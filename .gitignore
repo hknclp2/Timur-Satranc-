@@ -1,0 +1,172 @@
+# ==========================================
+# 1. Genel İşletim Sistemi & IDE Dosyaları
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Visual Studio / VS Code / JetBrains Rider / IntelliJ
+.vs/
+**/.vs/
+.idea/
+**/.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+
+# VS Code (Kişisel ayarlar)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+
+# ==========================================
+# 2. Unity Engine (Her dizin ve alt klasör için)
+# ==========================================
+# Unity geçici, önbellek ve derleme klasörleri
+[Ll]ibrary/
+**/[Ll]ibrary/
+[Tt]emp/
+**/[Tt]emp/
+[Oo]bj/
+**/[Oo]bj/
+[Bb]uild/
+**/[Bb]uild/
+[Bb]uilds/
+**/[Bb]uilds/
+[Ll]ogs/
+**/[Ll]logs/
+[Uu]ser[Ss]ettings/
+**/[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+**/[Mm]emoryCaptures/
+[Rr]ecordings/
+**/[Rr]ecordings/
+
+# Plastic SCM (Git çakışmasını ve fs_beacon kilitlenme hatasını önler)
+.plastic/
+**/.plastic/
+.plastic/*
+**/.plastic/*
+ignore.conf
+**/ignore.conf
+
+# Unity tarafından otomatik üretilen Visual Studio / Rider proje dosyaları
+*.csproj
+**/*.csproj
+*.unityproj
+**/*.unityproj
+*.sln
+**/*.sln
+*.slnx
+**/*.slnx
+*.suo
+**/*.suo
+*.tmp
+**/*.tmp
+*.user
+**/*.user
+*.userprefs
+**/*.userprefs
+*.pidb
+**/*.pidb
+*.booproj
+**/*.booproj
+*.svd
+**/*.svd
+*.pdb
+**/*.pdb
+*.mdb
+**/*.mdb
+*.opendb
+**/*.opendb
+*.idb
+**/*.idb
+
+# Unity Asset Store paketleri & geçici dosyalar
+sysinfo.txt
+**/sysinfo.txt
+Assets/AssetStoreTools*
+**/Assets/AssetStoreTools*
+
+# Derleme çıktıları (Builds / Paketler)
+*.apk
+*.aab
+*.unitypackage
+*.app
+*.exe
+*.apk.meta
+*.aab.meta
+
+# ==========================================
+# 3. Node.js & React / Vite (Client)
+# ==========================================
+# Bağımlılıklar (Node Modules)
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Üretim ve Derleme Çıktıları (Build / Dist)
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.next/
+**/.next/
+
+# Log ve Hata Dosyaları
+npm-debug.log*
+**/npm-debug.log*
+yarn-debug.log*
+**/yarn-debug.log*
+yarn-error.log*
+**/yarn-error.log*
+pnpm-debug.log*
+**/pnpm-debug.log*
+lerna-debug.log*
+**/lerna-debug.log*
+
+# Ortam Değişkenleri & Gizli Dosyalar (Env)
+.env
+**/.env
+.env*.local
+**/.env*.local
+.env.production
+**/.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Test & Önbellek Dosyaları
+coverage/
+**/coverage/
+.cache/
+**/.cache/
+.turbo/
+**/.turbo/
+.eslintcache
+**/.eslintcache
+.vite/
+**/.vite/
+
+# ==========================================
+# 4. Yerel Referans & Yardımcı Klasörler
+# ==========================================
+# Ayrı bir Git reposu barındıran yerel referans klasörü
+reference_repo/
