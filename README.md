@@ -98,4 +98,4 @@ Timur-Satranc-/
 
 ## 📄 Lisans
 
-Henüz bir lisans dosyası eklenmedi.
+Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır.
