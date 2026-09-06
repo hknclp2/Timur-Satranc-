@@ -9,6 +9,7 @@ export type PageState =
   | 'LEARN_MENU'
   | 'ROADMAP'
   | 'LESSON_1'
+  | 'LESSON_DETAIL'
   | 'RULES'
   | 'SCREEN_PLAY' // Ekranda Oyna (2 Kişilik Yerel Oyun)
   | 'CUSTOM_SETUP' // Serbest Dizilim Modu (Board Editor / Setup)

@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft, Trophy, Users, Award } from 'lucide-react';
+import { ArrowLeft, Trophy, Users, Medal } from '@phosphor-icons/react';
 import { NotificationType } from '../types';
 import { ComingSoonPanel } from './ComingSoonPanel';
 
@@ -80,7 +80,7 @@ export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
       <div className="w-full">
         {/* Header */}
         <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#122b1e]/95 z-20">
@@ -89,17 +89,17 @@ export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
             className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
             aria-label="Geri"
           >
-            <ArrowLeft size={26} strokeWidth={2.5} />
+            <ArrowLeft size={26} weight="bold" />
           </button>
           <div className="flex items-center gap-2">
-            <Trophy size={24} className="text-yellow-400" />
+            <Trophy size={24} weight="duotone" className="text-yellow-400" />
             <h2 className="font-batangas text-2xl font-bold text-white tracking-wide">
               Turnuvalar
             </h2>
           </div>
         </div>
 
-        {/* Turnuva Listesi (Krem Kartlar) */}
+        {/* Turnuva Listesi (krem kartlar) */}
         <div className="p-5 flex flex-col gap-3.5 max-w-lg mx-auto w-full pb-12">
           <p className="text-white/60 text-xs">
             Büyük Timur Satrancı arenasında yarış, puan topla ve imparatorluk unvanlarını kazan!
@@ -130,11 +130,11 @@ export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
 
               <div className="flex items-center justify-between text-xs text-[#5c6c66] pt-1 border-t border-[#e5dcce]">
                 <div className="flex items-center gap-1.5">
-                  <Users size={14} className="text-[#008f84]" />
+                  <Users size={14} weight="bold" className="text-[#008f84]" />
                   <span className="font-semibold">{t.participants}/{t.maxParticipants} Oyuncu</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-amber-700 font-bold">
-                  <Award size={14} />
+                  <Medal size={14} weight="bold" />
                   <span>{t.prize}</span>
                 </div>
               </div>

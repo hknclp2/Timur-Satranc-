@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft, Zap, Rocket, Clock, Sun, Sliders, Check } from 'lucide-react';
+import { ArrowLeft, Lightning, Rocket, Clock, Sun, Sliders, Check } from '@phosphor-icons/react';
 import { TimeControl } from '../types';
 
 interface TimeControlModalProps {
@@ -68,7 +68,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 backdrop-blur-md flex flex-col overflow-y-auto custom-scrollbar animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 flex flex-col overflow-y-auto custom-scrollbar animate-fade-in select-none">
       {/* Üst Başlık */}
       <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#122b1e]/95 z-20">
         <button
@@ -76,7 +76,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
           className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
           aria-label="Geri"
         >
-          <ArrowLeft size={26} strokeWidth={2.5} />
+          <ArrowLeft size={26} weight="bold" />
         </button>
         <h2 className="font-batangas text-2xl font-bold text-white tracking-wide">
           Zaman Kontrolü
@@ -87,7 +87,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
         {/* 1. Kurşun (Bullet) */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
-            <Rocket size={17} />
+            <Rocket size={17} weight="bold" />
             <span>Kurşun (Bullet)</span>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
@@ -102,7 +102,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
                   }}
                   className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
                     active
-                      ? 'bg-[#00d4c4] text-[#0a2318] ring-2 ring-white scale-[1.02] font-extrabold shadow-[#00d4c4]/30'
+                      ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.02] font-extrabold shadow-md'
                       : 'bg-[#f5eedc] text-[#141f1b] hover:bg-[#eae2cf] active:scale-95'
                   }`}
                 >
@@ -116,7 +116,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
         {/* 2. Yıldırım (Blitz) */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-yellow-300 font-bold text-sm">
-            <Zap size={17} />
+            <Lightning size={17} weight="bold" />
             <span>Yıldırım (Blitz)</span>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
@@ -131,7 +131,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
                   }}
                   className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
                     active
-                      ? 'bg-[#00d4c4] text-[#0a2318] ring-2 ring-white scale-[1.02] font-extrabold shadow-[#00d4c4]/30'
+                      ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.02] font-extrabold shadow-md'
                       : 'bg-[#f5eedc] text-[#141f1b] hover:bg-[#eae2cf] active:scale-95'
                   }`}
                 >
@@ -145,7 +145,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
         {/* 3. Hızlı (Rapid) */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2 text-[#00e5ff] font-bold text-sm">
-            <Clock size={17} />
+            <Clock size={17} weight="bold" />
             <span>Hızlı (Rapid)</span>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
@@ -160,7 +160,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
                   }}
                   className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
                     active
-                      ? 'bg-[#00d4c4] text-[#0a2318] ring-2 ring-white scale-[1.02] font-extrabold shadow-[#00d4c4]/30'
+                      ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.02] font-extrabold shadow-md'
                       : 'bg-[#f5eedc] text-[#141f1b] hover:bg-[#eae2cf] active:scale-95'
                   }`}
                 >
@@ -175,7 +175,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-orange-300 font-bold text-sm">
-              <Sun size={17} />
+              <Sun size={17} weight="bold" />
               <span>Günlük (Daily)</span>
             </div>
             <span className="text-[11px] text-white/50 font-medium">(Hamle Başına Süre)</span>
@@ -192,7 +192,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
                   }}
                   className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer shadow-md ${
                     active
-                      ? 'bg-[#00d4c4] text-[#0a2318] ring-2 ring-white scale-[1.02] font-extrabold shadow-[#00d4c4]/30'
+                      ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.02] font-extrabold shadow-md'
                       : 'bg-[#f5eedc] text-[#141f1b] hover:bg-[#eae2cf] active:scale-95'
                   }`}
                 >
@@ -206,7 +206,7 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
         {/* 5. Özel Süre (Custom) */}
         <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-4 shadow-lg border border-[#e5dcce]">
           <div className="flex items-center gap-2 text-[#0e3b2e] font-bold text-base">
-            <Sliders size={18} className="text-[#00a89a]" />
+            <Sliders size={18} weight="bold" className="text-[#00a89a]" />
             <span className="font-batangas">Özel Zaman Ayarı</span>
           </div>
 
@@ -254,9 +254,9 @@ export const TimeControlModal: FC<TimeControlModalProps> = ({
 
           <button
             onClick={handleApplyCustom}
-            className="w-full mt-2 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-batangas font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shadow-[#00d4c4]/30"
+            className="w-full mt-2 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-batangas font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Check size={18} />
+            <Check size={18} weight="bold" />
             <span>Özel Süreyi Ayarla ({customMin} dk {customSec > 0 ? `+ ${customSec} sn` : ''})</span>
           </button>
         </div>

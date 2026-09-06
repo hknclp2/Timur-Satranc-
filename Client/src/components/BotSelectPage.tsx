@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Crown } from '@phosphor-icons/react';
 import { PageState } from '../types';
 import haritaImg from '../assets/harita.png';
 import botImg from '../assets/bot.png';
@@ -16,19 +16,29 @@ type BotKey = 'kolay' | 'orta' | 'zor';
 function CrownSelector({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
     <div className="flex gap-2">
-      {[1, 2, 3].map((n) => (
-        <button
-          key={n}
-          onClick={() => onChange(n)}
-          className={`bg-[#387e5c] text-white py-1.5 px-3 rounded-lg flex items-center justify-center gap-0.5 cursor-pointer transition-all active:scale-95 ${
-            value === n ? 'ring-2 ring-yellow-400 scale-105 shadow-md' : 'opacity-55 hover:opacity-80'
-          }`}
-        >
-          {Array.from({ length: n }).map((_, i) => (
-            <span key={i} className="text-yellow-400 text-xs">👑</span>
-          ))}
-        </button>
-      ))}
+      {[1, 2, 3].map((n) => {
+        const isSelected = value === n;
+        return (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={`py-1.5 px-3 rounded-lg flex items-center justify-center gap-0.5 cursor-pointer transition-all active:scale-95 border ${
+              isSelected
+                ? 'bg-[#387e5c] border-[#f59e0b] text-white shadow-md scale-105 font-bold ring-2 ring-[#f59e0b]'
+                : 'bg-[#e8deca] hover:bg-[#dfd4be] border-[#cfc4ad] text-[#5c6c66] shadow-sm'
+            }`}
+          >
+            {Array.from({ length: n }).map((_, i) => (
+              <Crown
+                key={i}
+                size={14}
+                weight="fill"
+                className={isSelected ? 'text-amber-500' : 'text-amber-400/70'}
+              />
+            ))}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -48,7 +58,7 @@ interface BotCardProps {
 
 function BotCard({ label, icon, isExpanded, onToggle, time, onTimeToggle, crowns, onCrownChange, onStart }: BotCardProps) {
   return (
-    <div className={`rounded-2xl overflow-hidden shadow-xl transition-all duration-300 ${isExpanded ? 'ring-2 ring-purple-400/70' : ''}`}>
+    <div className={`rounded-2xl overflow-hidden shadow-xl border border-[#e5dcce] bg-[#f5eedc] transition-all duration-300 ${isExpanded ? 'ring-2 ring-[#f59e0b]' : ''}`}>
       <button
         onClick={onToggle}
         className={`bg-[#f5eedc] p-5 flex justify-between items-center w-full cursor-pointer transition-all duration-200 active:scale-[0.99] ${isExpanded ? '' : 'rounded-2xl'}`}
@@ -79,7 +89,7 @@ function BotCard({ label, icon, isExpanded, onToggle, time, onTimeToggle, crowns
           {/* Başlat */}
           <button
             onClick={onStart}
-            className="w-full bg-[#1a442e] hover:bg-[#123020] text-white font-batangas font-bold py-3.5 rounded-xl transition-all shadow-lg cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0 mt-1"
+            className="w-full bg-[#1a442e] hover:bg-[#123020] text-white font-batangas font-bold py-3.5 rounded-xl transition-all shadow-lg cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0 mt-1 text-lg"
           >
             Oyunu Başlat
           </button>
@@ -108,12 +118,11 @@ export const BotSelectPage: FC<BotSelectPageProps> = ({ onNavigate, onStartGame 
 
   return (
     <div className="mobile-screen flex flex-col bg-[#1a4228] relative overflow-y-auto custom-scrollbar select-none">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,229,255,0.04)_0%,_transparent_70%)] pointer-events-none" />
 
       {/* Başlık */}
       <div className="flex items-center gap-3 px-5 pt-9 pb-3 relative z-10">
         <button onClick={() => onNavigate('PLAY_MENU')} className="mobile-back-btn" aria-label="Geri">
-          <ArrowLeft size={28} strokeWidth={2.5} />
+          <ArrowLeft size={28} weight="bold" />
         </button>
         <h1 className="font-batangas text-[2rem] font-bold text-white tracking-wide leading-none">
           Bot'a karşı oyna

@@ -1,8 +1,11 @@
-import React, { FC, useState } from 'react';
-import { ArrowLeft, Swords, BookOpen } from 'lucide-react';
+import React, { FC } from 'react';
+import { ArrowLeft, Sword, BookOpen } from '@phosphor-icons/react';
 import { PageState } from '../types';
+import { PIECE_GUIDES, RULE_ENTRIES } from '../learn/learnContent';
+import { EngineNote } from './learn/EngineNote';
+import { MicroBadgeLegend } from './learn/MicroBadgeLegend';
 
-// Taş görselleri
+// Taş görselleri (PDF sırasına göre; Şehzade/Yedek Şah için şah görseli yedeği)
 import sSah from '../assets/pieces/s_sah.png';
 import sVezir from '../assets/pieces/s_vezir.png';
 import sKale from '../assets/pieces/s_kale.png';
@@ -12,6 +15,24 @@ import sDeve from '../assets/pieces/s_deve.png';
 import sZurafa from '../assets/pieces/s_zurafa.png';
 import sMancinik from '../assets/pieces/s_mancinik.png';
 import sPiyon from '../assets/pieces/s_piyon.png';
+import sGeneral from '../assets/pieces/s_general.png';
+import sKazik from '../assets/pieces/s_kazik.png';
+
+const PIECE_IMGS: Record<string, string> = {
+  king: sSah,
+  queen: sVezir,
+  rook: sKale,
+  bishop: sFil,
+  knight: sAt,
+  camel: sDeve,
+  giraffe: sZurafa,
+  warMachine: sMancinik,
+  pawn: sPiyon,
+  general: sGeneral,
+  picket: sKazik,
+  prince: sSah,
+  masnua: sSah,
+};
 
 interface RulesPageProps {
   onNavigate: (page: PageState) => void;
@@ -28,66 +49,52 @@ interface PieceData {
   move: string;
   value: string;
   color: string;
+  terfi?: string;
+  engineNote?: string;
 }
 
-const piecesData: PieceData[] = [
-  { name: 'Şah',     symbol: 'Ş', img: sSah,      move: "Her yönde 1 kare. Asla tehdit altına giremez.",                        value: '∞', color: '#f59e0b' },
-  { name: 'Vezir',   symbol: 'V', img: sVezir,    move: 'Her yönde istediği kadar kare hareket eder.',                           value: '9', color: '#a78bfa' },
-  { name: 'Kale',    symbol: 'K', img: sKale,     move: 'Yatay ve dikey istediği kadar kare.',                                   value: '5', color: '#60a5fa' },
-  { name: 'Fil',     symbol: 'F', img: sFil,      move: 'Çapraz istediği kadar kare hareket eder.',                              value: '3', color: '#34d399' },
-  { name: 'At',      symbol: 'A', img: sAt,       move: "L şeklinde: 2+1 kare. Taşları atlayabilir.",                           value: '3', color: '#00d4c4' },
-  { name: 'Deve',    symbol: 'D', img: sDeve,     move: 'Çapraz 2 kare atlayarak hareket eder.',                                value: '4', color: '#fb923c' },
-  { name: 'Zürafa',  symbol: 'Z', img: sZurafa,   move: '1 kare düz + 3 kare çapraz veya tersi.',                               value: '5', color: '#facc15' },
-  { name: 'Mancınık',symbol: 'M', img: sMancinik, move: '2 kare düz + 2 kare çapraz (L²) hareket eder.',                       value: '4', color: '#f87171' },
-  { name: 'Piyade',  symbol: 'P', img: sPiyon,    move: '1 kare ileri. İlk hamlede 2 kare. Çapraz yer.',                       value: '1', color: '#d1d5db' },
-];
-
-const rules = [
-  { title: 'Oyunun Amacı',  icon: '🎯', desc: "Rakibin Şahını mat ederek oyunu kazanmak. Mat, Şahın kaçma yolu kalmadığı ve tehdit altında olduğu durumdur." },
-  { title: 'Tahta Boyutu',  icon: '📐', desc: "Timur Satrancı 10×11 büyüklüğünde bir tahta üzerinde oynanır. Bu standart satrancın 8×8 tahtasından çok daha geniştir." },
-  { title: 'Sıra Takibi',   icon: '⏱️', desc: "Beyaz her zaman ilk hamleyi yapar. Oyuncular sırayla birer hamle yapar. Sıranızı geçemezsiniz." },
-  { title: 'Taş Yeme',      icon: '⚔️', desc: "Bir taş, rakibin taşının üzerine hareket ederek onu tahtadan kaldırabilir. Kendi taşınızın üzerine gidemezsiniz." },
-  { title: 'Şah ve Mat',    icon: '👑', desc: "Şahınız tehdit altındaysa 'şah' durumundasınızdır ve tehdidi mutlaka gidermeniz gerekir. Bunu yapamazsanız mat olursunuz." },
-  { title: 'Beraberlik',    icon: '🤝', desc: "Oyun; pat durumunda, yetersiz materyal olduğunda veya her iki oyuncu anlaştığında beraberlikle sonuçlanabilir." },
-];
-
 export const RulesPage: FC<RulesPageProps> = ({ onNavigate, rulesTab, setRulesTab, selectedPiece, setSelectedPiece }) => {
+  const piecesData: PieceData[] = PIECE_GUIDES.map((g) => ({
+    name: g.name,
+    symbol: g.symbol,
+    img: PIECE_IMGS[g.key] ?? sPiyon,
+    move: g.move,
+    value: g.value,
+    color: g.color,
+    terfi: g.terfi,
+    engineNote: g.engineNote,
+  }));
+
   return (
     <div className="mobile-screen flex flex-col bg-[#122b1e] relative overflow-hidden select-none">
-      {/* Arka plan */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.06) 0%, transparent 55%)' }}
-      />
-
       {/* Başlık */}
       <div className="flex items-center gap-3 px-5 pt-10 pb-3 relative z-10 flex-shrink-0">
         <button onClick={() => onNavigate('LEARN_MENU')} className="mobile-back-btn" aria-label="Geri">
           <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
-            <ArrowLeft size={20} strokeWidth={2.5} />
+            <ArrowLeft size={20} weight="bold" />
           </div>
         </button>
         <div>
           <h1 className="font-batangas text-[2rem] font-bold text-white tracking-wide leading-none">Kurallar</h1>
-          <p className="text-white/40 text-xs mt-0.5">Taşlar ve oyun kuralları</p>
+          <p className="text-[#A7BDB1] text-sm mt-0.5">PDF müfredatı • 11 taş + Şehzade + Yedek Şah</p>
         </div>
       </div>
 
-      {/* Tab switcher */}
+      {/* Tab switcher (krem pill) */}
       <div className="px-5 pb-3 flex-shrink-0 relative z-10">
-        <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/[0.08]">
+        <div className="flex gap-2 bg-[#f5eedc] p-1.5 rounded-2xl border border-[#e5dcce] shadow-xl">
           {[
-            { key: 'pieces' as const, label: 'Taşlar',  icon: <Swords size={14} /> },
-            { key: 'rules'  as const, label: 'Kurallar', icon: <BookOpen size={14} /> },
+            { key: 'pieces' as const, label: 'Taşlar',  icon: <Sword size={14} weight="bold" /> },
+            { key: 'rules'  as const, label: 'Kurallar', icon: <BookOpen size={14} weight="bold" /> },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setRulesTab(tab.key)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200"
               style={{
-                background:   rulesTab === tab.key ? 'rgba(245,158,11,0.2)'   : 'transparent',
-                color:        rulesTab === tab.key ? '#f59e0b'                 : 'rgba(255,255,255,0.3)',
-                border:       rulesTab === tab.key ? '1px solid rgba(245,158,11,0.3)' : '1px solid transparent',
+                background:   rulesTab === tab.key ? '#00d4c4'   : 'transparent',
+                color:        rulesTab === tab.key ? '#0d2818'   : '#5c6c66',
+                boxShadow:    rulesTab === tab.key ? '0 4px 14px rgba(0,212,196,0.4)' : 'none',
               }}
             >
               {tab.icon}
@@ -102,71 +109,77 @@ export const RulesPage: FC<RulesPageProps> = ({ onNavigate, rulesTab, setRulesTa
         {rulesTab === 'pieces' ? (
           <>
             {/* Taş ızgarası */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {piecesData.map((piece) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+              {piecesData.map((piece) => {
+                const isSelected = selectedPiece?.name === piece.name;
+                return (
                 <button
                   key={piece.name}
-                  onClick={() => setSelectedPiece(selectedPiece?.name === piece.name ? null : piece)}
-                  className="rounded-2xl p-3 flex flex-col items-center gap-2 border transition-all active:scale-95"
+                  onClick={() => setSelectedPiece(isSelected ? null : piece)}
+                  className="rounded-2xl p-3 flex flex-col items-center gap-2 border border-[#e5dcce] bg-[#f5eedc] shadow-md transition-all active:scale-95"
                   style={{
-                    background:   selectedPiece?.name === piece.name ? `${piece.color}18` : 'rgba(255,255,255,0.04)',
-                    borderColor:  selectedPiece?.name === piece.name ? `${piece.color}50` : 'rgba(255,255,255,0.07)',
-                    boxShadow:    selectedPiece?.name === piece.name ? `0 4px 16px ${piece.color}25` : 'none',
+                    outline: isSelected ? '2.5px solid #1A1A1A' : 'none',
+                    outlineOffset: isSelected ? 2 : 0,
                   }}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${piece.color}15` }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#141f1b]/5 border border-[#141f1b]/10">
                     <img src={piece.img} alt={piece.name} className="w-8 h-8 object-contain" />
                   </div>
-                  <span className="text-[11px] font-bold" style={{ color: selectedPiece?.name === piece.name ? piece.color : 'rgba(255,255,255,0.6)' }}>
+                  <span className="text-[13px] font-bold text-center leading-tight text-[#141f1b]">
                     {piece.name}
                   </span>
-                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: `${piece.color}20`, color: piece.color }}>
-                    {piece.value === '∞' ? '♾' : `+${piece.value}`}
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40">
+                    {piece.value === '∞' ? '♾' : piece.value === '—' ? '★' : `${piece.value} puan`}
                   </span>
                 </button>
-              ))}
+                );
+              })}
             </div>
 
-            {/* Seçili taş detayı */}
+            {/* Seçili taş detayı (krem lüks kart) */}
             {selectedPiece && (
-              <div
-                className="rounded-2xl p-5 border mb-4 animate-slide-down"
-                style={{ background: `${selectedPiece.color}10`, borderColor: `${selectedPiece.color}30` }}
-              >
+              <div className="rounded-2xl p-5 border border-[#e5dcce] bg-[#f5eedc] shadow-xl mb-4 animate-slide-down">
                 <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                    style={{ background: `${selectedPiece.color}20`, border: `1.5px solid ${selectedPiece.color}40` }}
-                  >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#141f1b]/5 border border-[#141f1b]/10">
                     <img src={selectedPiece.img} alt={selectedPiece.name} className="w-10 h-10 object-contain" />
                   </div>
                   <div>
-                    <div className="font-batangas text-xl font-bold" style={{ color: selectedPiece.color }}>{selectedPiece.name}</div>
-                    <div className="text-white/40 text-xs">Hamle değeri: {selectedPiece.value}</div>
+                    <div className="font-batangas text-xl font-bold text-[#141f1b]">
+                      {selectedPiece.name} <span className="text-sm text-[#5c6c66]">({selectedPiece.symbol})</span>
+                    </div>
+                    <div className="text-[#5c6c66] text-sm">
+                      Güç: {selectedPiece.value === '∞' ? '∞' : `${selectedPiece.value} puan`}
+                      {selectedPiece.terfi ? ` • Terfi: ${selectedPiece.terfi}` : ''}
+                    </div>
                   </div>
                 </div>
-                <p className="text-white/70 text-sm leading-relaxed">{selectedPiece.move}</p>
+                <p className="text-[#3a4a44] text-[15px] md:text-base leading-7">{selectedPiece.move}</p>
+                {selectedPiece.engineNote && <EngineNote text={selectedPiece.engineNote} />}
               </div>
             )}
+
+            <MicroBadgeLegend />
+            <div className="mt-3 text-xs text-white/45 leading-relaxed">
+              Notasyon: dikey hatlar a–k (PDF metninde a–l geçer), yataylar 1–10; hisarlar H-SOL / H-SAĞ.
+            </div>
           </>
         ) : (
-          <div className="flex flex-col gap-3">
-            {rules.map((rule, i) => (
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
+            {RULE_ENTRIES.map((rule, i) => (
               <div
                 key={i}
-                className="rounded-2xl p-4 border flex gap-4"
-                style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}
+                className="rounded-2xl p-4 border border-[#e5dcce] bg-[#f5eedc] shadow-md flex flex-col gap-2"
               >
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl"
-                  style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.2)' }}
-                >
-                  {rule.icon}
+                <div className="flex gap-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-xl bg-amber-100 border border-amber-600/25">
+                    {rule.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-batangas text-lg font-bold text-[#141f1b] mb-1">{rule.title}</div>
+                    <p className="text-[#5c6c66] text-sm leading-relaxed">{rule.desc}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="font-batangas text-base font-bold text-white mb-1">{rule.title}</div>
-                  <p className="text-white/45 text-xs leading-relaxed">{rule.desc}</p>
-                </div>
+                {rule.engineNote && <EngineNote text={rule.engineNote} />}
               </div>
             ))}
           </div>

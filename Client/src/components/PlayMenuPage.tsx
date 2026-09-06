@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft, ChevronDown, Play } from 'lucide-react';
+import { ArrowLeft, CaretDown, Play } from '@phosphor-icons/react';
 import {
   Trophy,
   UsersThree,
@@ -55,7 +55,7 @@ function CreamCard({ id, label, desc, icon, badge, onClick }: CreamCardProps) {
             {label}
           </span>
           {badge && (
-            <span className="text-[10px] bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40 font-bold px-2 py-0.5 rounded-full">
+            <span className="text-[10px] bg-[#00d4c4]/25 text-[#0c4e48] border border-[#00d4c4]/40 font-bold px-2 py-0.5 rounded-full">
               {badge}
             </span>
           )}
@@ -104,9 +104,6 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
 
   return (
     <div className="mobile-screen flex flex-col bg-[#1a4228] relative overflow-y-auto custom-scrollbar select-none">
-      {/* Arka plan ışık vurgusu */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,229,255,0.05)_0%,_transparent_70%)] pointer-events-none" />
-
       {/* ─── ÜST BAŞLIK ────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 pt-8 pb-3 relative z-10">
         <button
@@ -114,7 +111,7 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
           className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
           aria-label="Geri"
         >
-          <ArrowLeft size={28} strokeWidth={2.5} />
+          <ArrowLeft size={28} weight="bold" />
         </button>
         <h1 className="font-batangas text-[2.4rem] font-bold text-white tracking-wide leading-none">
           Oyna
@@ -123,7 +120,7 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
 
       {/* ─── MOD KARTLARI & HIZLI OYNA ─────────────────────────────── */}
       <div className="flex flex-col gap-4 px-5 py-3 pb-12 relative z-10 max-w-lg mx-auto w-full">
-        {/* 1. ÜST KISIM DİREKT OYNAMA KISAYOLU (Krem / Turkuaz Tasarım) */}
+        {/* 1. ÜST KISIM DİREKT OYNAMA KISAYOLU (krem kutu) */}
         <div className="bg-[#f5eedc] rounded-2xl p-3.5 shadow-xl flex flex-col gap-2.5 border border-[#e5dcce]">
           {/* Zaman Seçici Butonu */}
           <button
@@ -142,18 +139,18 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
             </div>
             <div className="flex items-center gap-1 text-[#5c6c66]">
               <span className="text-xs font-semibold">Değiştir</span>
-              <ChevronDown size={18} />
+              <CaretDown size={18} weight="bold" />
             </div>
           </button>
 
-          {/* Oyunu Başlat Butonu (Canlı Turkuaz Ana Buton) */}
+          {/* Oyunu Başlat Butonu (altın CTA) */}
           <button
             id="start-game-btn"
             onClick={handleQuickPlay}
-            className="mobile-main-btn py-3.5"
+            className="w-full bg-[#f59e0b] hover:bg-[#d97706] active:scale-[0.98] text-[#1A1A1A] font-batangas font-bold py-3.5 rounded-xl shadow-lg transition-all cursor-pointer"
           >
             <div className="flex items-center justify-center gap-2 font-batangas text-xl font-bold">
-              <Play size={22} fill="currentColor" />
+              <Play size={22} weight="fill" />
               <span>Oyunu Başlat</span>
             </div>
           </button>

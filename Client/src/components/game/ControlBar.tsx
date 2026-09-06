@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { List, Pause, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { List, Pause, Play, CaretLeft, CaretRight } from '@phosphor-icons/react';
 
 interface ControlBarProps {
   onPrevious: () => void;
@@ -27,7 +27,7 @@ export const ControlBar: FC<ControlBarProps> = ({
         onClick={onOptionsClick}
         className="flex flex-col items-center justify-center gap-1 text-[#141f1b] hover:opacity-80 active:scale-90 transition-all cursor-pointer min-w-[56px]"
       >
-        <List size={24} strokeWidth={2.5} />
+        <List size={24} weight="bold" />
         <span className="text-[11px] font-bold tracking-tight">Seçenekler</span>
       </button>
 
@@ -38,9 +38,9 @@ export const ControlBar: FC<ControlBarProps> = ({
         title={isPaused ? 'Oyuna Devam Et' : 'Oyunu Duraklat'}
       >
         {isPaused ? (
-          <Play size={24} strokeWidth={2.5} fill="currentColor" />
+          <Play size={24} weight="fill" />
         ) : (
-          <Pause size={24} strokeWidth={2.5} fill="currentColor" />
+          <Pause size={24} weight="fill" />
         )}
         <span className="text-[11px] font-bold tracking-tight">
           {isPaused ? 'Devam' : 'Durdur'}
@@ -57,7 +57,7 @@ export const ControlBar: FC<ControlBarProps> = ({
           }`}
         title="Önceki Hamle"
       >
-        <ChevronLeft size={24} strokeWidth={3} />
+        <CaretLeft size={24} weight="bold" />
         <span className="text-[11px] font-bold tracking-tight">Önceki</span>
       </button>
 
@@ -71,7 +71,7 @@ export const ControlBar: FC<ControlBarProps> = ({
           }`}
         title="Sonraki Hamle"
       >
-        <ChevronRight size={24} strokeWidth={3} />
+        <CaretRight size={24} weight="bold" />
         <span className="text-[11px] font-bold tracking-tight">Sonraki</span>
       </button>
     </div>

@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '@phosphor-icons/react';
 import ekrandaOynaIcon from '../../assets/ekrandaoyna.png';
 import { NotationHeader } from './NotationHeader';
 import { MoveHistoryEntry } from '../../hooks/useGame';
@@ -28,7 +28,7 @@ export const Header: FC<HeaderProps> = ({
           className="p-1 text-white/80 hover:text-white active:scale-90 transition-all cursor-pointer"
           aria-label="Geri Dön"
         >
-          <ArrowLeft size={24} strokeWidth={2.5} />
+          <ArrowLeft size={24} weight="bold" />
         </button>
 
         {/* Ortalanmış Oyun İkonu ve Başlığı */}

@@ -6,7 +6,7 @@ import { BoardContainer } from '../components/game/BoardContainer';
 import { ControlBar } from '../components/game/ControlBar';
 import { PromotionModal } from '../components/board/PromotionModal';
 import { defaultMaterialCalculator } from '../core/material/MaterialCalculator';
-import { Trophy, RotateCcw, Flag, Handshake, Play, Pause, X, Home } from 'lucide-react';
+import { Trophy, ArrowCounterClockwise, Flag, Handshake, Play, Pause, X, House } from '@phosphor-icons/react';
 import { NotificationType, PlayerColor } from '../types';
 import { BoardMatrix, CitadelState } from '../types/chess';
 
@@ -182,7 +182,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
 
       {/* ─── SEÇENEKLER MODALI (Options Modal) ────────────────────────── */}
       {isOptionsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-5 animate-fade-in">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-5 animate-fade-in">
           <div className="bg-[#1c3829] border border-white/15 rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h3 className="font-batangas text-xl font-bold text-[#f4eedd]">
@@ -192,7 +192,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                 onClick={() => setIsOptionsOpen(false)}
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all cursor-pointer"
               >
-                <X size={18} />
+                <X size={18} weight="bold" />
               </button>
             </div>
 
@@ -203,9 +203,9 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                   togglePause();
                   setIsOptionsOpen(false);
                 }}
-                className="w-full bg-[#f4eedd] hover:bg-[#eae2cf] active:scale-98 text-[#141f1b] font-batangas font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow transition-all cursor-pointer"
+                className="w-full bg-[#f4eedd] hover:bg-[#eae2cf] active:scale-98 text-[#141f1b] font-batangas font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow transition-all cursor-pointer text-sm"
               >
-                {isPaused ? <Play size={18} /> : <Pause size={18} />}
+                {isPaused ? <Play size={18} weight="fill" /> : <Pause size={18} weight="fill" />}
                 <span>{isPaused ? 'Oyuna Devam Et' : 'Oyunu Duraklat'}</span>
               </button>
 
@@ -214,7 +214,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                 onClick={onResetClick}
                 className="w-full bg-[#274e39] hover:bg-[#326449] active:scale-98 text-[#f4eedd] font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10 shadow transition-all cursor-pointer text-sm"
               >
-                <RotateCcw size={18} className="text-[#00d4c4]" />
+                <ArrowCounterClockwise size={18} weight="bold" className="text-[#00d4c4]" />
                 <span>Yeniden Başlat</span>
               </button>
 
@@ -223,7 +223,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                 onClick={onDrawClick}
                 className="w-full bg-[#274e39] hover:bg-[#326449] active:scale-98 text-[#f4eedd] font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10 shadow transition-all cursor-pointer text-sm"
               >
-                <Handshake size={18} className="text-amber-300" />
+                <Handshake size={18} weight="bold" className="text-amber-300" />
                 <span>Beraberlik Teklif Et / Bitir</span>
               </button>
 
@@ -233,14 +233,14 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                   onClick={() => onResignClick('white')}
                   className="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 text-red-300 text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <Flag size={14} />
+                  <Flag size={14} weight="bold" />
                   <span>Beyaz Terk</span>
                 </button>
                 <button
                   onClick={() => onResignClick('black')}
                   className="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 text-red-300 text-xs font-bold py-2.5 px-2 rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <Flag size={14} />
+                  <Flag size={14} weight="bold" />
                   <span>Siyah Terk</span>
                 </button>
               </div>
@@ -250,7 +250,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                 onClick={onExit}
                 className="w-full mt-2 bg-black/40 hover:bg-black/60 active:scale-98 text-white/70 hover:text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10 transition-all cursor-pointer text-sm"
               >
-                <Home size={18} />
+                <House size={18} weight="bold" />
                 <span>Ana Menüye Çık</span>
               </button>
             </div>
@@ -260,10 +260,10 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
 
       {/* ─── OYUN BİTTİ MODALI (Game Over Modal) ───────────────────────── */}
       {gameState.isGameOver && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-5 animate-fade-in">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-5 animate-fade-in">
           <div className="bg-[#1c3829] border-2 border-[#00d4c4]/40 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center gap-4 shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-[#00d4c4]/20 border border-[#00d4c4] flex items-center justify-center text-[#00d4c4] shadow-lg animate-bounce">
-              <Trophy size={36} />
+              <Trophy size={36} weight="duotone" />
             </div>
 
             <div className="flex flex-col gap-1">
@@ -272,7 +272,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
                   ? 'Berabere!'
                   : `${gameState.winner === 'white' ? whiteName : blackName} Kazandı!`}
               </h3>
-              <p className="text-[#00e5ff] text-xs font-mono font-semibold">
+              <p className="text-[#00e5ff] text-xs font-semibold">
                 {statusText}
               </p>
             </div>
@@ -295,7 +295,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
             <div className="w-full flex flex-col gap-2 mt-2">
               <button
                 onClick={onResetClick}
-                className="w-full bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-3.5 rounded-xl shadow-lg transition-all cursor-pointer"
+                className="w-full bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-3.5 rounded-xl shadow-lg transition-all cursor-pointer text-sm"
               >
                 Tekrar Oyna
               </button>

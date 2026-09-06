@@ -202,7 +202,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
                       isSelected
                         ? 'bg-amber-300/60 ring-2 ring-inset ring-amber-400 z-10'
                         : isHovered
-                        ? 'bg-cyan-400/40 ring-2 ring-inset ring-cyan-300 z-10'
+                        ? 'bg-[#00d4c4]/40 ring-2 ring-inset ring-[#00d4c4] z-10'
                         : isLastMoveSquare
                         ? 'bg-amber-500/25'
                         : ''
@@ -211,7 +211,11 @@ export const BoardGrid: FC<BoardGridProps> = ({
                     {/* Rank Number Label on left edge (Column 0) */}
                     {x === 0 && (
                       <span
-                        className="absolute top-0.5 left-0.5 text-[8px] font-bold opacity-45 text-black pointer-events-none select-none"
+                        className={`absolute top-0.5 left-0.5 text-[8px] font-extrabold pointer-events-none select-none ${
+                          isDarkSquare
+                            ? 'text-amber-100 opacity-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'
+                            : 'text-[#381f0d] opacity-85'
+                        }`}
                         style={{
                           transform: isRotated ? 'rotate(180deg)' : undefined,
                         }}
@@ -223,7 +227,11 @@ export const BoardGrid: FC<BoardGridProps> = ({
                     {/* Column Letter Label on bottom edge (Row 0) */}
                     {y === 0 && (
                       <span
-                        className="absolute bottom-0.5 right-0.5 text-[8px] font-bold opacity-45 text-black pointer-events-none select-none uppercase"
+                        className={`absolute bottom-0.5 right-0.5 text-[8px] font-extrabold pointer-events-none select-none uppercase ${
+                          isDarkSquare
+                            ? 'text-amber-100 opacity-90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'
+                            : 'text-[#381f0d] opacity-85'
+                        }`}
                         style={{
                           transform: isRotated ? 'rotate(180deg)' : undefined,
                         }}
@@ -267,11 +275,11 @@ export const BoardGrid: FC<BoardGridProps> = ({
 
                     {/* Move Indicators */}
                     {isMoveTarget && !piece && (
-                      <div className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-cyan-400/80 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse pointer-events-none" />
+                      <div className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#00d4c4] ring-2 ring-black/40 shadow-md animate-pulse pointer-events-none" />
                     )}
 
                     {isCaptureTarget && (
-                      <div className="absolute inset-0.5 border-2 border-red-500/90 rounded-md bg-red-600/20 shadow-[0_0_10px_rgba(239,68,68,0.7)] animate-pulse pointer-events-none z-10" />
+                      <div className="absolute inset-0.5 border-2 border-red-500/90 rounded-md bg-red-600/20 shadow-sm animate-pulse pointer-events-none z-10" />
                     )}
                   </div>
                 );

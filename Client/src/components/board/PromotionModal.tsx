@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { PieceType, PlayerColor } from '../../types/chess';
 import { PIECE_ASSETS } from './PieceView';
-import { Sparkles } from 'lucide-react';
+import { Sparkle } from '@phosphor-icons/react';
 
 interface PromotionModalProps {
   color: PlayerColor;
@@ -27,10 +27,10 @@ export const PromotionModal: FC<PromotionModalProps> = ({
   onSelectPromotion,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-[#1c3829] border border-amber-400/40 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl text-center">
         <div className="w-12 h-12 rounded-full bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 animate-bounce">
-          <Sparkles size={24} />
+          <Sparkle size={24} weight="bold" />
         </div>
 
         <div>
@@ -45,7 +45,7 @@ export const PromotionModal: FC<PromotionModalProps> = ({
         {/* Quick Default Option */}
         <button
           onClick={() => onSelectPromotion(defaultPromotionType)}
-          className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold rounded-xl flex items-center justify-center gap-3 shadow-lg active:scale-98 transition cursor-pointer"
+          className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold rounded-xl flex items-center justify-center gap-3 shadow-lg active:scale-98 transition cursor-pointer text-sm"
         >
           <img
             src={PIECE_ASSETS[color][defaultPromotionType]}

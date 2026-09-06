@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { X, CastleTurret } from '@phosphor-icons/react';
 
 interface ComingSoonPanelProps {
   title: string;
@@ -9,8 +9,8 @@ interface ComingSoonPanelProps {
 }
 
 /**
- * ComingSoonPanel — Henüz hazır olmayan ekranlar için yer tutucu.
- * Arka plan yeşil, ön plan krem; ikon kullanılmaz.
+ * ComingSoonPanel — Henüz hazır olmayan özellikler için ortalanmış Modal Dialog.
+ * Arkada yarı saydam karartma vardır; dışarı tıklanınca veya "Anladım" ile kapanır.
  */
 export const ComingSoonPanel: FC<ComingSoonPanelProps> = ({
   title,
@@ -19,31 +19,51 @@ export const ComingSoonPanel: FC<ComingSoonPanelProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-[#1a4228] flex flex-col overflow-y-auto custom-scrollbar animate-fade-in select-none">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#1a4228] z-20">
+    <div
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in select-none"
+      onClick={onClose}
+    >
+      {/* Modal Kartı (tıklama yayılmasını engelle) */}
+      <div
+        className="bg-[#f5eedc] border border-[#e5dcce] rounded-3xl p-6 sm:p-8 max-w-sm w-full flex flex-col items-center text-center gap-4 shadow-2xl relative animate-zoom-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Kapat X Butonu */}
         <button
           onClick={onClose}
-          className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
-          aria-label="Geri"
+          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#e8deca] hover:bg-[#dfd4be] text-[#5c6c66] hover:text-[#141f1b] flex items-center justify-center transition"
+          aria-label="Kapat"
         >
-          <ArrowLeft size={26} strokeWidth={2.5} />
+          <X size={18} weight="bold" />
         </button>
-        <h2 className="font-batangas text-2xl font-bold text-white tracking-wide">
-          {title}
-        </h2>
-      </div>
 
-      {/* İçerik */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="bg-[#f5eedc] rounded-3xl px-8 py-10 w-full max-w-sm text-center shadow-xl border border-[#e5dcce] flex flex-col gap-2">
-          <h3 className="font-batangas text-2xl font-bold text-[#141f1b] leading-snug">
+        {/* Otağ / Kale İkonu Rozeti */}
+        <div className="w-16 h-16 rounded-full bg-[#e8deca] border border-[#cfc4ad] flex items-center justify-center text-[#0c4e48] shadow-md">
+          <CastleTurret size={32} weight="duotone" />
+        </div>
+
+        {/* Başlık ve Özellik Bilgisi */}
+        <div className="flex flex-col gap-1.5 items-center">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40">
+            {title}
+          </span>
+          <h3 className="font-batangas text-2xl font-bold text-[#141f1b] leading-tight mt-1">
             {headline}
           </h3>
-          <p className="text-[#5c6c66] text-sm font-medium">
-            {subtext}
-          </p>
         </div>
+
+        {/* Açıklama Metni */}
+        <p className="text-[#5c6c66] text-sm leading-relaxed px-2">
+          {subtext}
+        </p>
+
+        {/* Tamam / Anladım Butonu */}
+        <button
+          onClick={onClose}
+          className="w-full bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer text-sm mt-2"
+        >
+          Anladım
+        </button>
       </div>
     </div>
   );

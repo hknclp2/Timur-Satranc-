@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { ArrowLeft, Trophy } from 'lucide-react';
+import { ArrowLeft, Trophy } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../types';
 import logoImg from '../assets/logo.png';
 
@@ -36,23 +36,15 @@ const slides = [
 export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification, slideIdx, setSlideIdx }) => {
   return (
     <div className="mobile-screen flex flex-col bg-[#122b1e] relative overflow-hidden select-none">
-      {/* Arka plan */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(0,212,196,0.07) 0%, transparent 60%)' }}
-        />
-      </div>
-
       {/* Başlık */}
       <div className="flex items-center justify-between px-5 pt-10 pb-4 relative z-10 flex-shrink-0">
         <button onClick={() => onNavigate('ROADMAP')} className="mobile-back-btn" aria-label="Geri">
           <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
-            <ArrowLeft size={20} strokeWidth={2.5} />
+            <ArrowLeft size={20} weight="bold" />
           </div>
         </button>
         <div className="text-center">
-          <div className="text-[#00d4c4] text-[10px] font-bold uppercase tracking-widest">Bölüm 1</div>
+          <div className="text-[#00d4c4] text-xs font-bold uppercase tracking-widest">Bölüm 1</div>
           <h1 className="font-batangas text-lg font-bold text-white leading-tight">Timur Satrancı Hakkında</h1>
         </div>
         <div className="text-white/30 text-xs font-semibold">{slideIdx + 1}/{slides.length}</div>
@@ -77,18 +69,13 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
       <div className="flex-1 px-5 relative z-10 flex flex-col">
         <div
           key={slideIdx}
-          className="flex-1 rounded-3xl p-6 flex flex-col border animate-zoom-in"
-          style={{
-            background: 'rgba(255,255,255,0.04)',
-            borderColor: 'rgba(0,212,196,0.15)',
-            backdropFilter: 'blur(16px)',
-          }}
+          className="flex-1 rounded-3xl p-6 flex flex-col border border-[#e5dcce] bg-[#f5eedc] shadow-xl animate-zoom-in"
         >
           <div className="text-5xl mb-4 text-center">{slides[slideIdx].emoji}</div>
-          <h2 className="font-batangas text-2xl font-bold text-white text-center mb-4 leading-tight">
+          <h2 className="font-batangas text-2xl font-bold text-[#141f1b] text-center mb-4 leading-tight">
             {slides[slideIdx].title}
           </h2>
-          <p className="text-white/60 text-sm leading-relaxed text-center flex-1">{slides[slideIdx].body}</p>
+          <p className="text-[#3a4a44] text-sm leading-relaxed text-center flex-1">{slides[slideIdx].body}</p>
           <div className="flex justify-center mt-6 opacity-20">
             <img src={logoImg} alt="" className="w-16 h-16 object-contain" />
           </div>
@@ -100,20 +87,14 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
         <button
           onClick={() => setSlideIdx((s) => Math.max(0, s - 1))}
           disabled={slideIdx === 0}
-          className="flex-1 py-4 rounded-2xl border border-white/10 text-white/50 font-bold text-sm disabled:opacity-30 transition-all active:scale-95"
-          style={{ background: 'rgba(255,255,255,0.05)' }}
+          className="flex-1 py-4 rounded-2xl border border-[#cfc4ad] bg-[#e8deca] text-[#141f1b] font-bold text-sm disabled:opacity-40 transition-all active:scale-95"
         >
           ← Önceki
         </button>
         {slideIdx < slides.length - 1 ? (
           <button
             onClick={() => setSlideIdx((s) => s + 1)}
-            className="flex-1 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95"
-            style={{
-              background: 'linear-gradient(135deg, #00d4c4, #00a896)',
-              color: '#0d2818',
-              boxShadow: '0 6px 20px rgba(0,212,196,0.4)',
-            }}
+            className="flex-1 py-4 rounded-2xl bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-bold text-sm shadow-lg transition-all cursor-pointer"
           >
             Sonraki →
           </button>
@@ -123,14 +104,9 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
               showNotification('Tebrikler! Bölüm 1 tamamlandı! 🎉', 'success');
               onNavigate('ROADMAP');
             }}
-            className="flex-1 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2"
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-              color: '#1a0a00',
-              boxShadow: '0 6px 20px rgba(245,158,11,0.4)',
-            }}
+            className="flex-1 py-4 rounded-2xl bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-bold text-sm shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            <Trophy size={16} />
+            <Trophy size={16} weight="bold" />
             Tamamla!
           </button>
         )}

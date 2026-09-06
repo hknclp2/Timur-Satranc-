@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { BoardPosition, Piece, PlayerColor } from '../../types/chess';
 import { PieceView } from './PieceView';
-import { Castle } from 'lucide-react';
+import { CastleTurret } from '@phosphor-icons/react';
 
 interface CitadelBadgeProps {
   side: 'left' | 'right';
@@ -78,9 +78,9 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
           : 'border-t border-b border-r border-l-0 border-[#2b180d] rounded-r-md'
       } ${
         isValidMoveTarget
-          ? 'bg-amber-400/90 border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.8)] z-30'
+          ? 'bg-amber-400/90 border-amber-400 shadow-md ring-2 ring-amber-400 z-30'
           : isDragOver
-          ? 'bg-cyan-400/50 border-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.8)] z-30'
+          ? 'bg-[#00d4c4]/50 border-[#00d4c4] shadow-md ring-2 ring-[#00d4c4] z-30'
           : piece
           ? 'bg-[#7c532e] shadow-inner'
           : 'bg-[#5a381d] hover:bg-[#6c4323]'
@@ -114,15 +114,17 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center text-[#d9b382] pointer-events-none select-none">
-          <Castle size={14} className={isValidMoveTarget ? 'text-amber-950 animate-bounce' : 'opacity-70'} />
-          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-tighter leading-none mt-0.5 opacity-60">
+          <CastleTurret size={14} weight="bold" className={isValidMoveTarget ? 'text-amber-950 animate-bounce' : 'opacity-70'} />
+          <span className={`text-[7px] font-extrabold uppercase tracking-tight leading-none mt-0.5 ${
+            isValidMoveTarget ? 'text-amber-950 opacity-100' : 'opacity-60'
+          }`}>
             {isLeft ? 'Hisar' : 'Hisar'}
           </span>
         </div>
       )}
 
       {isValidMoveTarget && !piece && (
-        <span className="absolute w-2.5 h-2.5 bg-cyan-400 rounded-full animate-ping pointer-events-none" />
+        <span className="absolute w-2.5 h-2.5 bg-[#00d4c4] rounded-full animate-pulse pointer-events-none" />
       )}
     </div>
   );

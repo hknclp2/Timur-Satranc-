@@ -14,7 +14,7 @@ export const SplashScreen: FC<SplashScreenProps> = ({ onDone }) => {
   return (
     <div className="mobile-screen flex flex-col items-center justify-center bg-[#1a4228] select-none">
       {/* Arka plan parlaması */}
-      <div className="absolute w-72 h-72 rounded-full bg-[rgba(0,229,255,0.04)] blur-3xl pointer-events-none" />
+      <div className="absolute w-72 h-72 rounded-full bg-[rgba(0,212,196,0.06)] blur-3xl pointer-events-none" />
 
       {/* Logo + Başlık */}
       <div className="flex flex-col items-center gap-5 animate-mobile-fadein relative z-10">
@@ -33,7 +33,7 @@ export const SplashScreen: FC<SplashScreenProps> = ({ onDone }) => {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="w-2 h-2 rounded-full bg-white/30"
+            className="w-2 h-2 rounded-full bg-[#00d4c4]"
             style={{ animation: `mobilePulse 1.2s ${i * 0.2}s ease-in-out infinite` }}
           />
         ))}

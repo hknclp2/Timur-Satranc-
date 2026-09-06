@@ -16,15 +16,15 @@ import { useSetupEditor } from '../hooks/useSetupEditor';
 import {
   ArrowLeft,
   Play,
-  Trash2,
-  RotateCcw,
-  ListOrdered,
-  ArrowUpDown,
+  Trash,
+  ArrowCounterClockwise,
+  ListNumbers,
+  ArrowsDownUp,
   Check,
   Eraser,
   Clock,
-  RotateCw,
-} from 'lucide-react';
+  ArrowClockwise,
+} from '@phosphor-icons/react';
 
 // Moda girmeden önceki ekrandan gelen süre ayarını okunabilir metne çevir
 function formatSetupTime(totalSeconds: number, incrementSeconds: number): string {
@@ -101,7 +101,7 @@ const PaletteItem: FC<PaletteItemProps> = ({ type, color, isActive, onSelect }) 
         transition-all duration-150 select-none
         ${isActive
           ? 'bg-[#00d4c4]/30 ring-2 ring-[#00d4c4] scale-105 shadow-[0_0_12px_rgba(0,212,196,0.5)]'
-          : 'bg-white/5 hover:bg-white/15 active:scale-95'
+          : 'bg-white/5 hover:bg-white/15 active:scale-95 border border-transparent'
         }
       `}
       style={{ height: 52 }}
@@ -259,7 +259,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
           className="p-2 rounded-full hover:bg-white/10 active:scale-90 transition-all"
           aria-label="Geri"
         >
-          <ArrowLeft size={24} strokeWidth={2.5} />
+          <ArrowLeft size={24} weight="bold" />
         </button>
         <div className="flex flex-col items-center">
           <h1 className="font-batangas text-xl font-bold text-[#f4eedd] leading-tight">
@@ -301,13 +301,13 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
           <div className="flex-1 flex flex-col gap-1 min-w-0">
             {/* Beyaz sırası */}
             <div className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-[#f4eedd] border border-black/40 flex-shrink-0 ml-0.5" />
+              <span className="w-3 h-3 rounded-full bg-white border border-black/40 flex-shrink-0 ml-0.5" />
               {renderPaletteRow('white')}
             </div>
             <div className="border-t border-white/10" />
             {/* Siyah sırası */}
             <div className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full bg-[#141f1b] border border-white/40 flex-shrink-0 ml-0.5" />
+              <span className="w-3 h-3 rounded-full bg-text-primary border border-black/40 flex-shrink-0 ml-0.5" />
               {renderPaletteRow('black')}
             </div>
           </div>
@@ -331,7 +331,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
               }
             `}
           >
-            <Trash2 size={22} className={trashHover ? 'text-red-300' : 'text-white/60'} />
+            <Trash size={22} weight="bold" className={trashHover ? 'text-red-300' : 'text-white/60'} />
             <span className="text-[8px] font-bold text-white/50 text-center leading-tight">Sürükle<br />sil</span>
           </div>
         </div>
@@ -348,21 +348,21 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
           onClick={() => setShowOptions(true)}
           className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl hover:bg-white/10 active:scale-95 transition-all text-white/70"
         >
-          <ListOrdered size={24} />
+          <ListNumbers size={24} weight="bold" />
           <span className="text-[11px] font-semibold">Seçenekler</span>
         </button>
         <button
           onClick={() => setFlipped((f) => !f)}
           className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl hover:bg-white/10 active:scale-95 transition-all text-white/70"
         >
-          <ArrowUpDown size={24} />
+          <ArrowsDownUp size={24} weight="bold" />
           <span className="text-[11px] font-semibold">Çevir</span>
         </button>
         <button
           onClick={() => setShowStartOptions(true)}
           className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl hover:bg-white/10 active:scale-95 transition-all text-[#00d4c4]"
         >
-          <Check size={24} strokeWidth={3} />
+          <Check size={24} weight="bold" />
           <span className="text-[11px] font-bold">Tamam</span>
         </button>
       </div>
@@ -381,7 +381,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-white/10 active:scale-[0.99] transition-all text-left"
             >
-              <RotateCcw size={20} className="text-[#00d4c4]" />
+              <ArrowCounterClockwise size={20} weight="bold" className="text-[#00d4c4]" />
               <span className="font-semibold text-sm">Tahtayı Sıfırla</span>
             </button>
             <button
@@ -391,7 +391,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
               }}
               className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-white/10 active:scale-[0.99] transition-all text-left"
             >
-              <Eraser size={20} className="text-red-300" />
+              <Eraser size={20} weight="bold" className="text-red-300" />
               <span className="font-semibold text-sm">Tahtayı Temizle</span>
             </button>
             <button
@@ -485,13 +485,13 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
             {/* Moda girmeden önceki ayarlar (Ekranda Oyna ekranından gelir, burada değişmez) */}
             <div className="bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 flex flex-col gap-1.5">
               <div className="flex items-center gap-2 text-xs text-white/70">
-                <Clock size={14} className="text-[#00d4c4] flex-shrink-0" />
+                <Clock size={14} weight="bold" className="text-[#00d4c4] flex-shrink-0" />
                 <span className="font-semibold">
                   Süre: {formatSetupTime(initialTimeSeconds, initialIncrementSeconds)}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-white/70">
-                <RotateCw size={14} className="text-[#00d4c4] flex-shrink-0" />
+                <ArrowClockwise size={14} weight="bold" className="text-[#00d4c4] flex-shrink-0" />
                 <span className="font-semibold">
                   Tahta döndürme: {initialBoardRotates ? 'Açık' : 'Kapalı'}
                 </span>
@@ -502,13 +502,9 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
               <button
                 onClick={handleStartGame}
                 disabled={!validation.valid}
-                className={`w-full font-batangas font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  validation.valid
-                    ? 'bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818]'
-                    : 'bg-white/10 text-white/30 cursor-not-allowed'
-                }`}
+                className={`mobile-main-btn !py-3.5 text-sm gap-2 ${!validation.valid ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
-                <Play size={20} fill="currentColor" />
+                <Play size={20} weight="fill" />
                 <span>Oyunu Başlat</span>
               </button>
               <button

@@ -10,9 +10,11 @@ import { BotSelectPage } from './components/BotSelectPage';
 import { LearnMenuPage } from './components/LearnMenuPage';
 import { RoadmapPage } from './components/RoadmapPage';
 import { Lesson1Page } from './components/Lesson1Page';
+import { LessonDetailPage } from './components/LessonDetailPage';
 import { RulesPage, PieceData } from './components/RulesPage';
 import { GameHUD } from './components/GameHUD';
 import { ToastNotification } from './components/ToastNotification';
+import { LearnShell } from './components/learn/LearnShell';
 import { ScreenPlayView } from './views/ScreenPlayView';
 import { SetupEditorView } from './views/SetupEditorView';
 
@@ -71,6 +73,22 @@ export const App: React.FC = () => {
   const [slideIdx, setSlideIdx] = useState<number>(0);
   const [rulesTab, setRulesTab] = useState<'pieces' | 'rules'>('pieces');
   const [selectedPiece, setSelectedPiece] = useState<PieceData | null>(null);
+  // PDF müfredatı: seçili seviye/ders (LESSON_DETAIL)
+  const [selectedLevelId, setSelectedLevelId] = useState<number>(1);
+  const [selectedLessonIdx, setSelectedLessonIdx] = useState<number>(0);
+
+  const handleOpenLevel = (levelId: number) => {
+    setSelectedLevelId(levelId);
+    setSelectedLessonIdx(0);
+    setSlideIdx(0);
+    setCurrentPage('LESSON_DETAIL');
+  };
+
+  const handleLessonChange = (levelId: number, lessonIdx: number) => {
+    setSelectedLevelId(levelId);
+    setSelectedLessonIdx(lessonIdx);
+    setSlideIdx(0);
+  };
 
   // Bildirim tetikleyici
   const showNotification = (message: string, type: NotificationType = 'info') => {
@@ -173,22 +191,22 @@ export const App: React.FC = () => {
   };
 
   return (
-    /* 1. Dış Kapsayıcı (Masaüstünde sağ/sol koyu arka plan) */
-    <div className="w-screen h-screen bg-[#0a1710] flex items-center justify-center overflow-hidden select-none relative font-primary text-white">
+    /* 1. Tam ekran web kapsayıcı (mobile-first responsive) */
+    <div className="w-full min-h-screen bg-[#0a1710] text-white select-none relative font-primary">
 
-      {/* 2. 9:16 Sabit Oranlı Ana Mobil Çerçeve */}
-      <div className="relative h-full w-auto aspect-[9/16] max-w-full max-h-full bg-[#173325] shadow-2xl overflow-hidden flex flex-col justify-between">
+      {/* 2. Akışkan İçerik Alanı */}
+      <div className="w-full min-h-screen flex flex-col bg-[#1a4228]">
 
         {/* React UI (Sayfa Durumuna Göre Değişir) */}
-        <div className="relative z-10 w-full h-full">
+        <div className="relative z-10 w-full flex-1 flex flex-col">
           {currentPage === 'SPLASH' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <SplashScreen onDone={() => setCurrentPage('MAIN_MENU')} />
             </div>
           )}
 
           {currentPage === 'MAIN_MENU' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <MainMenuPage
                 onNavigate={setCurrentPage}
                 showNotification={showNotification}
@@ -197,7 +215,7 @@ export const App: React.FC = () => {
           )}
 
           {currentPage === 'PLAY_MENU' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <PlayMenuPage
                 onNavigate={setCurrentPage}
                 showNotification={showNotification}
@@ -209,7 +227,7 @@ export const App: React.FC = () => {
           )}
 
           {currentPage === 'CUSTOM_SETUP' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <SetupEditorView
                 onExit={() => {
                   setPendingSetupEntry(null);
@@ -226,7 +244,7 @@ export const App: React.FC = () => {
           )}
 
           {currentPage === 'SCREEN_PLAY' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <ScreenPlayView
                 whiteName={screenPlayConfig.whiteName}
                 blackName={screenPlayConfig.blackName}
@@ -246,7 +264,7 @@ export const App: React.FC = () => {
           )}
 
           {currentPage === 'BOT_SELECT' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <BotSelectPage
                 onNavigate={setCurrentPage}
                 onStartGame={(mode) => handleStartGameMode(mode as GameMode)}
@@ -255,25 +273,34 @@ export const App: React.FC = () => {
           )}
 
           {currentPage === 'LEARN_MENU' && (
-            <div className="pointer-events-auto w-full h-full">
-              <LearnMenuPage
-                onNavigate={setCurrentPage}
-                showNotification={showNotification}
-              />
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
+              <LearnShell>
+                <LearnMenuPage
+                  onNavigate={setCurrentPage}
+                  showNotification={showNotification}
+                />
+              </LearnShell>
             </div>
           )}
 
           {currentPage === 'ROADMAP' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
+              <LearnShell>
               <RoadmapPage
                 onNavigate={setCurrentPage}
                 showNotification={showNotification}
+                onOpenLevel={handleOpenLevel}
+                onOpenLesson={(levelId, lessonIdx) => {
+                  handleLessonChange(levelId, lessonIdx);
+                  setCurrentPage('LESSON_DETAIL');
+                }}
               />
+              </LearnShell>
             </div>
           )}
 
           {currentPage === 'LESSON_1' && (
-            <div className="pointer-events-auto w-full h-full">
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <Lesson1Page
                 onNavigate={setCurrentPage}
                 showNotification={showNotification}
@@ -283,15 +310,31 @@ export const App: React.FC = () => {
             </div>
           )}
 
+          {currentPage === 'LESSON_DETAIL' && (
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
+              <LearnShell>
+                <LessonDetailPage
+                  levelId={selectedLevelId}
+                  lessonIdx={selectedLessonIdx}
+                  onNavigate={setCurrentPage}
+                  onLessonChange={handleLessonChange}
+                  showNotification={showNotification}
+                />
+              </LearnShell>
+            </div>
+          )}
+
           {currentPage === 'RULES' && (
-            <div className="pointer-events-auto w-full h-full">
-              <RulesPage
-                onNavigate={setCurrentPage}
-                rulesTab={rulesTab}
-                setRulesTab={setRulesTab}
-                selectedPiece={selectedPiece}
-                setSelectedPiece={setSelectedPiece}
-              />
+            <div className="pointer-events-auto w-full flex-1 flex flex-col">
+              <LearnShell>
+                <RulesPage
+                  onNavigate={setCurrentPage}
+                  rulesTab={rulesTab}
+                  setRulesTab={setRulesTab}
+                  selectedPiece={selectedPiece}
+                  setSelectedPiece={setSelectedPiece}
+                />
+              </LearnShell>
             </div>
           )}
 

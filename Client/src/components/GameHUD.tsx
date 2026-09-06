@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { ArrowLeft, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, ArrowCounterClockwise, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
 import { GameMode } from '../types';
 
 interface GameHUDProps {
@@ -40,7 +40,7 @@ export const GameHUD: FC<GameHUDProps> = ({
           aria-label="Ana Menüye Dön"
           title="Ana Menüye Dön"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={20} weight="bold" />
         </button>
 
         <div className="flex flex-col items-center">
@@ -60,7 +60,7 @@ export const GameHUD: FC<GameHUDProps> = ({
               aria-label="Yeniden Başlat"
               title="Yeniden Başlat"
             >
-              <RotateCcw size={18} />
+              <ArrowCounterClockwise size={18} />
             </button>
           )}
 
@@ -70,7 +70,7 @@ export const GameHUD: FC<GameHUDProps> = ({
             aria-label={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
             title={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
           >
-            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+            {isMuted ? <SpeakerSlash size={18} /> : <SpeakerHigh size={18} />}
           </button>
         </div>
       </div>

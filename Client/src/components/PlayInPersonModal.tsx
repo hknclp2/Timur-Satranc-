@@ -1,5 +1,5 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft, ArrowUpDown, Clock, RotateCw, Check } from 'lucide-react';
+import { ArrowLeft, ArrowsDownUp, Clock, ArrowClockwise } from '@phosphor-icons/react';
 import { TimeControl } from '../types';
 import {
   MonitorPlay,
@@ -54,7 +54,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
       {/* Üst Kısım */}
       <div className="w-full">
         {/* Header */}
@@ -64,10 +64,10 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
             className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
             aria-label="Geri"
           >
-            <ArrowLeft size={26} strokeWidth={2.5} />
+            <ArrowLeft size={26} weight="bold" />
           </button>
           <div className="flex items-center gap-2">
-            <MonitorPlay size={48} />
+            <MonitorPlay size={48} weight="duotone" />
             <h2 className="font-batangas text-2xl font-bold text-white tracking-wide">
               Ekranda Oyna
             </h2>
@@ -106,7 +106,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
                 className="w-9 h-9 rounded-full bg-[#e4dac6] hover:bg-[#d8ccb6] active:scale-90 border border-[#cfc4ad] text-[#141f1b] flex items-center justify-center shadow transition-all"
                 title="Renkleri Değiştir"
               >
-                <ArrowUpDown size={17} />
+                <ArrowsDownUp size={17} weight="bold" />
               </button>
             </div>
 
@@ -125,7 +125,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
             </div>
           </div>
 
-          {/* Tür Seçimi (Krem Kart) */}
+          {/* Tür Seçimi (krem) */}
           <div className="bg-[#f5eedc] rounded-2xl p-4 flex items-center justify-between shadow-md border border-[#e5dcce]">
             <span className="text-[#141f1b] font-semibold text-sm">Oyun Türü</span>
             <select
@@ -143,14 +143,14 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
             </div>
           )}
 
-          {/* Zaman Kontrolü Satırı & Açılır Grid (Krem Kart) */}
+          {/* Zaman Kontrolü Satırı & Açılır Grid (krem) */}
           <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-3 shadow-md border border-[#e5dcce]">
             <button
               onClick={() => setIsTimeExpanded(!isTimeExpanded)}
               className="flex items-center justify-between w-full cursor-pointer text-left"
             >
               <div className="flex items-center gap-2">
-                <Clock size={18} className="text-[#008f84]" />
+                <Clock size={18} weight="bold" className="text-[#008f84]" />
                 <span className="text-[#141f1b] font-semibold text-sm">Zaman Kontrolü</span>
               </div>
               <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
           {/* Tahtayı Döndür (Board Rotates Switch) */}
           <div className="bg-[#f5eedc] rounded-2xl p-4 flex items-center justify-between shadow-md border border-[#e5dcce]">
             <div className="flex items-center gap-2.5">
-              <RotateCw size={18} className="text-[#008f84]" />
+              <ArrowClockwise size={18} weight="bold" className="text-[#008f84]" />
               <div>
                 <span className="text-[#141f1b] font-semibold text-sm block">Tahtayı Döndür</span>
                 <span className="text-[#5c6c66] text-xs">Her hamlede oyuncu yönüne çevir</span>
@@ -227,9 +227,9 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
       <div className="p-5 max-w-lg mx-auto w-full pb-8">
         <button
           onClick={handlePlay}
-          className="mobile-main-btn py-4 shadow-xl"
+          className="w-full bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-batangas font-bold py-4 rounded-xl shadow-lg transition-all cursor-pointer"
         >
-          <span className="font-batangas text-xl font-bold text-[#0d2818]">Oyuna Başla</span>
+          <span className="font-batangas text-xl font-bold">Oyuna Başla</span>
         </button>
       </div>
     </div>

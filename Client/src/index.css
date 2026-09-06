@@ -4,15 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Değişkenleri ─────────────────────────────────────────── */
+/* ─── CSS Değişkenleri (koyu yeşil + krem + neon) ──────────────── */
 :root {
   --color-bg-dark: #0a1710;
   --color-bg-main: #1a4228;
   --color-bg-learn: #122b1e;
-  --color-accent: #00e5ff;
-  --color-accent-alt: #00d4c4;
+  --color-bg-card-dark: #132b1d;
   --color-card-bg: #f5eedc;
-  --color-card-text: #141f1b;
+  --color-card-alt: #e8deca;
+  --color-card-hover: #dfd4be;
+  --color-card-border: #e5dcce;
+  --color-card-border-st: #cfc4ad;
+  --color-neon-cyan: #00d4c4;
+  --color-neon-hover: #00c4b4;
+  --color-neon-glow: rgba(0, 212, 196, 0.45);
+  --color-neon-text: #0d2818;
+  --color-text-on-dark: #FFFFFF;
+  --color-text-muted-dark: #A7BDB1;
+  --color-text-on-cream: #141f1b;
+  --color-text-sub-cream: #5c6c66;
+  --color-gold: #f59e0b;
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
   --font-primary: 'Outfit', sans-serif;
   --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -20,24 +33,23 @@
 /* ─── Reset ────────────────────────────────────────────────────── */
 html, body, #root {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   font-family: var(--font-primary);
+  background: var(--color-bg-dark);
+  color: var(--color-text-on-dark);
 }
 
-/* ─── Mobil Ekran Konteyneri ───────────────────────────────────── */
+/* ─── Ekran Konteyneri (tam ekran responsive) ──────────────────── */
 .mobile-screen {
-  position: fixed;
-  inset: 0;
-  width: 100dvw;
-  height: 100dvh;
-  z-index: 50;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
 }
 
-/* ─── İkon Butonları (küçük kare) ──────────────────────────────── */
+/* ─── İkon Butonları (küçük kare krem) ─────────────────────────── */
 .mobile-icon-btn {
   width: 54px;
   height: 54px;
@@ -59,42 +71,65 @@ html, body, #root {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* ─── Ana Aksiyon Butonları (Oyna / Öğren) ─────────────────────── */
+/* ─── Ana Aksiyon Butonları (krem/amber varsayılan) ────────────── */
 .mobile-main-btn {
   width: 100%;
-  background: #00d4c4;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
   border-radius: 18px;
   padding: 17px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
   cursor: pointer;
-  box-shadow: 0 6px 22px rgba(0, 212, 196, 0.45);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  color: #0d2818;
+  color: var(--color-text-on-cream);
 }
 
 .mobile-main-btn:hover {
-  background: #00c4b4;
-  box-shadow: 0 8px 28px rgba(0, 196, 180, 0.55);
+  background: var(--color-card-hover);
 }
 
 .mobile-main-btn:active {
   transform: scale(0.97);
-  box-shadow: 0 3px 12px rgba(0, 212, 196, 0.35);
 }
 
-/* ─── Menü Kart Butonları ──────────────────────────────────────── */
+/* ─── Anasayfa Neon Aksiyon Butonları (SADECE MainMenu) ────────── */
+.mobile-main-btn-neon {
+  width: 100%;
+  background: var(--color-neon-cyan);
+  border: none;
+  border-radius: 18px;
+  padding: 17px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 22px var(--color-neon-glow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  color: var(--color-neon-text);
+}
+
+.mobile-main-btn-neon:hover {
+  background: var(--color-neon-hover);
+  box-shadow: 0 8px 28px rgba(0, 196, 180, 0.55);
+}
+
+.mobile-main-btn-neon:active {
+  transform: scale(0.97);
+}
+
+/* ─── Menü Kart Butonları (krem) ───────────────────────────────── */
 .mobile-card-btn {
   width: 100%;
   background: #f5eedc;
+  border: 1px solid var(--color-card-border);
   border-radius: 20px;
   padding: 20px 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: none;
   cursor: pointer;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -109,6 +144,24 @@ html, body, #root {
 .mobile-card-btn:active {
   transform: scale(0.98);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+/* ─── İkincil & Seçim Butonları (açık bej) ─────────────────────── */
+.mobile-btn-cream {
+  background: var(--color-card-alt);
+  border: 1px solid var(--color-card-border-st);
+  color: var(--color-text-on-cream);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mobile-btn-cream:hover {
+  background: var(--color-card-hover);
+}
+
+.mobile-btn-cream:active {
+  transform: scale(0.97);
 }
 
 /* ─── Geri Dön Butonu ──────────────────────────────────────────── */
@@ -135,17 +188,17 @@ html, body, #root {
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(26, 26, 26, 0.2);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.3);
+  background: var(--color-neon-cyan);
 }
 
 /* ─── Animasyonlar ─────────────────────────────────────────────── */
 @keyframes mobilePulse {
-  0%, 100% { opacity: 0.25; transform: scale(1); }
-  50%       { opacity: 0.8;  transform: scale(1.35); }
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1.0;  transform: scale(1.35); }
 }
 
 @keyframes mobile-fadein {
@@ -185,13 +238,21 @@ html, body, #root {
 .animate-fade-in-up    { animation: fade-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-slide-down    { animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* ─── Glassmorphism ────────────────────────────────────────────── */
-.glass-panel {
-  background: rgba(4, 15, 10, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* ─── Öğren Modülü: responsive okunabilirlik ──────────────────────
+   Telefon (<md): mevcut tek kolon tasarım aynen korunur.
+   Masaüstü (md+): LearnShell içinde satır uzunluğu sınırlanır,
+   gövde metinleri bir basamak büyür. Oyun tarafına dokunulmaz. */
+.learn-shell-body {
+  max-width: 70ch;
 }
+
+@media (min-width: 768px) {
+  .learn-panel-scroll {
+    overflow-y: auto;
+  }
+}
+
+/* ─── Glassmorphism kaldırıldı (Gridline düz tasarım) ─────────── */
 
 /* ─── font-batangas fallback ───────────────────────────────────── */
 .font-batangas {

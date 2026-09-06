@@ -71,7 +71,7 @@ export const CapturedPieces: FC<CapturedPiecesProps> = ({
 
       {/* Material Advantage Badge (+N) */}
       {materialAdvantage !== undefined && materialAdvantage > 0 && (
-        <span className="text-[10px] font-bold text-[#70db8b] font-mono shrink-0">
+        <span className="text-[10px] font-bold text-[#70db8b] shrink-0">
           +{materialAdvantage}
         </span>
       )}
