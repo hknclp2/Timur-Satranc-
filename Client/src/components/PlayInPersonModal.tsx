@@ -1,6 +1,9 @@
 import React, { FC, useState } from 'react';
-import { ArrowLeft, ArrowUpDown, Smartphone, Clock, RotateCw, Check } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, Clock, RotateCw, Check } from 'lucide-react';
 import { TimeControl } from '../types';
+import {
+  MonitorPlay,
+} from '@phosphor-icons/react';
 
 interface PlayInPersonModalProps {
   onClose: () => void;
@@ -51,11 +54,11 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#12281c]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
       {/* Üst Kısım */}
       <div className="w-full">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#12281c]/95 z-20">
+        <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#122b1e]/95 z-20">
           <button
             onClick={onClose}
             className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
@@ -64,7 +67,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
             <ArrowLeft size={26} strokeWidth={2.5} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📱</span>
+            <MonitorPlay size={48} />
             <h2 className="font-batangas text-2xl font-bold text-white tracking-wide">
               Ekranda Oyna
             </h2>
@@ -78,21 +81,21 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
           </p>
         </div>
 
-        {/* Form Alanı */}
+        {/* Form Alanı (Krem Kartlar) */}
         <div className="p-5 flex flex-col gap-4 max-w-lg mx-auto w-full">
           {/* Oyuncu İsimleri & Renk Değişimi */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex flex-col relative shadow-md">
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col relative shadow-md border border-[#e5dcce]">
             {/* Beyaz */}
-            <div className="flex items-center justify-between py-2 border-b border-white/10">
+            <div className="flex items-center justify-between py-2 border-b border-[#e5dcce]">
               <div className="flex items-center gap-2">
                 <span className="w-4 h-4 rounded-full bg-white border border-black/30 shadow-sm inline-block" />
-                <span className="text-white/80 font-medium text-sm">Beyaz</span>
+                <span className="text-[#141f1b] font-semibold text-sm">Beyaz</span>
               </div>
               <input
                 type="text"
                 value={whiteName}
                 onChange={(e) => setWhiteName(e.target.value)}
-                className="bg-black/30 border border-white/10 rounded-lg px-3 py-1 text-right text-white font-bold text-sm focus:outline-none focus:border-[#7fa650] w-40"
+                className="bg-[#e4dac6] border border-[#cfc4ad] rounded-lg px-3 py-1 text-right text-[#141f1b] font-bold text-sm focus:outline-none focus:border-[#00d4c4] w-40"
               />
             </div>
 
@@ -100,62 +103,66 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
               <button
                 onClick={handleSwap}
-                className="w-9 h-9 rounded-full bg-[#27533a] hover:bg-[#32694a] active:scale-90 border border-white/20 text-white flex items-center justify-center shadow-lg transition-all"
+                className="w-9 h-9 rounded-full bg-[#e4dac6] hover:bg-[#d8ccb6] active:scale-90 border border-[#cfc4ad] text-[#141f1b] flex items-center justify-center shadow transition-all"
                 title="Renkleri Değiştir"
               >
-                <ArrowUpDown size={18} />
+                <ArrowUpDown size={17} />
               </button>
             </div>
 
             {/* Siyah */}
             <div className="flex items-center justify-between py-2 pt-4">
               <div className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-gray-900 border border-white/30 shadow-sm inline-block" />
-                <span className="text-white/80 font-medium text-sm">Siyah</span>
+                <span className="w-4 h-4 rounded-full bg-[#141f1b] border border-black/50 shadow-sm inline-block" />
+                <span className="text-[#141f1b] font-semibold text-sm">Siyah</span>
               </div>
               <input
                 type="text"
                 value={blackName}
                 onChange={(e) => setBlackName(e.target.value)}
-                className="bg-black/30 border border-white/10 rounded-lg px-3 py-1 text-right text-white font-bold text-sm focus:outline-none focus:border-[#7fa650] w-40"
+                className="bg-[#e4dac6] border border-[#cfc4ad] rounded-lg px-3 py-1 text-right text-[#141f1b] font-bold text-sm focus:outline-none focus:border-[#00d4c4] w-40"
               />
             </div>
           </div>
 
-          {/* Tür Seçimi */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-md">
-            <span className="text-white/80 font-medium text-sm">Oyun Türü</span>
+          {/* Tür Seçimi (Krem Kart) */}
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex items-center justify-between shadow-md border border-[#e5dcce]">
+            <span className="text-[#141f1b] font-semibold text-sm">Oyun Türü</span>
             <select
               value={gameType}
               onChange={(e) => setGameType(e.target.value)}
-              className="bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-white font-bold text-sm focus:outline-none focus:border-[#7fa650] cursor-pointer"
+              className="bg-[#e4dac6] border border-[#cfc4ad] rounded-xl px-3 py-2 text-[#141f1b] font-bold text-sm focus:outline-none focus:border-[#00d4c4] cursor-pointer"
             >
               <option value="Standart">Standart Timur Satrancı</option>
-              <option value="CifteHisar">Çifte Hisar Modu</option>
               <option value="Serbest">Serbest Dizilim</option>
             </select>
           </div>
+          {gameType === 'Serbest' && (
+            <div className="bg-[#00d4c4]/10 border border-[#00d4c4]/30 rounded-2xl px-4 py-3 text-xs text-[#0c4e48] font-medium leading-relaxed">
+              Serbest dizilim seçildi — taşları özgürce dizip oyunu başlatacağın editör açılacak.
+            </div>
+          )}
 
-          {/* Zaman Kontrolü Satırı & Açılır Grid */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
+          {/* Zaman Kontrolü Satırı & Açılır Grid (Krem Kart) */}
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-3 shadow-md border border-[#e5dcce]">
             <button
               onClick={() => setIsTimeExpanded(!isTimeExpanded)}
               className="flex items-center justify-between w-full cursor-pointer text-left"
             >
               <div className="flex items-center gap-2">
-                <Clock size={18} className="text-[#7fa650]" />
-                <span className="text-white/80 font-medium text-sm">Zaman Kontrolü</span>
+                <Clock size={18} className="text-[#008f84]" />
+                <span className="text-[#141f1b] font-semibold text-sm">Zaman Kontrolü</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="bg-black/40 text-[#7fa650] font-bold px-3 py-1 rounded-lg border border-[#7fa650]/30 text-sm">
+                <span className="bg-[#e4dac6] text-[#141f1b] font-bold px-3 py-1 rounded-lg border border-[#cfc4ad] text-sm">
                   {selectedTime}
                 </span>
               </div>
             </button>
 
-            {/* Zaman Grid Seçimi (Görsel 2) */}
+            {/* Zaman Grid Seçimi */}
             {isTimeExpanded && (
-              <div className="pt-3 border-t border-white/10 flex flex-col gap-2.5 animate-slide-down">
+              <div className="pt-3 border-t border-[#e5dcce] flex flex-col gap-2.5 animate-slide-down">
                 <div className="grid grid-cols-3 gap-2">
                   {IN_PERSON_TIME_PRESETS.filter((t) => t !== 'Süresiz').map((timeStr) => {
                     const active = selectedTime === timeStr;
@@ -166,11 +173,10 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
                           setSelectedTime(timeStr);
                           setIsTimeExpanded(false);
                         }}
-                        className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer ${
-                          active
-                            ? 'bg-[#2b573c] text-white ring-2 ring-[#7fa650] scale-[1.02] shadow-md shadow-[#7fa650]/20'
-                            : 'bg-[#213a2c] text-white/90 hover:bg-[#284937] active:scale-95'
-                        }`}
+                        className={`py-3 px-2 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer ${active
+                          ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.02] shadow'
+                          : 'bg-[#e4dac6] text-[#141f1b] hover:bg-[#ded2bd] active:scale-95'
+                          }`}
                       >
                         {timeStr}
                       </button>
@@ -183,11 +189,10 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
                     setSelectedTime('Süresiz');
                     setIsTimeExpanded(false);
                   }}
-                  className={`py-3 px-4 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer ${
-                    selectedTime === 'Süresiz'
-                      ? 'bg-[#2b573c] text-white ring-2 ring-[#7fa650] scale-[1.01] shadow-md shadow-[#7fa650]/20'
-                      : 'bg-[#213a2c] text-white/90 hover:bg-[#284937] active:scale-95'
-                  }`}
+                  className={`py-3 px-4 rounded-xl font-bold text-sm transition-all duration-150 flex items-center justify-center cursor-pointer ${selectedTime === 'Süresiz'
+                    ? 'bg-[#00d4c4] text-[#0d2818] ring-2 ring-white scale-[1.01] shadow'
+                    : 'bg-[#e4dac6] text-[#141f1b] hover:bg-[#ded2bd] active:scale-95'
+                    }`}
                 >
                   Süresiz (No Timer)
                 </button>
@@ -196,12 +201,12 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
           </div>
 
           {/* Tahtayı Döndür (Board Rotates Switch) */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-md">
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex items-center justify-between shadow-md border border-[#e5dcce]">
             <div className="flex items-center gap-2.5">
-              <RotateCw size={18} className="text-[#00e5ff]" />
+              <RotateCw size={18} className="text-[#008f84]" />
               <div>
-                <span className="text-white font-medium text-sm block">Tahtayı Döndür</span>
-                <span className="text-white/40 text-xs">Her hamlede oyuncu yönüne çevir</span>
+                <span className="text-[#141f1b] font-semibold text-sm block">Tahtayı Döndür</span>
+                <span className="text-[#5c6c66] text-xs">Her hamlede oyuncu yönüne çevir</span>
               </div>
             </div>
             {/* Toggle Switch */}
@@ -212,7 +217,7 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
                 onChange={(e) => setBoardRotates(e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-12 h-6 bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7fa650]"></div>
+              <div className="w-12 h-6 bg-[#d8ccb6] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#00d4c4]"></div>
             </label>
           </div>
         </div>
@@ -222,9 +227,9 @@ export const PlayInPersonModal: FC<PlayInPersonModalProps> = ({ onClose, onStart
       <div className="p-5 max-w-lg mx-auto w-full pb-8">
         <button
           onClick={handlePlay}
-          className="w-full bg-[#7fa650] hover:bg-[#6e9343] active:scale-[0.98] text-white font-batangas text-xl font-bold py-4 rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[#7fa650]/30"
+          className="mobile-main-btn py-4 shadow-xl"
         >
-          <span>Oyuna Başla</span>
+          <span className="font-batangas text-xl font-bold text-[#0d2818]">Oyuna Başla</span>
         </button>
       </div>
     </div>

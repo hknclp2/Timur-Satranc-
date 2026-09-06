@@ -1,18 +1,15 @@
 import React, { FC, useState } from 'react';
+import { ArrowLeft, ChevronDown, Play } from 'lucide-react';
 import {
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-  Play,
   Trophy,
-  Users,
-  Bot,
+  UsersThree,
+  UserCircleGear,
   GraduationCap,
-  Sliders,
-  Smartphone,
-  Sparkles,
-} from 'lucide-react';
+  SlidersHorizontal,
+  MonitorPlay,
+} from '@phosphor-icons/react';
 import { PageState, NotificationType, TimeControl, GameMode } from '../types';
+
 import { TimeControlModal } from './TimeControlModal';
 import { CustomGameModal } from './CustomGameModal';
 import { PlayInPersonModal } from './PlayInPersonModal';
@@ -24,12 +21,61 @@ interface PlayMenuPageProps {
   onNavigate: (page: PageState) => void;
   showNotification: (message: string, type?: NotificationType) => void;
   onStartGame?: (mode: GameMode, timeSeconds?: number) => void;
+  onStartScreenPlay?: (config: {
+    whiteName: string;
+    blackName: string;
+    timeControl: string;
+    boardRotates: boolean;
+    gameType: string;
+  }) => void;
+  onOpenSetupEditor?: (config?: {
+    whiteName: string;
+    blackName: string;
+    timeControl: string;
+    boardRotates: boolean;
+    gameType: string;
+  }) => void;
+}
+
+interface CreamCardProps {
+  id: string;
+  label: string;
+  desc: string;
+  icon: React.ReactNode;
+  badge?: string;
+  onClick: () => void;
+}
+
+function CreamCard({ id, label, desc, icon, badge, onClick }: CreamCardProps) {
+  return (
+    <button id={id} onClick={onClick} className="mobile-card-btn group relative">
+      <div className="flex flex-col gap-0.5 text-left">
+        <div className="flex items-center gap-2">
+          <span className="font-batangas text-[1.25rem] font-bold text-[#141f1b] leading-tight">
+            {label}
+          </span>
+          {badge && (
+            <span className="text-[10px] bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40 font-bold px-2 py-0.5 rounded-full">
+              {badge}
+            </span>
+          )}
+        </div>
+        <span className="text-[#5c6c66] text-xs font-medium">{desc}</span>
+      </div>
+
+      <div className="text-[#141f1b] group-hover:scale-105 group-hover:text-[#0c4e48] transition-all flex items-center justify-center flex-shrink-0">
+        {icon}
+      </div>
+    </button>
+  );
 }
 
 export const PlayMenuPage: FC<PlayMenuPageProps> = ({
   onNavigate,
   showNotification,
   onStartGame,
+  onStartScreenPlay,
+  onOpenSetupEditor,
 }) => {
   // Seçili Zaman Kontrolü
   const [selectedTime, setSelectedTime] = useState<TimeControl>({
@@ -48,12 +94,8 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
   const [isCoachOpen, setIsCoachOpen] = useState(false);
   const [isPlayFriendOpen, setIsPlayFriendOpen] = useState(false);
 
-  // Hızlı Oyuna Başla
+  // Hızlı Karşılaşma Başlat
   const handleQuickPlay = () => {
-    showNotification(
-      `Hızlı Karşılaşma (${selectedTime.label}) başlatılıyor... Rakip aranıyor.`,
-      'info'
-    );
     if (onStartGame) {
       const totalSec = selectedTime.initialMinutes * 60;
       onStartGame('online', totalSec);
@@ -61,9 +103,9 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
   };
 
   return (
-    <div className="mobile-screen flex flex-col bg-[#142e1f] relative overflow-y-auto custom-scrollbar select-none">
-      {/* Arka plan parlama efekti */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,229,255,0.06)_0%,_transparent_70%)] pointer-events-none" />
+    <div className="mobile-screen flex flex-col bg-[#1a4228] relative overflow-y-auto custom-scrollbar select-none">
+      {/* Arka plan ışık vurgusu */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,229,255,0.05)_0%,_transparent_70%)] pointer-events-none" />
 
       {/* ─── ÜST BAŞLIK ────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 pt-8 pb-3 relative z-10">
@@ -74,176 +116,110 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
         >
           <ArrowLeft size={28} strokeWidth={2.5} />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">♟️</span>
-          <h1 className="font-batangas text-[2.2rem] font-bold text-white tracking-wide leading-none">
-            Yeni Oyun
-          </h1>
-        </div>
+        <h1 className="font-batangas text-[2.4rem] font-bold text-white tracking-wide leading-none">
+          Oyna
+        </h1>
       </div>
 
-      {/* ─── İÇERİK LİSTESİ ────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3.5 px-5 py-4 pb-12 relative z-10 max-w-lg mx-auto w-full">
-        {/* 1. ÜST KISIM DİREKT OYNAMA KISAYOLU (Zaman Seçici + Oyunu Başlat) */}
-        <div className="flex flex-col gap-2.5 bg-[#1b3b29] border border-white/10 rounded-2xl p-3.5 shadow-xl">
-          {/* Zaman Kontrolü Seçim Dropdown Butonu */}
+      {/* ─── MOD KARTLARI & HIZLI OYNA ─────────────────────────────── */}
+      <div className="flex flex-col gap-4 px-5 py-3 pb-12 relative z-10 max-w-lg mx-auto w-full">
+        {/* 1. ÜST KISIM DİREKT OYNAMA KISAYOLU (Krem / Turkuaz Tasarım) */}
+        <div className="bg-[#f5eedc] rounded-2xl p-3.5 shadow-xl flex flex-col gap-2.5 border border-[#e5dcce]">
+          {/* Zaman Seçici Butonu */}
           <button
             id="time-selector-btn"
             onClick={() => setIsTimeModalOpen(true)}
-            className="w-full bg-[#12271c] hover:bg-[#183526] active:scale-[0.99] border border-white/15 rounded-xl py-3 px-4 flex items-center justify-between transition-all cursor-pointer shadow-inner"
+            className="w-full bg-[#e8deca] hover:bg-[#dfd4be] active:scale-[0.99] border border-[#d8ccb6] rounded-xl py-2.5 px-4 flex items-center justify-between transition-all cursor-pointer"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <span className="text-xl">{selectedTime.icon || '🚀'}</span>
-              <span className="font-batangas text-lg font-bold text-white tracking-wider">
-                {selectedTime.label}
-              </span>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] text-[#5c6c66] font-semibold leading-tight">Zaman Kontrolü</span>
+                <span className="font-batangas text-base font-bold text-[#141f1b]">
+                  {selectedTime.label}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-white/50">
-              <ChevronDown size={20} />
+            <div className="flex items-center gap-1 text-[#5c6c66]">
+              <span className="text-xs font-semibold">Değiştir</span>
+              <ChevronDown size={18} />
             </div>
           </button>
 
-          {/* Oyunu Başlat Butonu (Büyük Yeşil Buton) */}
+          {/* Oyunu Başlat Butonu (Canlı Turkuaz Ana Buton) */}
           <button
             id="start-game-btn"
             onClick={handleQuickPlay}
-            className="w-full bg-[#7fa650] hover:bg-[#6e9343] active:scale-[0.98] text-white font-batangas text-xl font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-[#7fa650]/25 transform hover:-translate-y-0.5"
+            className="mobile-main-btn py-3.5"
           >
-            <Play size={20} fill="currentColor" />
-            <span>Oyunu Başlat</span>
+            <div className="flex items-center justify-center gap-2 font-batangas text-xl font-bold">
+              <Play size={22} fill="currentColor" />
+              <span>Oyunu Başlat</span>
+            </div>
           </button>
         </div>
 
-        {/* 2. OYUN MODLARI LİSTESİ */}
-        <div className="flex flex-col gap-2.5 mt-1">
+        {/* 2. KREM RENK MENÜ KARTLARI LİSTESİ (Phosphor Icons - size={48}) */}
+        <div className="flex flex-col gap-3.5 mt-1">
           {/* Turnuvalar */}
-          <button
-            id="tournaments-btn"
+          <CreamCard
+            id="mobile-tournament-btn"
+            label="Turnuvalar"
+            desc="Canlı arena ve şampiyonalar"
+            icon={<Trophy size={48} weight="duotone" />}
+            badge="Canlı"
             onClick={() => setIsTournamentOpen(true)}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                🏅
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-amber-300 transition-colors">
-                  Turnuvalar
-                </span>
-                <span className="text-white/50 text-xs">Canlı arena ve şampiyonalar</span>
-              </div>
-            </div>
-            <span className="text-xs bg-amber-500/20 text-amber-300 font-semibold px-2.5 py-1 rounded-full border border-amber-500/30">
-              Canlı
-            </span>
-          </button>
+          />
 
           {/* Arkadaşınla Oyna */}
-          <button
-            id="play-friend-btn"
+          <CreamCard
+            id="mobile-friend-btn"
+            label="Arkadaşınla oyna"
+            desc="Davet kodu veya bağlantı ile"
+            icon={<UsersThree size={48} weight="duotone" />}
             onClick={() => setIsPlayFriendOpen(true)}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                👥
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-cyan-300 transition-colors">
-                  Arkadaşınla Oyna
-                </span>
-                <span className="text-white/50 text-xs">Davet kodu veya bağlantı ile</span>
-              </div>
-            </div>
-          </button>
+          />
 
-          {/* Botlarla Oyna */}
-          <button
-            id="play-bots-btn"
+          {/* Bot'a Karşı Oyna */}
+          <CreamCard
+            id="mobile-bot-btn"
+            label="Bot'a karşı oyna"
+            desc="Yapay zekaya meydan oku"
+            icon={<UserCircleGear size={48} weight="duotone" />}
             onClick={() => onNavigate('BOT_SELECT')}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                🖥️
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">
-                  Botlarla Oyna
-                </span>
-                <span className="text-white/50 text-xs">Farklı zorluklarda yapay zeka</span>
-              </div>
-            </div>
-          </button>
+          />
 
           {/* Koç ile Oyna */}
-          <button
-            id="play-coach-btn"
+          <CreamCard
+            id="mobile-coach-btn"
+            label="Koç ile oyna"
+            desc="Hamle analizi ve canlı tavsiyeler"
+            icon={<GraduationCap size={48} weight="duotone" />}
+            badge="Eğitim"
             onClick={() => setIsCoachOpen(true)}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                👩‍🏫
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-pink-300 transition-colors">
-                  Koç ile Oyna
-                </span>
-                <span className="text-white/50 text-xs">Hamle analizi ve canlı tavsiyeler</span>
-              </div>
-            </div>
-            <span className="text-xs bg-emerald-500/20 text-[#a3cf6f] font-semibold px-2.5 py-1 rounded-full border border-emerald-500/30">
-              Eğitim
-            </span>
-          </button>
-
-          {/* Küçük Ayırıcı Ok */}
-          <div className="flex items-center justify-center py-0.5 opacity-40 text-white">
-            <ChevronUp size={16} />
-          </div>
+          />
 
           {/* Özel Oyun */}
-          <button
-            id="custom-game-btn"
+          <CreamCard
+            id="mobile-custom-btn"
+            label="Özel oyun"
+            desc="Kuralları, tarafı ve süreyi belirle"
+            icon={<SlidersHorizontal size={48} weight="duotone" />}
             onClick={() => setIsCustomGameOpen(true)}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                🎛️
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-yellow-200 transition-colors">
-                  Özel Oyun
-                </span>
-                <span className="text-white/50 text-xs">Kuralları, tarafı ve süreyi belirle</span>
-              </div>
-            </div>
-          </button>
+          />
 
-          {/* Ekranda Oyna (Play in Person) */}
-          <button
-            id="play-in-person-btn"
+          {/* Ekranda Oyna */}
+          <CreamCard
+            id="mobile-screen-btn"
+            label="Ekranda oyna"
+            desc="Aynı ekranda iki oyuncu"
+            icon={<MonitorPlay size={48} weight="duotone" />}
             onClick={() => setIsInPersonOpen(true)}
-            className="w-full bg-[#1e422f] hover:bg-[#27533c] active:scale-[0.99] border border-white/10 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer shadow-md group"
-          >
-            <div className="flex items-center gap-3.5">
-              <span className="text-2xl p-2 bg-black/20 rounded-xl border border-white/10">
-                📱
-              </span>
-              <div className="flex flex-col text-left">
-                <span className="font-batangas text-lg font-bold text-white group-hover:text-emerald-200 transition-colors">
-                  Ekranda Oyna
-                </span>
-                <span className="text-white/50 text-xs">Aynı cihazda arkadaşınla çevrimdışı</span>
-              </div>
-            </div>
-          </button>
+          />
         </div>
       </div>
 
-      {/* ─── MODALLAR ──────────────────────────────────────────────── */}
+      {/* ─── MODALLAR ─────────────────────────────────────────────── */}
       {/* 1. Zaman Kontrolü Seçim Modalı */}
       {isTimeModalOpen && (
         <TimeControlModal
@@ -259,10 +235,6 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
           onClose={() => setIsCustomGameOpen(false)}
           onStart={(config) => {
             setIsCustomGameOpen(false);
-            showNotification(
-              `Özel karşılaşma başlatılıyor (${config.timeControl.label}, ${config.opponent === 'random' ? 'Rastgele' : config.opponent}, ${config.isRated ? 'Dereceli' : 'Dostluk'})...`,
-              'info'
-            );
             if (onStartGame) {
               onStartGame('custom', config.timeControl.initialMinutes * 60);
             }
@@ -277,11 +249,20 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
           onClose={() => setIsInPersonOpen(false)}
           onStart={(config) => {
             setIsInPersonOpen(false);
-            showNotification(
-              `Ekranda oyun başladı! ${config.whiteName} (Beyaz) vs ${config.blackName} (Siyah)`,
-              'success'
-            );
-            if (onStartGame) {
+            // Serbest dizilim seçildiyse editöre yönlendir (oyun türü seçim ekranından erişim)
+            if (config.gameType === 'Serbest') {
+              if (onOpenSetupEditor) {
+                onOpenSetupEditor(config);
+              } else if (onStartScreenPlay) {
+                onStartScreenPlay(config);
+              } else if (onStartGame) {
+                onStartGame('local_pass_and_play', 600);
+              }
+              return;
+            }
+            if (onStartScreenPlay) {
+              onStartScreenPlay(config);
+            } else if (onStartGame) {
               onStartGame('local_pass_and_play', 600);
             }
           }}
@@ -300,12 +281,8 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
       {isCoachOpen && (
         <CoachModal
           onClose={() => setIsCoachOpen(false)}
-          onStartCoachGame={(coachName, tipLevel) => {
+          onStartCoachGame={(_coachName, _tipLevel) => {
             setIsCoachOpen(false);
-            showNotification(
-              `${coachName} ile antrenman karşılaşması başlatılıyor...`,
-              'success'
-            );
             if (onStartGame) {
               onStartGame('coach_easy', 900);
             }

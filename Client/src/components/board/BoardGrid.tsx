@@ -1,0 +1,285 @@
+import React, { FC, useMemo, useState } from 'react';
+import { BoardMatrix, BoardPosition, CitadelState, Move, Piece, PieceType, PlayerColor } from '../../types/chess';
+import { PieceView } from './PieceView';
+import { CitadelBadge } from './CitadelBadge';
+import { COLUMN_LETTERS } from '../../core/notation';
+
+interface BoardGridProps {
+  board: BoardMatrix;
+  citadels: CitadelState;
+  selectedPos: BoardPosition | null;
+  validMoves: Move[];
+  lastMove?: Move | null;
+  turn?: PlayerColor;
+  boardRotates?: boolean;
+  isEditorMode?: boolean;
+  flipped?: boolean;
+  onSquareClick: (pos: BoardPosition) => void;
+  onSquareDoubleClick?: (pos: BoardPosition) => void;
+  onDropMove?: (from: BoardPosition, to: BoardPosition) => void;
+  onDropFromPalette?: (type: PieceType, color: PlayerColor, to: BoardPosition) => void;
+  onPieceDragStart?: (from: BoardPosition) => void;
+  onPieceDragEnd?: () => void;
+}
+
+export const BoardGrid: FC<BoardGridProps> = ({
+  board,
+  citadels,
+  selectedPos,
+  validMoves,
+  lastMove,
+  turn = 'white',
+  boardRotates = false,
+  isEditorMode = false,
+  flipped = false,
+  onSquareClick,
+  onSquareDoubleClick,
+  onDropMove,
+  onDropFromPalette,
+  onPieceDragStart,
+  onPieceDragEnd,
+}) => {
+  const isRotated = flipped || (boardRotates && turn === 'black');
+  const [dragOverPos, setDragOverPos] = useState<string | null>(null);
+  const [draggingFromKey, setDraggingFromKey] = useState<string | null>(null);
+
+  // Map valid moves by coordinate for O(1) lookup
+  const validMoveMap = useMemo(() => {
+    const map = new Map<string, Move>();
+    for (const move of validMoves) {
+      if (move.to.isCitadel) {
+        map.set(`citadel-${move.to.citadelSide}`, move);
+      } else {
+        map.set(`${move.to.x},${move.to.y}`, move);
+      }
+    }
+    return map;
+  }, [validMoves]);
+
+  // Standard display rows (Rank 10 down to 1 / Y=9 down to 0)
+  const rows = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+  const cols = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, posKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverPos !== posKey) {
+      setDragOverPos(posKey);
+    }
+  };
+
+  const handleDragLeave = (_e: React.DragEvent<HTMLDivElement>, posKey: string) => {
+    if (dragOverPos === posKey) {
+      setDragOverPos(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetPos: BoardPosition) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverPos(null);
+    setDraggingFromKey(null);
+    onPieceDragEnd?.();
+
+    try {
+      const dataStr = e.dataTransfer.getData('application/json');
+      if (!dataStr) return;
+      const data = JSON.parse(dataStr);
+
+      if (data.type === 'palettePiece') {
+        onDropFromPalette?.(data.pieceType, data.color, targetPos);
+      } else if (data.type === 'piece' && data.from) {
+        const from: BoardPosition = data.from;
+        // Aynı kareye bırakıldıysa işlem yapma
+        if (
+          !from.isCitadel && !targetPos.isCitadel &&
+          from.x === targetPos.x && from.y === targetPos.y
+        ) {
+          return;
+        }
+        if (onDropMove) {
+          onDropMove(from, targetPos);
+        } else {
+          // Fallback: tıklama simülasyonu (tüm oyun modlarında sürükle-bırak)
+          onSquareClick(from);
+          onSquareClick(targetPos);
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggingFromKey(null);
+    setDragOverPos(null);
+    onPieceDragEnd?.();
+  };
+
+  return (
+    <div className="w-full flex-1 flex items-center justify-center p-2 select-none overflow-visible">
+      {/* 11x10 Outer Board Frame */}
+      <div
+        className="relative w-full max-w-[500px] aspect-[11/10] bg-[#3a200f] rounded-xl p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[#7a4f2c]"
+        style={{
+          transform: isRotated ? 'rotate(180deg)' : undefined,
+        }}
+      >
+        {/* Black Citadel (Left of Row 9 / Y=8) */}
+        <CitadelBadge
+          side="left"
+          targetRow={8}
+          piece={citadels.blackCitadelPiece}
+          isValidMoveTarget={validMoveMap.has('citadel-left')}
+          isDragOver={dragOverPos === 'citadel-left'}
+          isDraggingSource={draggingFromKey === 'citadel-left'}
+          onCitadelClick={onSquareClick}
+          onCitadelDoubleClick={onSquareDoubleClick}
+          onCitadelDrop={(e, pos) => handleDrop(e, pos)}
+          onCitadelDragOver={() => setDragOverPos('citadel-left')}
+          onCitadelDragLeave={() => setDragOverPos((p) => (p === 'citadel-left' ? null : p))}
+          onCitadelDragStart={() => {
+            setDraggingFromKey('citadel-left');
+            onPieceDragStart?.({ x: -1, y: 8, isCitadel: true, citadelSide: 'left' });
+          }}
+          onCitadelDragEnd={handleDragEnd}
+          currentTurn={turn}
+          boardRotates={boardRotates}
+        />
+
+        {/* White Citadel (Right of Row 2 / Y=1) */}
+        <CitadelBadge
+          side="right"
+          targetRow={1}
+          piece={citadels.whiteCitadelPiece}
+          isValidMoveTarget={validMoveMap.has('citadel-right')}
+          isDragOver={dragOverPos === 'citadel-right'}
+          isDraggingSource={draggingFromKey === 'citadel-right'}
+          onCitadelClick={onSquareClick}
+          onCitadelDoubleClick={onSquareDoubleClick}
+          onCitadelDrop={(e, pos) => handleDrop(e, pos)}
+          onCitadelDragOver={() => setDragOverPos('citadel-right')}
+          onCitadelDragLeave={() => setDragOverPos((p) => (p === 'citadel-right' ? null : p))}
+          onCitadelDragStart={() => {
+            setDraggingFromKey('citadel-right');
+            onPieceDragStart?.({ x: 11, y: 1, isCitadel: true, citadelSide: 'right' });
+          }}
+          onCitadelDragEnd={handleDragEnd}
+          currentTurn={turn}
+          boardRotates={boardRotates}
+        />
+
+        {/* 11x10 Inner Board Grid */}
+        <div className="w-full h-full grid grid-rows-10 border border-[#2b180d] rounded-lg overflow-hidden shadow-inner">
+          {rows.map((y) => (
+            <div key={y} className="grid grid-cols-11 w-full h-full">
+              {cols.map((x) => {
+                const piece = board[y][x];
+                const isDarkSquare = (x + y) % 2 === 1;
+                const isSelected = selectedPos?.x === x && selectedPos?.y === y && !selectedPos.isCitadel;
+                const posKey = `${x},${y}`;
+                const moveOption = validMoveMap.get(posKey);
+                const isMoveTarget = Boolean(moveOption);
+                const isCaptureTarget = isMoveTarget && Boolean(piece);
+                const isLastMoveSquare =
+                  lastMove &&
+                  ((lastMove.from.x === x && lastMove.from.y === y) ||
+                    (lastMove.to.x === x && lastMove.to.y === y));
+                const isHovered = dragOverPos === posKey;
+                const isDraggingSource = draggingFromKey === posKey;
+
+                return (
+                  <div
+                    key={posKey}
+                    onClick={() => onSquareClick({ x, y })}
+                    onDoubleClick={() => onSquareDoubleClick?.({ x, y })}
+                    onDragOver={(e) => handleDragOver(e, posKey)}
+                    onDragLeave={(e) => handleDragLeave(e, posKey)}
+                    onDrop={(e) => handleDrop(e, { x, y })}
+                    className={`relative w-full h-full flex items-center justify-center cursor-pointer transition-colors duration-100 ${
+                      isDarkSquare ? 'bg-[#916239]' : 'bg-[#cba476]'
+                    } ${
+                      isSelected
+                        ? 'bg-amber-300/60 ring-2 ring-inset ring-amber-400 z-10'
+                        : isHovered
+                        ? 'bg-cyan-400/40 ring-2 ring-inset ring-cyan-300 z-10'
+                        : isLastMoveSquare
+                        ? 'bg-amber-500/25'
+                        : ''
+                    }`}
+                  >
+                    {/* Rank Number Label on left edge (Column 0) */}
+                    {x === 0 && (
+                      <span
+                        className="absolute top-0.5 left-0.5 text-[8px] font-bold opacity-45 text-black pointer-events-none select-none"
+                        style={{
+                          transform: isRotated ? 'rotate(180deg)' : undefined,
+                        }}
+                      >
+                        {y + 1}
+                      </span>
+                    )}
+
+                    {/* Column Letter Label on bottom edge (Row 0) */}
+                    {y === 0 && (
+                      <span
+                        className="absolute bottom-0.5 right-0.5 text-[8px] font-bold opacity-45 text-black pointer-events-none select-none uppercase"
+                        style={{
+                          transform: isRotated ? 'rotate(180deg)' : undefined,
+                        }}
+                      >
+                        {COLUMN_LETTERS[x]}
+                      </span>
+                    )}
+
+                    {/* Piece View */}
+                    {piece && (
+                      <div
+                        draggable
+                        className={`w-full h-full flex items-center justify-center transition-opacity ${
+                          isDraggingSource ? 'opacity-30' : 'opacity-100'
+                        }`}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingFromKey(posKey);
+                          onPieceDragStart?.({ x, y });
+                          // Hayalet görseli garantile: kare içeriğini kullan
+                          try {
+                            const img = (e.currentTarget as HTMLDivElement).querySelector('img');
+                            if (img) {
+                              e.dataTransfer.setDragImage(img, img.clientWidth / 2, img.clientHeight / 2);
+                            }
+                          } catch {
+                            /* ignore */
+                          }
+                        }}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <PieceView
+                          piece={piece}
+                          isSelected={isSelected}
+                          isTarget={isCaptureTarget}
+                          currentTurn={turn}
+                          boardRotates={boardRotates}
+                        />
+                      </div>
+                    )}
+
+                    {/* Move Indicators */}
+                    {isMoveTarget && !piece && (
+                      <div className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-cyan-400/80 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse pointer-events-none" />
+                    )}
+
+                    {isCaptureTarget && (
+                      <div className="absolute inset-0.5 border-2 border-red-500/90 rounded-md bg-red-600/20 shadow-[0_0_10px_rgba(239,68,68,0.7)] animate-pulse pointer-events-none z-10" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

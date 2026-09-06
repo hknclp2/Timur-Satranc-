@@ -26,15 +26,14 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
       showNotification('Lütfen geçerli bir oda kodu giriniz.', 'error');
       return;
     }
-    showNotification(`${roomCode.toUpperCase()} odasına bağlanılıyor...`, 'info');
     onStartOnlineGame();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#12281c]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 bg-[#122b1e]/95 backdrop-blur-md flex flex-col justify-between overflow-y-auto custom-scrollbar animate-fade-in select-none">
       <div className="w-full">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#12281c]/95 z-20">
+        <div className="flex items-center gap-3 px-5 pt-8 pb-3 border-b border-white/10 sticky top-0 bg-[#122b1e]/95 z-20">
           <button
             onClick={onClose}
             className="mobile-back-btn p-1 rounded-full hover:bg-white/10 active:scale-90 transition-all"
@@ -55,17 +54,17 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
             Arkadaşına davet kodu gönder veya onun oluşturduğu odaya katıl!
           </p>
 
-          {/* Oda Oluştur Kartı */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
-            <span className="text-white font-bold text-sm">Oda Oluştur</span>
-            <p className="text-white/60 text-xs">Bu kodu arkadaşına göndererek maça davet et:</p>
-            <div className="flex items-center justify-between bg-black/40 border border-white/15 rounded-xl p-3">
-              <span className="font-mono text-2xl font-extrabold text-[#00e5ff] tracking-widest">
+          {/* Oda Oluştur Kartı (Krem Kart) */}
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-3 shadow-md border border-[#e5dcce]">
+            <span className="text-[#141f1b] font-bold text-sm">Oda Oluştur</span>
+            <p className="text-[#5c6c66] text-xs">Bu kodu arkadaşına göndererek maça davet et:</p>
+            <div className="flex items-center justify-between bg-[#e4dac6] border border-[#cfc4ad] rounded-xl p-3">
+              <span className="font-mono text-2xl font-extrabold text-[#0c4e48] tracking-widest">
                 {generatedCode}
               </span>
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 bg-[#7fa650] hover:bg-[#6e9343] active:scale-95 text-white font-bold text-xs py-2 px-3 rounded-lg shadow transition-all cursor-pointer"
+                className="flex items-center gap-1.5 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-95 text-[#0d2818] font-bold text-xs py-2 px-3 rounded-lg shadow transition-all cursor-pointer"
               >
                 <Copy size={14} />
                 <span>Kopyala</span>
@@ -73,19 +72,18 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
             </div>
             <button
               onClick={() => {
-                showNotification('Arkadaş bekleniyor... Oda hazır!', 'info');
                 onStartOnlineGame();
               }}
-              className="w-full mt-1 bg-[#7fa650] hover:bg-[#6e9343] active:scale-98 text-white font-batangas font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer"
+              className="w-full mt-1 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-3 rounded-xl shadow-md transition-all cursor-pointer"
             >
               Odayı Başlat & Rakibi Bekle
             </button>
           </div>
 
-          {/* Odaya Katıl Kartı */}
-          <div className="bg-[#1b3b29] border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
-            <span className="text-white font-bold text-sm">Odaya Katıl</span>
-            <p className="text-white/60 text-xs">Arkadaşından aldığın 6 haneli kodu buraya gir:</p>
+          {/* Odaya Katıl Kartı (Krem Kart) */}
+          <div className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-3 shadow-md border border-[#e5dcce]">
+            <span className="text-[#141f1b] font-bold text-sm">Odaya Katıl</span>
+            <p className="text-[#5c6c66] text-xs">Arkadaşından aldığın 6 haneli kodu buraya gir:</p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -93,11 +91,11 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 maxLength={6}
-                className="flex-1 bg-black/40 border border-white/15 rounded-xl px-4 py-2.5 text-white font-mono text-lg font-bold tracking-widest focus:outline-none focus:border-[#7fa650] uppercase"
+                className="flex-1 bg-[#e4dac6] border border-[#cfc4ad] rounded-xl px-4 py-2.5 text-[#141f1b] font-mono text-lg font-bold tracking-widest focus:outline-none focus:border-[#00d4c4] uppercase"
               />
               <button
                 onClick={handleJoinRoom}
-                className="bg-[#2a5b3e] hover:bg-[#34724e] active:scale-95 text-white font-bold px-5 rounded-xl transition-all cursor-pointer"
+                className="bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-95 text-[#0d2818] font-bold px-5 rounded-xl transition-all cursor-pointer font-batangas"
               >
                 Katıl
               </button>

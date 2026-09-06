@@ -1,3 +1,5 @@
+export * from './chess';
+
 // ─── Uygulama Sayfa Durumları ───────────────────────────────────────────────
 export type PageState =
   | 'SPLASH'
@@ -8,7 +10,9 @@ export type PageState =
   | 'ROADMAP'
   | 'LESSON_1'
   | 'RULES'
-  | 'GAME_UNITY'; // Unity sahnesinin aktif olduğu oyun modu
+  | 'SCREEN_PLAY' // Ekranda Oyna (2 Kişilik Yerel Oyun)
+  | 'CUSTOM_SETUP' // Serbest Dizilim Modu (Board Editor / Setup)
+  | 'GAME_PLAY'; // Aktif oyun modu
 
 // ─── Oyun Modları ────────────────────────────────────────────────────────────
 export type GameMode =
@@ -38,26 +42,6 @@ export interface Notification {
   id: number;
   message: string;
   type: NotificationType;
-}
-
-// ─── Unity Bridge ────────────────────────────────────────────────────────────
-export interface UnityBridge {
-  isLoaded: boolean;
-  loadingProgression: number;
-  unityProvider: unknown;
-  isDemoMode: boolean;
-  sendMessage: (gameObject: string, method: string, param?: string) => void;
-  startGame: (mode: string) => void;
-  exitGame: () => void;
-}
-
-// ─── Taş Tipleri ─────────────────────────────────────────────────────────────
-export type PieceType = 'Ş' | 'V' | 'Fe' | 'F' | 'D' | 'M' | 'K' | 'A' | 'Z' | 'P';
-
-export interface Piece {
-  type: PieceType;
-  name: string;
-  isWhite: boolean;
 }
 
 // ─── Bot Seçenekleri ─────────────────────────────────────────────────────────
