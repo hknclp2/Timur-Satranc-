@@ -5,3 +5,6 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.asset filter=lfs diff=lfs merge=lfs -text
+
+# Satır sonu normalizasyonu (Windows CRLF / Unix LF karışmasını önler)
+* text=auto

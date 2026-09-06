@@ -170,3 +170,11 @@ coverage/
 # ==========================================
 # Ayrı bir Git reposu barındıran yerel referans klasörü
 reference_repo/
+
+# ==========================================
+# 5. Yerel Tasarım Referansları (versiyonlanmaz)
+# ==========================================
+# Taslak tasarım görselleri ve kaynak PDF (yerel çalışma dosyaları)
+/örnek asıl.png
+/örnek.jpeg
+/Timur Satrancı Öğrenme Seviyelendirme Rehberi.pdf
