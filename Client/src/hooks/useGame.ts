@@ -18,6 +18,10 @@ import {
   processPawnPromotion,
 } from '../core/engine/moveRules';
 import { generateMoveNotation } from '../core/notation';
+import type { BotProfileId } from '../bot/profiles';
+import { getSharedEngineClient } from '../worker/engineClient';
+import { createBrowserWorker, isWorkerSupported } from '../worker/createBrowserWorker';
+import { engineMoveToLegacy, legacyGameStateToPosition } from '../worker/legacyAdapter';
 
 export interface MoveHistoryEntry {
   moveNumber: number; // 1, 2, 3, ... (1-indexed absolute move count)
@@ -50,6 +54,13 @@ export interface UseGameProps {
   initialHasUsedKingSwap?: { white: boolean; black: boolean };
   onMoveMade?: (move: Move, notation: string) => void;
   onGameOver?: (winner: PlayerColor | 'draw', reason: string) => void;
+  /**
+   * Bot modu (Faz 6, opt-in): verilirse sıra bu renge geçtiğinde hamle
+   * Worker'daki Engine+Bot hattına hesaplattırılır. VERİLMEZSE bu hookun
+   * davranışı birebir aynıdır (bot kodu hiç çalışmaz).
+   */
+  botSide?: PlayerColor | null;
+  botProfileId?: BotProfileId;
 }
 
 export function useGame({
@@ -64,6 +75,8 @@ export function useGame({
   initialHasUsedKingSwap,
   onMoveMade,
   onGameOver,
+  botSide = null,
+  botProfileId = 'III',
 }: UseGameProps = {}) {
   // ── Gerçek oyun başlangıcı snapshot'ı (özel dizilim veya klasik) ──────────
   // Mount'ta bir kez yakalanır; hamle geçmişi görünümü (başlangıca git) ve
@@ -122,6 +135,9 @@ export function useGame({
     defaultType: PieceType;
   } | null>(null);
 
+  // Bot düşünme göstergesi (opt-in bot modu dışında hep false kalır)
+  const [botThinking, setBotThinking] = useState(false);
+
   // Structured History Entries with Board Snapshots
   const [historyEntries, setHistoryEntries] = useState<MoveHistoryEntry[]>([]);
 
@@ -156,26 +172,28 @@ export function useGame({
     if (isPaused || gameState.isGameOver || initialTimeSeconds <= 0) return;
 
     const interval = setInterval(() => {
-      if (gameState.currentTurn === 'white') {
-        setWhiteTime((prev) => {
-          if (prev <= 1) {
-            setGameState((g) => ({ ...g, isGameOver: true, status: 'TIMEOUT', winner: 'black' }));
-            setStatusText(`Süre bitti! ${blackName} kazandı.`);
-            onGameOver?.('black', 'Beyazın süresi doldu!');
-            return 0;
-          }
-          return prev - 1;
-        });
+      // Saf okuma: ref üzerinden karar ver, updater içinde yan etki yapma
+      // (StrictMode çift-çalıştırmasında süre-bitişinin iki kez işlenmemesi için).
+      const snap = stateRef.current;
+      if (snap.gameState.isGameOver || snap.isPaused) return;
+      if (snap.gameState.currentTurn === 'white') {
+        if (snap.whiteTime <= 1) {
+          setWhiteTime(0);
+          setGameState((g) => (g.isGameOver ? g : { ...g, isGameOver: true, status: 'TIMEOUT', winner: 'black' }));
+          setStatusText(`Süre bitti! ${blackName} kazandı.`);
+          onGameOver?.('black', 'Beyazın süresi doldu!');
+        } else {
+          setWhiteTime((t) => t - 1);
+        }
       } else {
-        setBlackTime((prev) => {
-          if (prev <= 1) {
-            setGameState((g) => ({ ...g, isGameOver: true, status: 'TIMEOUT', winner: 'white' }));
-            setStatusText(`Süre bitti! ${whiteName} kazandı.`);
-            onGameOver?.('white', 'Siyahın süresi doldu!');
-            return 0;
-          }
-          return prev - 1;
-        });
+        if (snap.blackTime <= 1) {
+          setBlackTime(0);
+          setGameState((g) => (g.isGameOver ? g : { ...g, isGameOver: true, status: 'TIMEOUT', winner: 'white' }));
+          setStatusText(`Süre bitti! ${whiteName} kazandı.`);
+          onGameOver?.('white', 'Siyahın süresi doldu!');
+        } else {
+          setBlackTime((t) => t - 1);
+        }
       }
     }, 1000);
 
@@ -277,12 +295,18 @@ export function useGame({
   ]);
 
   // Execute a verified move in Live game
+  // Tüm hesap saf yapılır: setState updater'ı içinde başka setState çağrılmaz.
+  // (StrictMode'da updater çift çalışır; iç içe çağrılar hamle geçmişini
+  // ikiye katlayıp notasyon barı ile tahtayı senkrondan çıkarırdı.)
   const executeMoveInternal = useCallback(
     (move: Move, promotionType?: PieceType) => {
       // Ensure we are in live view
       setViewedMoveIndex(null);
 
-      setGameState((prev) => {
+      const prev = stateRef.current.gameState;
+      const prevEntries = stateRef.current.historyEntries;
+      const prevTimes = { whiteTime: stateRef.current.whiteTime, blackTime: stateRef.current.blackTime };
+      {
         const newBoard: BoardMatrix = prev.board.map((row) => [...row]);
         const newCitadels: CitadelState = {
           whiteCitadelPiece: prev.citadels.whiteCitadelPiece ? { ...prev.citadels.whiteCitadelPiece } : null,
@@ -327,7 +351,7 @@ export function useGame({
             newBoard[move.from.y][move.from.x] = null;
           }
 
-          if (!movingPiece) return prev;
+          if (!movingPiece) return;
 
           // Handle Captures
           let capturedPiece = move.capturedPiece;
@@ -373,7 +397,7 @@ export function useGame({
           }
         }
 
-        if (!movingPiece) return prev;
+        if (!movingPiece) return;
 
         // 2. Captures State
         const newCaptured = {
@@ -443,9 +467,9 @@ export function useGame({
           ...h,
           {
             gameState: prev,
-            historyEntries: stateRef.current.historyEntries,
-            whiteTime: stateRef.current.whiteTime,
-            blackTime: stateRef.current.blackTime,
+            historyEntries: prevEntries,
+            whiteTime: prevTimes.whiteTime,
+            blackTime: prevTimes.blackTime,
           },
         ]);
         setRedoStack([]);
@@ -453,7 +477,7 @@ export function useGame({
 
         onMoveMade?.(move, notation);
 
-        return {
+        const next: GameState = {
           ...prev,
           board: newBoard,
           citadels: newCitadels,
@@ -470,19 +494,16 @@ export function useGame({
           hasUsedKingSwap: newHasUsedKingSwap,
           turnNumber: nextTurn === 'white' ? prev.turnNumber + 1 : prev.turnNumber,
         };
-      });
+        setGameState(next);
+      }
 
       // Fischer increment: add increment to the player who just moved
       if (incrementSeconds > 0) {
-        setGameState((current) => {
-          const playerWhoMoved = current.currentTurn === 'white' ? 'black' : 'white';
-          if (playerWhoMoved === 'white') {
-            setWhiteTime((t) => t + incrementSeconds);
-          } else {
-            setBlackTime((t) => t + incrementSeconds);
-          }
-          return current;
-        });
+        if (prev.currentTurn === 'white') {
+          setWhiteTime((t) => t + incrementSeconds);
+        } else {
+          setBlackTime((t) => t + incrementSeconds);
+        }
       }
 
       setSelectedPos(null);
@@ -491,6 +512,68 @@ export function useGame({
   );
 
   // History Navigation Controls
+  // Notasyon barı ve tahta aynı state'ten beslenir; son hamleye gidildiğinde
+  // "canlı" (null) normalize edilir — bar vurgusu ile tahta konumu birebir
+  // paralel olur ve tahta girişi gereksiz yere kilitlenmez.
+
+  // executeMoveInternal referansı: bot etkisi, üst bileşenin her render'ında
+  // değişen callback kimlikleri yüzünden gereksiz tetiklenmesin diye ref
+  // üzerinden GÜNCEL kapanışı çağırır (bağımlılıklara alınmaz).
+  const executeRef = useRef(executeMoveInternal);
+  executeRef.current = executeMoveInternal;
+
+  // ── Bot hamlesi (Faz 6, opt-in) ──────────────────────────────────────────
+  // `botSide` YOKSA bu effect her zaman erken döner: mevcut davranış birebir
+  // korunur. Varsa ve sıra bottaysa, hamle Worker'daki Engine+Bot hattına
+  // hesaplattırılır; sonuç aynı `executeMoveInternal` yolundan oynanır
+  // (kural/notasyon/tarihçe akışı insan hamlesiyle BİREBİR aynıdır).
+  // Bayat cevaplar (undo/reset/StrictMode) token + hamle-sayacı ile düşürülür.
+  const botReqRef = useRef<{ cancel: () => void } | null>(null);
+  const botTokenRef = useRef(0);
+  useEffect(() => {
+    if (!botSide) return;
+    if (gameState.isGameOver || isPaused || isViewingHistory) return;
+    if (gameState.currentTurn !== botSide) return;
+    if (!isWorkerSupported()) return;
+    const client = getSharedEngineClient(() => createBrowserWorker());
+    if (!client) return;
+
+    // Bayat isteği iptal et (StrictMode çift-çalıştırma / hızlı reset güvenliği).
+    botReqRef.current?.cancel();
+    botReqRef.current = null;
+    const myToken = ++botTokenRef.current;
+    const snapshot = stateRef.current.gameState;
+    const moveNoAtRequest = snapshot.moveHistory.length;
+    setBotThinking(true);
+    const req = client.findBestMove(
+      legacyGameStateToPosition(snapshot),
+      botProfileId,
+    );
+    botReqRef.current = { cancel: () => req.cancel() };
+    req.then(
+      (result) => {
+        if (botTokenRef.current !== myToken) return; // bayat cevap
+        const snap = stateRef.current.gameState;
+        if (snap.isGameOver || snap.currentTurn !== botSide) return;
+        if (snap.moveHistory.length !== moveNoAtRequest) return; // undo/reset olmuş
+        const conv = engineMoveToLegacy(snap, result.bestMove);
+        if (!conv) {
+          setBotThinking(false);
+          return;
+        }
+        executeRef.current(conv.move, conv.promotionType);
+        setBotThinking(false);
+      },
+      () => {
+        // cancel/hata: oyun akışı bozulmaz, sadece düşünme göstergesi iner
+        if (botTokenRef.current === myToken) setBotThinking(false);
+      },
+    );
+    return () => {
+      botReqRef.current?.cancel();
+      botReqRef.current = null;
+    };
+  }, [botSide, botProfileId, gameState, isPaused, isViewingHistory]);
   const goToMove = useCallback((index: number | null) => {
     setSelectedPos(null);
     const count = historyEntries.length;
@@ -498,10 +581,10 @@ export function useGame({
       setViewedMoveIndex(null);
       return;
     }
-    if (index === null) {
-      setViewedMoveIndex(count - 1);
+    if (index === null || index >= count - 1) {
+      setViewedMoveIndex(null);
     } else {
-      setViewedMoveIndex(Math.max(-1, Math.min(count - 1, index)));
+      setViewedMoveIndex(Math.max(-1, index));
     }
   }, [historyEntries.length]);
 
@@ -523,14 +606,16 @@ export function useGame({
 
     setViewedMoveIndex((prev) => {
       const current = prev !== null ? prev : count - 1;
-      return Math.min(count - 1, current + 1);
+      const next = Math.min(count - 1, current + 1);
+      // Sona varınca canlı görünüme dön (tahta girişi açık kalır)
+      return next >= count - 1 ? null : next;
     });
   }, [historyEntries.length]);
 
   const goToLive = useCallback(() => {
     setSelectedPos(null);
-    setViewedMoveIndex(historyEntries.length > 0 ? historyEntries.length - 1 : null);
-  }, [historyEntries.length]);
+    setViewedMoveIndex(null);
+  }, []);
 
   // Click handler on board square or citadel
   const handleSelectSquare = useCallback(
@@ -541,6 +626,9 @@ export function useGame({
       }
 
       if (gameState.isGameOver || isPaused) return;
+
+      // Bot düşünürken insan girişi engellenir (sıra değişmeden önce race condition önlemi)
+      if (botThinking) return;
 
       // 1. If a piece is already selected
       if (selectedPos) {
@@ -612,7 +700,7 @@ export function useGame({
         setSelectedPos(pos);
       }
     },
-    [viewedMoveIndex, goToLive, gameState, isPaused, selectedPos, validMoves, executeMoveInternal]
+    [viewedMoveIndex, goToLive, gameState, isPaused, botThinking, selectedPos, validMoves, executeMoveInternal]
   );
 
   // Complete pawn promotion
@@ -630,6 +718,8 @@ export function useGame({
     (from: BoardPosition, to: BoardPosition) => {
       if (viewedMoveIndex !== null) return;
       if (gameState.isGameOver || isPaused) return;
+      // Bot düşünürken sürükle-bırak da engellenir
+      if (botThinking) return;
 
       const sameSquare =
         !!from.isCitadel === !!to.isCitadel &&
@@ -676,7 +766,7 @@ export function useGame({
 
       executeMoveInternal(targetMove);
     },
-    [viewedMoveIndex, gameState, isPaused, executeMoveInternal]
+    [viewedMoveIndex, gameState, isPaused, botThinking, executeMoveInternal]
   );
 
   // Undo (Moves live game back 1 turn)
@@ -802,6 +892,7 @@ export function useGame({
     whiteTime,
     blackTime,
     isPaused,
+    botThinking,
     statusText,
     boardRotates,
     whiteName,

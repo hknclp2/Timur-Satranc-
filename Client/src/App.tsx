@@ -6,7 +6,7 @@ import { BoardMatrix, CitadelState, PlayerColor } from './types/chess';
 import { SplashScreen } from './components/SplashScreen';
 import { MainMenuPage } from './components/MainMenuPage';
 import { PlayMenuPage } from './components/PlayMenuPage';
-import { BotSelectPage } from './components/BotSelectPage';
+import { BotSelectPage, type PlayerSideChoice } from './components/BotSelectPage';
 import { LearnMenuPage } from './components/LearnMenuPage';
 import { RoadmapPage } from './components/RoadmapPage';
 import { Lesson1Page } from './components/Lesson1Page';
@@ -15,8 +15,15 @@ import { RulesPage, PieceData } from './components/RulesPage';
 import { GameHUD } from './components/GameHUD';
 import { ToastNotification } from './components/ToastNotification';
 import { LearnShell } from './components/learn/LearnShell';
+import { CreditsModal } from './components/CreditsModal';
+import { PlayInPersonModal } from './components/PlayInPersonModal';
+import { DesktopSidebar } from './components/desktop/DesktopSidebar';
+import { DesktopMainMenu } from './components/desktop/DesktopMainMenu';
 import { ScreenPlayView } from './views/ScreenPlayView';
+import { BotPlayView } from './views/BotPlayView';
 import { SetupEditorView } from './views/SetupEditorView';
+import { useResponsive } from './hooks/useResponsive';
+import { BOT_PROFILES, type BotProfileId } from './bot/profiles';
 
 // ─── Custom Setup Config ─────────────────────────────────────────────────────
 interface CustomSetupConfig {
@@ -31,9 +38,12 @@ interface CustomSetupConfig {
 }
 
 export const App: React.FC = () => {
+  const { isDesktop } = useResponsive(1024);
   const [currentPage, setCurrentPage] = useState<PageState>('SPLASH');
   const [activeGameMode, setActiveGameMode] = useState<GameMode>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+  const [isInPersonModalOpen, setIsInPersonModalOpen] = useState(false);
   const [screenPlayConfig, setScreenPlayConfig] = useState({
     whiteName: 'Emir Timur',
     blackName: 'Yıldırım Bayezid',
@@ -100,15 +110,45 @@ export const App: React.FC = () => {
     }, 3800);
   };
 
+  // Bota karşı oyun yapılandırması (yalnızca bot_* kipinde dolar)
+  const [botGameConfig, setBotGameConfig] = useState<{
+    mode: GameMode;
+    timeSeconds: number;
+    profileId: BotProfileId;
+    incrementSeconds: number;
+    botSide: PlayerColor;
+  } | null>(null);
+
   // Oyuna başlama akışı
   const handleStartGameMode = (mode: GameMode) => {
     setActiveGameMode(mode);
+    setBotGameConfig(null);
+    setCurrentPage('GAME_PLAY');
+  };
+
+  // Bot oyunu başlatma (BotSelectPage: kart+taç → I–V profili, süre saniye, artış, taraf)
+  const handleStartBotGame = (
+    mode: GameMode,
+    timeSeconds: number,
+    profileId: BotProfileId,
+    incrementSeconds: number = 0,
+    playerColor: PlayerSideChoice = 'white'
+  ) => {
+    let botSide: PlayerColor = 'black';
+    if (playerColor === 'black') {
+      botSide = 'white';
+    } else if (playerColor === 'random') {
+      botSide = Math.random() < 0.5 ? 'black' : 'white';
+    }
+    setActiveGameMode(mode);
+    setBotGameConfig({ mode, timeSeconds, profileId, incrementSeconds, botSide });
     setCurrentPage('GAME_PLAY');
   };
 
   // Oyundan çıkış / Ana menüye dönüş
   const handleExitGame = () => {
     setActiveGameMode(null);
+    setBotGameConfig(null);
     setCurrentPage('MAIN_MENU');
   };
 
@@ -207,10 +247,28 @@ export const App: React.FC = () => {
 
           {currentPage === 'MAIN_MENU' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <MainMenuPage
-                onNavigate={setCurrentPage}
-                showNotification={showNotification}
-              />
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <DesktopMainMenu
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    onOpenInPersonModal={() => setIsInPersonModalOpen(true)}
+                    showNotification={showNotification}
+                  />
+                </div>
+              ) : (
+                <MainMenuPage
+                  onNavigate={setCurrentPage}
+                  onOpenCredits={() => setIsCreditsOpen(true)}
+                  showNotification={showNotification}
+                />
+              )}
             </div>
           )}
 
@@ -265,37 +323,93 @@ export const App: React.FC = () => {
 
           {currentPage === 'BOT_SELECT' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <BotSelectPage
-                onNavigate={setCurrentPage}
-                onStartGame={(mode) => handleStartGameMode(mode as GameMode)}
-              />
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                    <BotSelectPage
+                      onNavigate={setCurrentPage}
+                      onStartGame={(mode, seconds, profileId, inc, side) =>
+                        handleStartBotGame(mode as GameMode, seconds, profileId, inc ?? 0, side ?? 'white')
+                      }
+                    />
+                  </div>
+                </div>
+              ) : (
+                <BotSelectPage
+                  onNavigate={setCurrentPage}
+                  onStartGame={(mode, seconds, profileId, inc, side) =>
+                    handleStartBotGame(mode as GameMode, seconds, profileId, inc ?? 0, side ?? 'white')
+                  }
+                />
+              )}
             </div>
           )}
 
           {currentPage === 'LEARN_MENU' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <LearnShell>
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                    <LearnMenuPage
+                      onNavigate={setCurrentPage}
+                      showNotification={showNotification}
+                    />
+                  </div>
+                </div>
+              ) : (
                 <LearnMenuPage
                   onNavigate={setCurrentPage}
                   showNotification={showNotification}
                 />
-              </LearnShell>
+              )}
             </div>
           )}
 
           {currentPage === 'ROADMAP' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <LearnShell>
-              <RoadmapPage
-                onNavigate={setCurrentPage}
-                showNotification={showNotification}
-                onOpenLevel={handleOpenLevel}
-                onOpenLesson={(levelId, lessonIdx) => {
-                  handleLessonChange(levelId, lessonIdx);
-                  setCurrentPage('LESSON_DETAIL');
-                }}
-              />
-              </LearnShell>
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                    <RoadmapPage
+                      onNavigate={setCurrentPage}
+                      showNotification={showNotification}
+                      onOpenLevel={handleOpenLevel}
+                      onOpenLesson={(levelId, lessonIdx) => {
+                        handleLessonChange(levelId, lessonIdx);
+                        setCurrentPage('LESSON_DETAIL');
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <RoadmapPage
+                  onNavigate={setCurrentPage}
+                  showNotification={showNotification}
+                  onOpenLevel={handleOpenLevel}
+                  onOpenLesson={(levelId, lessonIdx) => {
+                    handleLessonChange(levelId, lessonIdx);
+                    setCurrentPage('LESSON_DETAIL');
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -312,7 +426,25 @@ export const App: React.FC = () => {
 
           {currentPage === 'LESSON_DETAIL' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <LearnShell>
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                    <LessonDetailPage
+                      levelId={selectedLevelId}
+                      lessonIdx={selectedLessonIdx}
+                      onNavigate={setCurrentPage}
+                      onLessonChange={handleLessonChange}
+                      showNotification={showNotification}
+                    />
+                  </div>
+                </div>
+              ) : (
                 <LessonDetailPage
                   levelId={selectedLevelId}
                   lessonIdx={selectedLessonIdx}
@@ -320,13 +452,31 @@ export const App: React.FC = () => {
                   onLessonChange={handleLessonChange}
                   showNotification={showNotification}
                 />
-              </LearnShell>
+              )}
             </div>
           )}
 
           {currentPage === 'RULES' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <LearnShell>
+              {isDesktop ? (
+                <div className="flex w-full min-h-screen">
+                  <DesktopSidebar
+                    currentPage={currentPage}
+                    onNavigate={setCurrentPage}
+                    onOpenCredits={() => setIsCreditsOpen(true)}
+                    showNotification={showNotification}
+                  />
+                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                    <RulesPage
+                      onNavigate={setCurrentPage}
+                      rulesTab={rulesTab}
+                      setRulesTab={setRulesTab}
+                      selectedPiece={selectedPiece}
+                      setSelectedPiece={setSelectedPiece}
+                    />
+                  </div>
+                </div>
+              ) : (
                 <RulesPage
                   onNavigate={setCurrentPage}
                   rulesTab={rulesTab}
@@ -334,18 +484,50 @@ export const App: React.FC = () => {
                   selectedPiece={selectedPiece}
                   setSelectedPiece={setSelectedPiece}
                 />
-              </LearnShell>
+              )}
             </div>
           )}
 
           {currentPage === 'GAME_PLAY' && (
-            <GameHUD
-              gameMode={activeGameMode}
-              onExitGame={handleExitGame}
-              onResetGame={handleResetGame}
-            />
+            botGameConfig && activeGameMode !== null && activeGameMode.startsWith('bot_') ? (
+              <div className="pointer-events-auto w-full flex-1 flex flex-col">
+                <BotPlayView
+                  whiteName={botGameConfig.botSide === 'white' ? `Bot · ${BOT_PROFILES[botGameConfig.profileId].name}` : 'Siz'}
+                  blackName={botGameConfig.botSide === 'black' ? `Bot · ${BOT_PROFILES[botGameConfig.profileId].name}` : 'Siz'}
+                  initialTimeSeconds={botGameConfig.timeSeconds}
+                  incrementSeconds={botGameConfig.incrementSeconds}
+                  botSide={botGameConfig.botSide}
+                  botProfileId={botGameConfig.profileId}
+                  onExit={handleExitGame}
+                  showNotification={showNotification}
+                />
+              </div>
+            ) : (
+              <GameHUD
+                gameMode={activeGameMode}
+                onExitGame={handleExitGame}
+                onResetGame={handleResetGame}
+              />
+            )
           )}
         </div>
+
+        {/* Credits / Hakkında Modalı (Okul Logosu tıklandığında açılır) */}
+        <CreditsModal
+          isOpen={isCreditsOpen}
+          onClose={() => setIsCreditsOpen(false)}
+        />
+
+        {/* Ekranda Oyna Modalı (Desktop ve doğrudan tetiklemeler için) */}
+        {isInPersonModalOpen && (
+          <PlayInPersonModal
+            onClose={() => setIsInPersonModalOpen(false)}
+            onStart={(config) => {
+              setIsInPersonModalOpen(false);
+              handleStartScreenPlay(config);
+            }}
+          />
+        )}
 
         {/* Global Toast Bildirimleri (Her zaman üstte z-50) */}
         <ToastNotification notifications={notifications} />

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "tsc --skipLibCheck --target es2020 --module commonjs --moduleResolution node --outDir build/test-tmp src/core/__tests__/runTests.ts && echo {\"type\":\"commonjs\"} > build/test-tmp/package.json && node build/test-tmp/core/__tests__/runTests.js"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

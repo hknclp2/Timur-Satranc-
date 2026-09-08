@@ -10,6 +10,7 @@ interface BoardGridProps {
   selectedPos: BoardPosition | null;
   validMoves: Move[];
   lastMove?: Move | null;
+  hintMove?: { from: BoardPosition; to: BoardPosition } | null;
   turn?: PlayerColor;
   boardRotates?: boolean;
   isEditorMode?: boolean;
@@ -28,6 +29,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
   selectedPos,
   validMoves,
   lastMove,
+  hintMove,
   turn = 'white',
   boardRotates = false,
   isEditorMode = false,
@@ -100,7 +102,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
         if (onDropMove) {
           onDropMove(from, targetPos);
         } else {
-          // Fallback: tıklama simülasyonu (tüm oyun modlarında sürükle-bırak)
+          // Fallback: tıklama simülasyonu
           onSquareClick(from);
           onSquareClick(targetPos);
         }
@@ -117,10 +119,10 @@ export const BoardGrid: FC<BoardGridProps> = ({
   };
 
   return (
-    <div className="w-full flex-1 flex items-center justify-center p-2 select-none overflow-visible">
+    <div className="w-full flex-1 flex items-center justify-center p-1 sm:p-2 select-none overflow-visible">
       {/* 11x10 Outer Board Frame */}
       <div
-        className="relative w-full max-w-[500px] aspect-[11/10] bg-[#3a200f] rounded-xl p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[#7a4f2c]"
+        className="relative w-full max-w-[540px] aspect-[11/10] bg-[#3a200f] rounded-xl p-1 sm:p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[#7a4f2c]"
         style={{
           transform: isRotated ? 'rotate(180deg)' : undefined,
         }}
@@ -183,10 +185,29 @@ export const BoardGrid: FC<BoardGridProps> = ({
                 const isCaptureTarget = isMoveTarget && Boolean(piece);
                 const isLastMoveSquare =
                   lastMove &&
-                  ((lastMove.from.x === x && lastMove.from.y === y) ||
-                    (lastMove.to.x === x && lastMove.to.y === y));
+                  ((lastMove.from.x === x && lastMove.from.y === y && !lastMove.from.isCitadel) ||
+                    (lastMove.to.x === x && lastMove.to.y === y && !lastMove.to.isCitadel));
                 const isHovered = dragOverPos === posKey;
                 const isDraggingSource = draggingFromKey === posKey;
+
+                // İpucu (Hint) Vurguları
+                const isHintFrom = hintMove && !hintMove.from.isCitadel && hintMove.from.x === x && hintMove.from.y === y;
+                const isHintTo = hintMove && !hintMove.to.isCitadel && hintMove.to.x === x && hintMove.to.y === y;
+
+                // Taş Kayma (Slide) Animasyonu
+                const isLastMoveDestination =
+                  lastMove &&
+                  !lastMove.to.isCitadel &&
+                  lastMove.to.x === x &&
+                  lastMove.to.y === y &&
+                  !lastMove.from.isCitadel;
+
+                const slideStyle = isLastMoveDestination
+                  ? ({
+                      '--slide-x': `${(lastMove.from.x - x) * 100}%`,
+                      '--slide-y': `${(y - lastMove.from.y) * 100}%`,
+                    } as React.CSSProperties)
+                  : undefined;
 
                 return (
                   <div
@@ -201,6 +222,10 @@ export const BoardGrid: FC<BoardGridProps> = ({
                     } ${
                       isSelected
                         ? 'bg-amber-300/60 ring-2 ring-inset ring-amber-400 z-10'
+                        : isHintTo
+                        ? 'bg-emerald-500/40 ring-4 ring-inset ring-emerald-400 z-20 animate-pulse'
+                        : isHintFrom
+                        ? 'bg-emerald-400/30 ring-2 ring-inset ring-emerald-400 z-20'
                         : isHovered
                         ? 'bg-[#00d4c4]/40 ring-2 ring-inset ring-[#00d4c4] z-10'
                         : isLastMoveSquare
@@ -240,18 +265,18 @@ export const BoardGrid: FC<BoardGridProps> = ({
                       </span>
                     )}
 
-                    {/* Piece View */}
+                    {/* Piece View with Slide Animation */}
                     {piece && (
                       <div
                         draggable
+                        style={slideStyle}
                         className={`w-full h-full flex items-center justify-center transition-opacity ${
                           isDraggingSource ? 'opacity-30' : 'opacity-100'
-                        }`}
+                        } ${isLastMoveDestination ? 'animate-piece-slide' : ''}`}
                         onDragStart={(e) => {
                           e.stopPropagation();
                           setDraggingFromKey(posKey);
                           onPieceDragStart?.({ x, y });
-                          // Hayalet görseli garantile: kare içeriğini kullan
                           try {
                             const img = (e.currentTarget as HTMLDivElement).querySelector('img');
                             if (img) {
@@ -273,8 +298,13 @@ export const BoardGrid: FC<BoardGridProps> = ({
                       </div>
                     )}
 
+                    {/* Hint destination indicator */}
+                    {isHintTo && !piece && (
+                      <div className="absolute w-4 h-4 rounded-full bg-emerald-400 ring-4 ring-emerald-300/80 shadow-lg animate-ping pointer-events-none" />
+                    )}
+
                     {/* Move Indicators */}
-                    {isMoveTarget && !piece && (
+                    {isMoveTarget && !piece && !isHintTo && (
                       <div className="absolute w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#00d4c4] ring-2 ring-black/40 shadow-md animate-pulse pointer-events-none" />
                     )}
 

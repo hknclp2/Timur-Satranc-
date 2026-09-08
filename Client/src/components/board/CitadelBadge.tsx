@@ -67,15 +67,13 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
         onCitadelDrop?.(e, citadelPos);
       }}
       style={{
-        width: 'calc(100% / 11)',
         height: '10%',
         top: topPercent,
-        ...(isLeft ? { left: 'calc(-100% / 11)' } : { right: 'calc(-100% / 11)' }),
       }}
-      className={`absolute z-20 flex items-center justify-center cursor-pointer box-border ${
+      className={`absolute z-20 flex items-center justify-center cursor-pointer box-border transition-all duration-200 ${
         isLeft
-          ? 'border-t border-b border-l border-r-0 border-[#2b180d] rounded-l-md'
-          : 'border-t border-b border-r border-l-0 border-[#2b180d] rounded-r-md'
+          ? 'left-[-18px] sm:left-[calc(-100%/11)] w-[22px] sm:w-[calc(100%/11)] border-t border-b border-l border-r-0 border-[#2b180d] rounded-l-md'
+          : 'right-[-18px] sm:right-[calc(-100%/11)] w-[22px] sm:w-[calc(100%/11)] border-t border-b border-r border-l-0 border-[#2b180d] rounded-r-md'
       } ${
         isValidMoveTarget
           ? 'bg-amber-400/90 border-amber-400 shadow-md ring-2 ring-amber-400 z-30'
@@ -89,7 +87,7 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
     >
       {piece ? (
         <div
-          className="w-full h-full flex items-center justify-center"
+          className="w-full h-full flex items-center justify-center overflow-hidden"
           draggable
           onDragStart={(e) => {
             e.stopPropagation();
@@ -115,7 +113,7 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
       ) : (
         <div className="flex flex-col items-center justify-center text-[#d9b382] pointer-events-none select-none">
           <CastleTurret size={14} weight="bold" className={isValidMoveTarget ? 'text-amber-950 animate-bounce' : 'opacity-70'} />
-          <span className={`text-[7px] font-extrabold uppercase tracking-tight leading-none mt-0.5 ${
+          <span className={`hidden sm:inline text-[7px] font-extrabold uppercase tracking-tight leading-none mt-0.5 ${
             isValidMoveTarget ? 'text-amber-950 opacity-100' : 'opacity-60'
           }`}>
             {isLeft ? 'Hisar' : 'Hisar'}

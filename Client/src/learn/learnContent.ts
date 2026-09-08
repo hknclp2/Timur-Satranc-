@@ -104,7 +104,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🔢',
             title: 'Notasyon',
-            body: 'Sayısal ve PGN kaydı için dikey hatlar a–k (PDF metninde a–l geçer, uygulamada 11 hat: a–k), yatay sıralar 1–10 olarak kodlanır. Dış cepler H-SOL (Beyaz Hisarı) ve H-SAĞ (Siyah Hisarı) olarak kaydedilir.',
+            body: 'Sayısal ve PGN kaydı için dikey hatlar a–k, yatay sıralar 1–10 olarak kodlanır. Dış cepler H-SOL (Beyaz Hisarı) ve H-SAĞ (Siyah Hisarı) olarak kaydedilir.',
           },
         ],
         puzzles: puzzlesFor('1.1', ['Hisarı bul', 'Koordinat avı', '112 kare sayımı']),
@@ -135,7 +135,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '♜',
             title: 'Kale: Kesintisiz Hat',
-            body: 'Kale yatay ve dikey yönde kesintisiz kayar, taş üzerinden atlayamaz. 112 karelik tahtada açık hatların denetimi ağır taş gücünün temelidir. PDF güç skalası: 5.5 puan.',
+            body: 'Kale yatay ve dikey yönde kesintisiz kayar, taş üzerinden atlayamaz. 112 karelik tahtada açık hatların denetimi ağır taş gücünün temelidir. Güç skalası: 5.5 puan.',
           },
           {
             emoji: '🛤️',
@@ -153,7 +153,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '♞',
             title: 'At: Klasik L Sıçrama',
-            body: 'At 2 düz + 1 dik klasik L şeklinde sıçrar, aradaki taşların üzerinden atlar. PDF güç skalası: 2.8 puan. Geniş tahtada menzili kısıtlıdır; merkez karelere erişim kritiktir.',
+            body: 'At 2 düz + 1 dik klasik L şeklinde sıçrar, aradaki taşların üzerinden atlar. Güç skalası: 2.8 puan. Geniş tahtada menzili kısıtlıdır; merkez karelere erişim kritiktir.',
           },
           {
             emoji: '🎯',
@@ -198,7 +198,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🧙',
             title: 'Fers: Çapraz Muhafız',
-            body: 'Fers çapraz yönde yalnızca 1 kare gider ve taş alır; düz gidemez. PDF güç skalası: 1.2 puan. Vezirle birlikte şah etrafında kilit savunma kurar.',
+            body: 'Fers çapraz yönde yalnızca 1 kare gider ve taş alır; düz gidemez. Güç skalası: 1.2 puan. Vezirle birlikte şah etrafında kilit savunma kurar.',
           },
         ],
         puzzles: puzzlesFor('2.2', ['Çapraz kilit', 'Fers duvarı', 'Köşe savunması']),
@@ -238,7 +238,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🐘',
             title: 'Fil: Tam-2 Çapraz Sıçrar',
-            body: 'Fil çapraz doğrultuda tam 2 kare sıçrar; önündeki veya aradaki taşa takılmaz. Tek renk ızgarasına kilitlidir. PDF güç skalası: 1.5 puan.',
+            body: 'Fil çapraz doğrultuda tam 2 kare sıçrar; önündeki veya aradaki taşa takılmaz. Tek renk ızgarasına kilitlidir. Güç skalası: 1.5 puan.',
           },
         ],
         puzzles: puzzlesFor('3.1', ['2 kare hesabı', 'Renk kilidi', 'Sıçrama avı']),
@@ -251,7 +251,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '💣',
             title: 'Mancınık: Tam-2 Düz Sıçrar',
-            body: 'Mancınık yatay veya dikey tam 2 kare sıçrar; aradaki dost ya da düşman taşa takılmadan hedef kareye konar. PDF güç skalası: 1.8 puan.',
+            body: 'Mancınık yatay veya dikey tam 2 kare sıçrar; aradaki dost ya da düşman taşa takılmadan hedef kareye konar. Güç skalası: 1.8 puan.',
           },
         ],
         puzzles: puzzlesFor('3.2', ['Siper arkası vuruş', 'Tam-2 hesabı', 'Kale ile karşılaştır']),
@@ -264,7 +264,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🐪',
             title: 'Deve: 3 Düz + 1 Dik',
-            body: 'Deve 3 düz + 1 dik geniş L şeklinde taşların üzerinden sıçrar; derin hat çatalları atar. PDF güç skalası: 2.5 puan.',
+            body: 'Deve 3 düz + 1 dik geniş L şeklinde taşların üzerinden sıçrar; derin hat çatalları atar. Güç skalası: 2.5 puan.',
           },
         ],
         puzzles: puzzlesFor('3.3', ['Derin çatal', 'Geniş L hesabı', 'At ile farkı']),
@@ -277,7 +277,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🚧',
             title: 'Nöbetçi: Min-2 Çapraz Kayar',
-            body: 'Nöbetçi çapraz yönde kayar ancak en az 2 kare ilerlemek zorundadır; 1 kare gidemez ve sıçrayamaz. PDF güç skalası: 3.5 puan. Ders arayüzünde: üzerinden geçilen ama durulamayan ara kareler turuncu nokta, yasal varışlar yeşil halka efsanesiyle anlatılır.',
+            body: 'Nöbetçi çapraz yönde kayar ancak en az 2 kare ilerlemek zorundadır; 1 kare gidemez ve sıçrayamaz. Güç skalası: 3.5 puan. Ders arayüzünde: üzerinden geçilen ama durulamayan ara kareler turuncu nokta, yasal varışlar yeşil halka efsanesiyle anlatılır.',
           },
         ],
         puzzles: puzzlesFor('3.4', ['Durulamaz kareler', 'Ulaşılabilir hedefler', 'Min-2 tuzağı']),
@@ -290,7 +290,7 @@ export const LEARN_LEVELS: LearnLevel[] = [
           {
             emoji: '🦒',
             title: 'Zürafa: 1 Çapraz + Min-3 Düz',
-            body: 'Zürafa 1 kare çapraz adım atar, ardından aynı doğrultuda düz yönde en az 3 kare kayar; sıçrayamaz, yolu açık olmalıdır. PDF güç skalası: 4.0 puan.',
+            body: 'Zürafa 1 kare çapraz adım atar, ardından aynı doğrultuda düz yönde en az 3 kare kayar; sıçrayamaz, yolu açık olmalıdır. Güç skalası: 4.0 puan.',
           },
         ],
         puzzles: puzzlesFor('3.5', ['Hibrit yol hesabı', 'Yolu açma', 'Kanat akını']),
@@ -526,12 +526,12 @@ export const PIECE_GUIDES: PieceGuide[] = [
   {
     key: 'prince', name: 'Şehzade', symbol: 'Şz', value: '—', color: '#fde68a',
     move: 'Şah Piyadesinin terfisiyle girer; Şah gibi her yöne 1 kare hareket eder. Şah + Şehzade varken oyun bitmez.',
-    terfi: 'Terfi ile girer', engineNote: 'PDF anlatımı esastır.',
+    terfi: 'Terfi ile girer', engineNote: 'Geleneksel kural anlatımı esastır.',
   },
   {
     key: 'masnua', name: 'Yedek Şah (Masnu’a)', symbol: 'MŞ', value: '—', color: '#fbbf24',
     move: 'Piyadelerin Piyadesi döngüsünün 3. terfisiyle girer; Şah gibi hareket eder ve hisar kilitleme gücü kazanır.',
-    terfi: 'Piyadelerin Piyadesi döngüsü', engineNote: 'PDF anlatımı esastır; oyun motoruna sonraki fazda eklenecek.',
+    terfi: 'Piyadelerin Piyadesi döngüsü', engineNote: 'Geleneksel kural anlatımı esastır; oyun motoruna sonraki fazda eklenecek.',
   },
 ];
 
@@ -545,9 +545,9 @@ export const RULE_ENTRIES: RuleEntry[] = [
   { title: 'Temsilî Terfi', icon: '🔄', desc: 'Her piyade yalnızca temsil ettiği figüre dönüşür; serbest figür seçimi yoktur.' },
   { title: 'Şah Takası (1x)', icon: '🔀', desc: 'Müsabakada 1 defaya mahsus, Şah tehdit altındayken dost taşla anında yer değiştirme.' },
   { title: 'Hisar Beraberliği', icon: '🏰', desc: 'Zayıf tarafın Şahı rakip hisara girerse oyun anında berabere biter.' },
-  { title: 'Hisar Kilitleme', icon: '🔒', desc: 'Kendi hisarına girebilen tek figür Yedek Şah’tır (Masnu’a); rakip sığınmayı kilitler.', engineNote: 'PDF anlatımı esastır; oyun motoruna sonraki fazda eklenecek.' },
-  { title: 'Yalın Şah Zaferi', icon: '🏆', desc: 'Rakip ordunun tamamını yok edip Şahı yapayalnız bırakan taraf doğrudan kazanır.', engineNote: 'PDF anlatımı esastır; oyun motoruna sonraki fazda eklenecek.' },
-  { title: 'Notasyon: a–k + H-SOL/H-SAĞ', icon: '🔢', desc: 'Dikey hatlar a–k (PDF metninde a–l geçer), yataylar 1–10; dış cepler H-SOL ve H-SAĞ olarak kaydedilir.' },
+  { title: 'Hisar Kilitleme', icon: '🔒', desc: 'Kendi hisarına girebilen tek figür Yedek Şah’tır (Masnu’a); rakip sığınmayı kilitler.', engineNote: 'Geleneksel kural anlatımı esastır; oyun motoruna sonraki fazda eklenecek.' },
+  { title: 'Yalın Şah Zaferi', icon: '🏆', desc: 'Rakip ordunun tamamını yok edip Şahı yapayalnız bırakan taraf doğrudan kazanır.', engineNote: 'Geleneksel kural anlatımı esastır; oyun motoruna sonraki fazda eklenecek.' },
+  { title: 'Notasyon: a–k + H-SOL/H-SAĞ', icon: '🔢', desc: 'Dikey hatlar a–k, yataylar 1–10; dış cepler H-SOL ve H-SAĞ olarak kaydedilir.' },
 ];
 
 export const TOTAL_LESSONS = LEARN_LEVELS.reduce((n, l) => n + l.lessons.length, 0); // 25

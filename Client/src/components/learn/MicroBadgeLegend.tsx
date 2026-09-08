@@ -10,7 +10,7 @@ import React, { FC } from 'react';
  */
 export const MicroBadgeLegend: FC = () => (
   <div className="rounded-2xl p-4 border border-[#e5dcce] bg-[#f5eedc] shadow-md flex flex-col gap-2.5">
-    <div className="text-xs font-bold uppercase tracking-widest text-[#5c6c66]">Tahta efsanesi (PDF §7)</div>
+    <div className="text-xs font-bold uppercase tracking-widest text-[#5c6c66]">Tahta efsanesi</div>
     <div className="flex items-center gap-2.5 text-sm text-[#3a4a44]">
       <span className="w-3.5 h-3.5 rounded-full bg-orange-400/60 flex-shrink-0" />
       <span>Turuncu nokta: geçilir ama durulamaz (Nöbetçi / Zürafa ara karesi)</span>

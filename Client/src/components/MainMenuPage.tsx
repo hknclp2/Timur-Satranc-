@@ -7,10 +7,11 @@ import chessboardImg from '../assets/Board.png';
 
 interface MainMenuPageProps {
   onNavigate: (page: PageState) => void;
+  onOpenCredits?: () => void;
   showNotification: (message: string, type?: NotificationType) => void;
 }
 
-export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, showNotification }) => {
+export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, onOpenCredits, showNotification }) => {
   return (
     <div className="mobile-screen flex flex-col bg-[#1a4228] relative overflow-hidden select-none">
       {/* Üst satır: Mağaza & Profil */}
@@ -35,9 +36,15 @@ export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, showNotificati
 
       {/* İkinci satır: Logo + Başlık + Ayarlar */}
       <div className="flex items-center justify-between px-5 mt-4 relative z-10">
-        <div className="w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-white/20 bg-black/20 flex items-center justify-center shadow-md">
+        <button
+          type="button"
+          onClick={onOpenCredits}
+          className="w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-white/20 bg-black/20 flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer"
+          title="Hakkında & Künye Bilgileri"
+          aria-label="Hakkında"
+        >
           <img src={okulLogo} alt="Logo" className="w-[52px] h-[52px] object-contain" />
-        </div>
+        </button>
 
         <h1 className="font-batangas text-4xl font-extrabold text-white text-center leading-none drop-shadow-md tracking-wide">
           Timur

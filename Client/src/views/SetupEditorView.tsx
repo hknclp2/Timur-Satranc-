@@ -277,7 +277,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
       </div>
 
       {/* ─── BOARD ────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 items-center justify-center overflow-hidden px-1 min-h-0">
+      <div className="flex flex-1 items-center justify-center overflow-visible px-10 min-h-0">
         <BoardGrid
           board={board}
           citadels={citadels}

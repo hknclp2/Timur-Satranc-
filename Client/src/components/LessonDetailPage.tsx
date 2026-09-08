@@ -139,7 +139,7 @@ export const LessonDetailPage: FC<LessonDetailPageProps> = ({
             🎯 Kazanım: {lesson.goal}
           </div>
           {ENGINE_NOTE_LESSONS.has(lesson.id) && (
-            <EngineNote text="Bu dersteki ışınlanma/kilitleme/Yalın Şah kuralları PDF'e göre anlatılır; oyun motoruna sonraki fazda eklenecek." />
+            <EngineNote text="Bu dersteki ışınlanma/kilitleme/Yalın Şah kuralları tarihî anlatıma göre aktarılır; oyun motoruna sonraki fazda eklenecek." />
           )}
         </div>
 

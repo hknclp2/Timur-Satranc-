@@ -76,7 +76,7 @@ export const RulesPage: FC<RulesPageProps> = ({ onNavigate, rulesTab, setRulesTa
         </button>
         <div>
           <h1 className="font-batangas text-[2rem] font-bold text-white tracking-wide leading-none">Kurallar</h1>
-          <p className="text-[#A7BDB1] text-sm mt-0.5">PDF müfredatı • 11 taş + Şehzade + Yedek Şah</p>
+          <p className="text-[#A7BDB1] text-sm mt-0.5">11 taş + Şehzade + Yedek Şah</p>
         </div>
       </div>
 
@@ -160,7 +160,7 @@ export const RulesPage: FC<RulesPageProps> = ({ onNavigate, rulesTab, setRulesTa
 
             <MicroBadgeLegend />
             <div className="mt-3 text-xs text-white/45 leading-relaxed">
-              Notasyon: dikey hatlar a–k (PDF metninde a–l geçer), yataylar 1–10; hisarlar H-SOL / H-SAĞ.
+              Notasyon: dikey hatlar a–k, yataylar 1–10; hisarlar H-SOL / H-SAĞ.
             </div>
           </>
         ) : (

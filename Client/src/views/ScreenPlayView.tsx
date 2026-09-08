@@ -1,14 +1,19 @@
-import React, { FC, useState, useMemo } from 'react';
+import React, { FC, useState, useMemo, useEffect } from 'react';
 import { useGame } from '../hooks/useGame';
 import { Header } from '../components/game/Header';
 import { PlayerCard } from '../components/game/PlayerCard';
 import { BoardContainer } from '../components/game/BoardContainer';
-import { ControlBar } from '../components/game/ControlBar';
+import { BottomToolbar } from '../components/game/BottomToolbar';
+import { GameOverModal, GameOverMode } from '../components/game/GameOverModal';
 import { PromotionModal } from '../components/board/PromotionModal';
+import { GameReviewView } from './GameReviewView';
+import { SelfAnalysisView } from './SelfAnalysisView';
 import { defaultMaterialCalculator } from '../core/material/MaterialCalculator';
-import { Trophy, ArrowCounterClockwise, Flag, Handshake, Play, Pause, X, House } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, Flag, Handshake, Play, Pause, X, House } from '@phosphor-icons/react';
 import { NotificationType, PlayerColor } from '../types';
 import { BoardMatrix, CitadelState } from '../types/chess';
+import type { BotProfileId } from '../bot/profiles';
+import { saveBotCrown } from '../components/BotSelectPage';
 
 interface ScreenPlayViewProps {
   initialTimeSeconds?: number;
@@ -19,6 +24,18 @@ interface ScreenPlayViewProps {
   initialBoard?: BoardMatrix;
   initialCitadels?: CitadelState;
   initialTurn?: PlayerColor;
+  /** Game-over modal variant: local (default), bot veya online. */
+  gameOverMode?: GameOverMode;
+  /** Bot modu ekstraları */
+  botDifficultyLabel?: string;
+  /** Bu renk bot tarafından oynanır (verilmezse iki kişilik yerel oyun). */
+  botSide?: PlayerColor | null;
+  botProfileId?: BotProfileId;
+  playerAccuracy?: number;
+  /** Online modu ekstraları */
+  eloDelta?: number;
+  whiteRating?: number;
+  blackRating?: number;
   onExit: () => void;
   showNotification?: (message: string, type?: NotificationType) => void;
 }
@@ -34,8 +51,20 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
   initialTurn,
   onExit,
   showNotification,
-}) => {
+  gameOverMode = 'local',
+  botDifficultyLabel,
+  botSide = null,
+  botProfileId,
+  playerAccuracy,
+  eloDelta,
+  whiteRating,
+  blackRating,
+}: ScreenPlayViewProps) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  /** Alt görünüm yönlendirmesi: oyun / otomatik inceleme / serbest sandbox. */
+  const [subView, setSubView] = useState<'game' | 'review' | 'analysis'>('game');
+  /** Game-over modalı X ile kapatılabilir (tahtayı incelemek için). */
+  const [showGameOver, setShowGameOver] = useState(true);
 
   // Timur Chess Gameplay Engine Hook
   const {
@@ -44,6 +73,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
     whiteTime,
     blackTime,
     isPaused,
+    botThinking,
     statusText,
     selectedPos,
     validMoves,
@@ -79,6 +109,8 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
     initialBoard,
     initialCitadels,
     initialTurn,
+    botSide,
+    botProfileId,
     onMoveMade: (_move, _notation) => {
       // Optional sound or notification
     },
@@ -96,9 +128,34 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
     };
   }, [displayedCapturedPieces]);
 
+  // Yeni oyun sonu geldiğinde modalı tekrar göster ve bot modunda kazanıldıysa taç kaydet
+  useEffect(() => {
+    if (gameState.isGameOver) {
+      setShowGameOver(true);
+      if (gameOverMode === 'bot' && botProfileId) {
+        const humanSide = botSide === 'white' ? 'black' : 'white';
+        if (gameState.winner === humanSide) {
+          saveBotCrown(botProfileId, 3);
+        }
+      }
+    }
+  }, [gameState.isGameOver, gameOverMode, botProfileId, botSide, gameState.winner]);
+
   const onResetClick = () => {
     resetGame();
     setIsOptionsOpen(false);
+    setShowGameOver(true);
+    setSubView('game');
+  };
+
+  const onShareClick = () => {
+    const text = `${whiteName} - ${blackName}: ${statusText} (${gameState.moveHistory.length} hamle)`;
+    try {
+      void navigator.clipboard?.writeText(text);
+      showNotification?.('Oyun sonucu panoya kopyalandı', 'success');
+    } catch {
+      showNotification?.('Paylaşım hazır: ' + text, 'info');
+    }
   };
 
   const onResignClick = (player: PlayerColor) => {
@@ -111,6 +168,37 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
     setIsOptionsOpen(false);
   };
 
+  // ── Alt görünüm yönlendirmesi (durum korunur: hook unmount olmaz) ──
+  if (subView === 'review') {
+    return (
+      <GameReviewView
+        historyEntries={historyEntries}
+        whiteName={whiteName}
+        blackName={blackName}
+        winner={gameState.winner}
+        statusText={statusText}
+        onBack={() => setSubView('game')}
+        onOpenSelfAnalysis={() => setSubView('analysis')}
+        onRematch={onResetClick}
+      />
+    );
+  }
+
+  if (subView === 'analysis') {
+    return (
+      <SelfAnalysisView
+        whiteName={whiteName}
+        blackName={blackName}
+        initialBoard={displayedBoard}
+        initialCitadels={displayedCitadels}
+        initialTurn={gameState.currentTurn}
+        initialTimeSeconds={0}
+        onExit={() => setSubView('game')}
+        showNotification={showNotification}
+      />
+    );
+  }
+
   return (
     <div className="mobile-screen flex flex-col justify-between bg-[#153423] text-white relative overflow-hidden select-none">
       {/* 1. ÜST HEADER: Oyun İkonu + Başlık + Entegre Notasyon Barı */}
@@ -122,8 +210,18 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
         onSelectMove={goToMove}
       />
 
+      {/* Bot düşünme göstergesi (yalnızca bot modunda, sıra bottayken görünür) */}
+      {botThinking && !gameState.isGameOver && (
+        <div className="flex justify-center relative z-10 pointer-events-none">
+          <div className="flex items-center gap-2 bg-black/50 border border-white/10 rounded-full px-4 py-1 text-xs font-bold text-[#00e5ff] animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-[#00e5ff] animate-ping" />
+            Bot düşünüyor…
+          </div>
+        </div>
+      )}
+
       {/* 2. OYUN ALANI (Masaüstü Oyun Düzeni: Üst Oyuncu -> Board -> Alt Oyuncu) */}
-      <div className="flex-1 flex flex-col justify-between items-center px-2 py-1 relative z-10 w-full max-w-lg mx-auto overflow-hidden">
+      <div className="flex-1 flex flex-col justify-between items-center px-10 py-1 relative z-10 w-full max-w-lg mx-auto overflow-visible">
         {/* Üst Oyuncu (Siyah / misafir) */}
         <PlayerCard
           name={blackName}
@@ -160,15 +258,17 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
         />
       </div>
 
-      {/* 3. EN ALT KONTROL BARI (Önceki, Sonraki, Durdur, Seçenekler) */}
-      <ControlBar
+      {/* 3. EN ALT ARAÇ ÇUBUĞU (Seçenekler, Duraklat, Analiz, Geri, İleri) */}
+      <BottomToolbar
+        onOptions={() => setIsOptionsOpen(true)}
+        onTogglePause={togglePause}
+        isPaused={isPaused}
+        onSelfAnalysis={() => setSubView('analysis')}
+        analysisHidden={!gameState.isGameOver}
         onPrevious={goToPreviousMove}
         onNext={goToNextMove}
-        onOptionsClick={() => setIsOptionsOpen(true)}
-        onTogglePause={togglePause}
         canPrevious={canGoPrevious}
         canNext={canGoNext}
-        isPaused={isPaused}
       />
 
       {/* ─── PİYON TERFİ MODALI ────────────────────────────────────── */}
@@ -258,56 +358,37 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
         </div>
       )}
 
-      {/* ─── OYUN BİTTİ MODALI (Game Over Modal) ───────────────────────── */}
-      {gameState.isGameOver && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-5 animate-fade-in">
-          <div className="bg-[#1c3829] border-2 border-[#00d4c4]/40 rounded-3xl p-6 w-full max-w-sm flex flex-col items-center text-center gap-4 shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-[#00d4c4]/20 border border-[#00d4c4] flex items-center justify-center text-[#00d4c4] shadow-lg animate-bounce">
-              <Trophy size={36} weight="duotone" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <h3 className="font-batangas text-2xl font-bold text-[#f4eedd]">
-                {gameState.winner === 'draw'
-                  ? 'Berabere!'
-                  : `${gameState.winner === 'white' ? whiteName : blackName} Kazandı!`}
-              </h3>
-              <p className="text-[#00e5ff] text-xs font-semibold">
-                {statusText}
-              </p>
-            </div>
-
-            <div className="w-full bg-black/30 border border-white/10 rounded-xl p-3 flex justify-around text-xs text-white/70">
-              <div>
-                <span className="block text-white/40">Toplam Hamle</span>
-                <span className="font-bold text-base text-white">{gameState.moveHistory.length}</span>
-              </div>
-              <div>
-                <span className="block text-white/40">Kalan Süre (B)</span>
-                <span className="font-bold text-base text-white">{Math.floor(whiteTime / 60)} dk</span>
-              </div>
-              <div>
-                <span className="block text-white/40">Kalan Süre (S)</span>
-                <span className="font-bold text-base text-white">{Math.floor(blackTime / 60)} dk</span>
-              </div>
-            </div>
-
-            <div className="w-full flex flex-col gap-2 mt-2">
-              <button
-                onClick={onResetClick}
-                className="w-full bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-3.5 rounded-xl shadow-lg transition-all cursor-pointer text-sm"
-              >
-                Tekrar Oyna
-              </button>
-              <button
-                onClick={onExit}
-                className="w-full bg-[#f4eedd] hover:bg-[#eae2cf] active:scale-98 text-[#141f1b] font-batangas font-bold py-3 rounded-xl shadow transition-all cursor-pointer text-sm"
-              >
-                Ana Menüye Dön
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* ─── OYUN BİTTİ MODALI (Game Over Modal — local/bot/online) ────── */}
+      {gameState.isGameOver && showGameOver && (
+        <GameOverModal
+          mode={gameOverMode}
+          winner={gameState.winner}
+          status={gameState.status}
+          statusText={statusText}
+          whiteName={whiteName}
+          blackName={blackName}
+          totalMoves={gameState.moveHistory.length}
+          playerAccuracy={playerAccuracy}
+          botDifficultyLabel={botDifficultyLabel}
+          playerWon={
+            gameOverMode === 'bot'
+              ? gameState.winner === (botSide === 'white' ? 'black' : 'white')
+              : undefined
+          }
+          eloDelta={eloDelta}
+          whiteRating={whiteRating}
+          blackRating={blackRating}
+          onGameReview={() => setSubView('review')}
+          onSelfAnalysis={() => setSubView('analysis')}
+          onRematch={onResetClick}
+          onNewGame={onExit}
+          onRetry={onResetClick}
+          onChangeBot={onExit}
+          onRequestRematch={onResetClick}
+          onFindOpponent={onExit}
+          onClose={() => setShowGameOver(false)}
+          onShare={onShareClick}
+        />
       )}
     </div>
   );

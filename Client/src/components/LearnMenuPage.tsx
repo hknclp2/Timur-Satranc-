@@ -18,7 +18,7 @@ export const LearnMenuPage: FC<LearnMenuPageProps> = ({ onNavigate, showNotifica
     {
       id: 'mobile-roadmap-btn',
       label: 'Yol Haritası',
-      desc: `6 seviye • 25 ders • 70 bulmaca (PDF müfredatı) — ${completedCount}/${TOTAL_LESSONS} ders`,
+      desc: `6 seviye • 25 ders • 70 bulmaca — ${completedCount}/${TOTAL_LESSONS} ders`,
       icon: <MapTrifold size={40} weight="duotone" />,
       progress: roadmapProgress,
       badge: `${completedLevels}/6`,
@@ -27,10 +27,10 @@ export const LearnMenuPage: FC<LearnMenuPageProps> = ({ onNavigate, showNotifica
     {
       id: 'mobile-rules-btn',
       label: 'Kurallar',
-      desc: 'PDF Tablo-2 taş değerleri + zafer/beraberlik şartları',
+      desc: 'Taş değerleri + zafer ve beraberlik şartları',
       icon: <Shield size={40} weight="duotone" />,
       progress: 0,
-      badge: 'PDF',
+      badge: 'Rehber',
       page: 'RULES' as PageState,
     },
   ];
@@ -57,7 +57,7 @@ export const LearnMenuPage: FC<LearnMenuPageProps> = ({ onNavigate, showNotifica
 
       {/* Genel ilerleme kartı (krem) */}
       <div className="px-5 mt-3 mb-5 relative z-10">
-        <div className="bg-[#f5eedc] rounded-2xl p-4 border border-[#e5dcce] shadow-xl lg:max-w-5xl lg:mx-auto w-full">
+        <div className="bg-[#f5eedc] rounded-2xl p-4 border border-[#e5dcce] shadow-xl w-full max-w-5xl lg:mx-auto">
           <div className="flex justify-between items-center mb-2">
             <span className="text-[#5c6c66] text-sm font-semibold">Genel İlerleme</span>
             <span className="text-[#0c4e48] text-sm font-bold">%{percent} • {xp} XP</span>
@@ -87,73 +87,73 @@ export const LearnMenuPage: FC<LearnMenuPageProps> = ({ onNavigate, showNotifica
 
       {/* Modül kartları (masaüstünde: kartlar sol + bilgi paneli sağ) */}
       <div className="flex-1 relative z-10 overflow-y-auto custom-scrollbar lg:overflow-visible px-5 pb-10">
-        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.25fr_1fr] lg:gap-6 lg:items-start lg:max-w-5xl lg:mx-auto">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.4fr_1fr] lg:gap-8 lg:items-start w-full max-w-5xl lg:mx-auto">
           <div className="flex flex-col gap-4 min-w-0">
-        {learnItems.map((item) => (
-          <button
-            key={item.id}
-            id={item.id}
-            onClick={() => onNavigate(item.page)}
-            className="mobile-card-btn group relative"
-          >
-            <div className="flex flex-col gap-0.5 text-left flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-batangas text-[1.25rem] font-bold text-[#141f1b] leading-tight">
-                  {item.label}
-                </span>
-                <span className="text-[10px] bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40 font-bold px-2 py-0.5 rounded-full flex-shrink-0">
-                  {item.badge}
-                </span>
-              </div>
-              <span className="text-[#5c6c66] text-sm font-medium">{item.desc}</span>
+            {learnItems.map((item) => (
+              <button
+                key={item.id}
+                id={item.id}
+                onClick={() => onNavigate(item.page)}
+                className="mobile-card-btn group relative"
+              >
+                <div className="flex flex-col gap-0.5 text-left flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-batangas text-[1.25rem] font-bold text-[#141f1b] leading-tight">
+                      {item.label}
+                    </span>
+                    <span className="text-[10px] bg-[#00d4c4]/20 text-[#0c4e48] border border-[#00d4c4]/40 font-bold px-2 py-0.5 rounded-full flex-shrink-0">
+                      {item.badge}
+                    </span>
+                  </div>
+                  <span className="text-[#5c6c66] text-sm font-medium">{item.desc}</span>
 
-              {/* İlerleme */}
-              <div className="mt-2.5 flex items-center gap-2">
-                <div className="flex-1 h-1.5 bg-[#141f1b]/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{
-                      width: `${item.progress}%`,
-                      background: 'linear-gradient(90deg, #00d4c4, #00a896)',
-                    }}
-                  />
+                  {/* İlerleme */}
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-[#141f1b]/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${item.progress}%`,
+                          background: 'linear-gradient(90deg, #00d4c4, #00a896)',
+                        }}
+                      />
+                    </div>
+                    <span className="text-[#5c6c66] text-xs font-semibold flex-shrink-0">%{item.progress}</span>
+                  </div>
                 </div>
-                <span className="text-[#5c6c66] text-xs font-semibold flex-shrink-0">%{item.progress}</span>
+
+                <div className="text-[#141f1b] group-hover:scale-105 transition-all flex items-center justify-center flex-shrink-0">
+                  {item.icon}
+                </div>
+              </button>
+            ))}
+
+            {/* Yakında (kilitli kartlar) */}
+            <div className="rounded-2xl border border-[#e5dcce] bg-[#f5eedc]/50 p-5 flex items-center gap-4 opacity-70">
+              <div className="w-14 h-14 rounded-2xl bg-[#141f1b]/5 border border-[#141f1b]/10 flex items-center justify-center flex-shrink-0">
+                <Cpu size={24} weight="duotone" className="text-[#141f1b]/30" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-batangas text-lg font-bold text-[#141f1b]/40">Analiz Motoru</span>
+                  <Lock size={12} weight="bold" className="text-[#141f1b]/25" />
+                </div>
+                <p className="text-[#141f1b]/30 text-sm mt-0.5">Çok yakında açılıyor</p>
               </div>
             </div>
 
-            <div className="text-[#141f1b] group-hover:scale-105 transition-all flex items-center justify-center flex-shrink-0">
-              {item.icon}
+            <div className="rounded-2xl border border-[#e5dcce] bg-[#f5eedc]/50 p-5 flex items-center gap-4 opacity-70">
+              <div className="w-14 h-14 rounded-2xl bg-[#141f1b]/5 border border-[#141f1b]/10 flex items-center justify-center flex-shrink-0">
+                <Trophy size={24} weight="duotone" className="text-[#141f1b]/30" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-batangas text-lg font-bold text-[#141f1b]/40">Turnuva Rehberi</span>
+                  <Lock size={12} weight="bold" className="text-[#141f1b]/25" />
+                </div>
+                <p className="text-[#141f1b]/30 text-sm mt-0.5">Çok yakında açılıyor</p>
+              </div>
             </div>
-          </button>
-        ))}
-
-        {/* Yakında (kilitli kartlar) */}
-        <div className="rounded-2xl border border-[#e5dcce] bg-[#f5eedc]/50 p-5 flex items-center gap-4 opacity-70">
-          <div className="w-14 h-14 rounded-2xl bg-[#141f1b]/5 border border-[#141f1b]/10 flex items-center justify-center flex-shrink-0">
-            <Cpu size={24} weight="duotone" className="text-[#141f1b]/30" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-batangas text-lg font-bold text-[#141f1b]/40">Analiz Motoru</span>
-              <Lock size={12} weight="bold" className="text-[#141f1b]/25" />
-            </div>
-            <p className="text-[#141f1b]/30 text-sm mt-0.5">Çok yakında açılıyor</p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-[#e5dcce] bg-[#f5eedc]/50 p-5 flex items-center gap-4 opacity-70">
-          <div className="w-14 h-14 rounded-2xl bg-[#141f1b]/5 border border-[#141f1b]/10 flex items-center justify-center flex-shrink-0">
-            <Trophy size={24} weight="duotone" className="text-[#141f1b]/30" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-batangas text-lg font-bold text-[#141f1b]/40">Turnuva Rehberi</span>
-              <Lock size={12} weight="bold" className="text-[#141f1b]/25" />
-            </div>
-            <p className="text-[#141f1b]/30 text-sm mt-0.5">Çok yakında açılıyor</p>
-          </div>
-        </div>
           </div>
 
           {/* Masaüstü bilgi paneli (mobilde gizli) */}

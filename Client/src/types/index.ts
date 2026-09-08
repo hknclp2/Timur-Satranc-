@@ -13,6 +13,8 @@ export type PageState =
   | 'RULES'
   | 'SCREEN_PLAY' // Ekranda Oyna (2 Kişilik Yerel Oyun)
   | 'CUSTOM_SETUP' // Serbest Dizilim Modu (Board Editor / Setup)
+  | 'GAME_REVIEW' // Oyun Analizi (otomatik motor incelemesi)
+  | 'SELF_ANALYSIS' // Kendi Kendine Analiz (serbest sandbox)
   | 'GAME_PLAY'; // Aktif oyun modu
 
 // ─── Oyun Modları ────────────────────────────────────────────────────────────
