@@ -4,6 +4,7 @@ import { NotificationType, PlayerColor } from '../types';
 import { createRoom, joinRoom } from '../core/online/roomService';
 import type { OnlineGame } from '../core/online/roomService';
 import { getOrCreatePlayerId, getPlayerName, setPlayerName } from '../lib/auth';
+import { isSupabaseConfigured } from '../lib/supabaseClient';
 
 interface PlayAFriendModalProps {
   onClose: () => void;
@@ -37,6 +38,10 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
 
   const handleCreateRoom = useCallback(async () => {
     if (isCreating) return;
+    if (!isSupabaseConfigured()) {
+      showNotification('Çevrim içi oyun yapılandırılmadı. Önce Supabase kurulumu gerekli (README).', 'error');
+      return;
+    }
     const name = resolveName();
     setIsCreating(true);
     try {
@@ -55,6 +60,10 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
 
   const handleJoinRoom = useCallback(async () => {
     if (isJoining) return;
+    if (!isSupabaseConfigured()) {
+      showNotification('Çevrim içi oyun yapılandırılmadı. Önce Supabase kurulumu gerekli (README).', 'error');
+      return;
+    }
     const code = joinCode.trim().toUpperCase();
     if (code.length !== 6) {
       showNotification('Lütfen geçerli bir 6 haneli oda kodu girin.', 'error');
@@ -101,6 +110,12 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
           <p className="text-[#A7BDB1] text-xs">
             Arkadaşına davet kodu gönder veya onun oluşturduğu odaya katıl!
           </p>
+
+          {!isSupabaseConfigured() && (
+            <div className="bg-amber-500/15 border border-amber-400/40 rounded-xl p-3 text-amber-200 text-xs">
+              Çevrim içi oyun bu sürümde yapılandırılmadı. Oda açmak için Supabase kurulumu gerekli (README → "Çevrim içi oyun kurulumu").
+            </div>
+          )}
 
           {/* İsim Girişi */}
           <div className="bg-[#1a4228] rounded-xl p-3 border border-white/10">

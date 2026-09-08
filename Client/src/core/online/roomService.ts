@@ -1,5 +1,8 @@
-import { supabase } from '../../lib/supabaseClient';
+import { getSupabase } from '../../lib/supabaseClient';
 import { createInitialBoardSetup } from '../engine/boardSetup';
+
+const NOT_CONFIGURED_ERROR = () =>
+  new Error('Çevrim içi oyun yapılandırılmadı (Supabase bilgileri eksik).');
 
 export interface OnlineGame {
   id: string;
@@ -48,6 +51,11 @@ export async function createRoom(
   whitePlayerId: string,
   whiteName: string
 ): Promise<{ data: OnlineGame | null; error: any }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
   const { board, citadels } = createInitialBoardSetup();
 
   let lastError: any = null;
@@ -104,6 +112,11 @@ export async function findRoom(
     return { data: null, error: new Error('Oda kodu 6 karakter olmali (ornek: TMAB12).') };
   }
 
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
   const { data, error } = await supabase
     .from('online_games')
     .select('*')
@@ -126,6 +139,11 @@ export async function joinRoom(
 
   if (!isValidCode(normalized)) {
     return { data: null, error: new Error('Oda kodu 6 karakter olmali (ornek: TMAB12).') };
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
   }
 
   // 1) Odayi bul

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { getSupabase } from '../lib/supabaseClient';
 import { sendMove, updateGameStatus, type OnlineMoveData } from '../core/online/moveService';
 import type { OnlineGame } from '../core/online/roomService';
 import type { MoveHistoryEntry } from './useGame';
@@ -40,6 +40,13 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
 
   // --- Realtime senkronizasyon: rakip hamleleri / durum degisiklikleri ---
   useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      // Supabase yapılandırılmamış: abonelik kurulamaz, uygulama çalışmaya devam eder.
+      setConnectionStatus('error');
+      return;
+    }
+
     setConnectionStatus('connecting');
 
     const channel = supabase

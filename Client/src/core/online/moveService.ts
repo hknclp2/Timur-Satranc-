@@ -1,5 +1,8 @@
-import { supabase } from '../../lib/supabaseClient';
+import { getSupabase } from '../../lib/supabaseClient';
 import type { OnlineGame } from './roomService';
+
+const NOT_CONFIGURED_ERROR = () =>
+  new Error('Çevrim içi oyun yapılandırılmadı (Supabase bilgileri eksik).');
 
 export interface OnlineMoveData {
   board_state: any;
@@ -25,6 +28,11 @@ export async function sendMove(
   gameId: string,
   move: OnlineMoveData
 ): Promise<{ data: any | null; error: any }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
   // 1) Once online_games update
   const { data: updatedGame, error: updateError } = await supabase
     .from('online_games')
@@ -79,6 +87,11 @@ export async function updateGameStatus(
   gameId: string,
   updates: Partial<OnlineGame>
 ): Promise<{ data: OnlineGame | null; error: any }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
   const { data, error } = await supabase
     .from('online_games')
     .update({
@@ -99,6 +112,11 @@ export async function updateGameStatus(
 export async function fetchMoveHistory(
   gameId: string
 ): Promise<{ data: any[] | null; error: any }> {
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
   const { data, error } = await supabase
     .from('online_moves')
     .select('*')
