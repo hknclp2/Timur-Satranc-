@@ -23,7 +23,7 @@ Bu repo, oyunun oynanabilir web istemcisini (React + Vite + TypeScript + Tailwin
 ### ♟️ Oyun
 - **Bota Karşı** — yapay zekâya karşı tek kişilik oyun
 - **Ekranda Oyna** — aynı cihazda iki kişilik yerel oyun
-- **Arkadaşla Oyna** — arkadaş davetli oyun akışı
+- **Arkadaşla Oyna** — 6 haneli oda koduyla gerçek zamanlı çevrim içi maç (Supabase Realtime, kayıtsız anonim kimlik)
 - **Turnuva** — turnuva katılım ekranı
 - **Dizilim Editörü** — başlangıç taş dizimini özelleştirme
 - Canlı maç HUD'ı (hamle geçmişi, alınan taşlar, ses kontrolü), terfi ve hisar rozetleri
@@ -50,8 +50,23 @@ Gereksinim: **Node.js 18+**
 ```bash
 cd Client
 npm install
-npm run dev      # geliştirme sunucusu (http://localhost:5173)
+npm run dev      # geliştirme sunucusu (http://localhost:3000)
 ```
+
+### 🌐 Çevrim içi oyun kurulumu (Arkadaşla Oyna)
+
+Oda kodlu online maç Supabase Realtime kullanır. Bu adım atlanırsa uygulamanın geri kalanı çalışır, yalnızca online maç açılmaz.
+
+1. [supabase.com](https://supabase.com) adresinde proje oluşturun (region: Frankfurt önerilir).
+2. **SQL Editor**'de [`Client/supabase/schema.sql`](Client/supabase/schema.sql) dosyasının tamamını çalıştırın (tablolar + Realtime yayını + RLS politikaları).
+3. **Settings → API** kısmından `Project URL` ve `anon/public key` değerlerini alıp `Client/.env` dosyası oluşturun:
+
+```env
+VITE_SUPABASE_URL=https://xxxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGci...
+```
+
+> `.env` dosyası gizlidir ve commit edilmez (bkz. `.env.example`).
 
 Üretim derlemesi:
 
@@ -69,10 +84,17 @@ Timur-Satranc-/
 │   │   ├── assets/          # Logo, taş görselleri, tahta dokuları
 │   │   ├── components/      # Ekranlar (MainMenu, PlayMenu, BotSelect, Learn…)
 │   │   │   └── game/ board/ learn/  # Oyun HUD, tahta ızgarası, öğrenme bileşenleri
-│   │   ├── core/ hooks/ lib/ utils/ workers/  # Oyun motoru ve yardımcılar
+│   │   ├── core/            # Oyun motoru
+│   │   │   └── online/      # Oda + hamle servisleri (roomService, moveService)
+│   │   ├── hooks/           # useGame, useOnlineGame (Realtime senkronizasyon)
+│   │   ├── lib/             # supabaseClient, auth (anonim kimlik), yardımcılar
+│   │   ├── utils/ workers/  # Yardımcılar ve motor worker'ları
 │   │   ├── learn/           # Öğrenme içeriği (learnContent) + ilerleme (learnProgress)
 │   │   ├── types/           # Paylaşılan TypeScript tipleri
-│   │   └── views/           # ScreenPlayView, SetupEditorView
+│   │   └── views/           # ScreenPlayView, OnlinePlayView, SetupEditorView
+│   ├── supabase/
+│   │   └── schema.sql       # Online maç veritabanı şeması (tek seferlik kurulum)
+│   ├── .env.example         # Supabase ortam değişkeni şablonu (.env commit edilmez)
 │   ├── index.html
 │   └── package.json
 ├── Assets/                  # Paylaşılan oyun asset'leri
@@ -87,13 +109,15 @@ Timur-Satranc-/
 |--------|-----------|
 | UI | React 18, Tailwind CSS 3.4, Phosphor Icons |
 | Derleme | Vite 5, TypeScript 5.2 |
-| Durum | React hooks + localStorage (öğrenme ilerlemesi) |
+| Çevrim içi | Supabase (Postgres + Realtime postgres_changes) |
+| Durum | React hooks + localStorage (öğrenme ilerlemesi, anonim oyuncu kimliği) |
 | Büyük asset'ler | Git LFS (`*.png`, `*.jpg`, Unity dosyaları) |
 
 ## 🗺️ Yol Haritası
 
 - Hisar ve özel kural setlerinin (şah takası, hisar kilitleme, yalın şah zaferi) oyun motoruna entegrasyonu
-- Çevrim içi (online) oyun
+- ✅ Oda kodlu online arkadaş maçı (MVP: süre yok, sayfa yenilemede devam yok)
+- Online v2: süre kontrolü, yeniden bağlanma, rövanş, ELO
 - Ek ders ve bulmaca içerikleri
 
 ## 📄 Lisans

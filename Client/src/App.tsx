@@ -22,6 +22,8 @@ import { DesktopMainMenu } from './components/desktop/DesktopMainMenu';
 import { ScreenPlayView } from './views/ScreenPlayView';
 import { BotPlayView } from './views/BotPlayView';
 import { SetupEditorView } from './views/SetupEditorView';
+import { OnlinePlayView } from './views/OnlinePlayView';
+import type { OnlineGame } from './core/online/roomService';
 import { useResponsive } from './hooks/useResponsive';
 import { BOT_PROFILES, type BotProfileId } from './bot/profiles';
 
@@ -119,6 +121,11 @@ export const App: React.FC = () => {
     botSide: PlayerColor;
   } | null>(null);
 
+  // Online arkadaş oyunu (PlayAFriendModal → ONLINE_PLAY)
+  const [onlineGameData, setOnlineGameData] = useState<OnlineGame | null>(null);
+  const [onlineMyColor, setOnlineMyColor] = useState<PlayerColor>('white');
+  const [onlineGameCode, setOnlineGameCode] = useState<string>('');
+
   // Oyuna başlama akışı
   const handleStartGameMode = (mode: GameMode) => {
     setActiveGameMode(mode);
@@ -143,6 +150,14 @@ export const App: React.FC = () => {
     setActiveGameMode(mode);
     setBotGameConfig({ mode, timeSeconds, profileId, incrementSeconds, botSide });
     setCurrentPage('GAME_PLAY');
+  };
+
+  // Online arkadaş oyunu başlatma (PlayAFriendModal → ONLINE_PLAY)
+  const handleStartOnlineGame = (gameData: OnlineGame, myColor: PlayerColor, gameCode: string) => {
+    setOnlineGameData(gameData);
+    setOnlineMyColor(myColor);
+    setOnlineGameCode(gameCode);
+    setCurrentPage('ONLINE_PLAY');
   };
 
   // Oyundan çıkış / Ana menüye dönüş
@@ -278,6 +293,7 @@ export const App: React.FC = () => {
                 onNavigate={setCurrentPage}
                 showNotification={showNotification}
                 onStartGame={(mode) => handleStartGameMode(mode)}
+                onStartOnlineGame={handleStartOnlineGame}
                 onStartScreenPlay={handleStartScreenPlay}
                 onOpenSetupEditor={handleOpenSetupEditor}
               />
@@ -487,6 +503,8 @@ export const App: React.FC = () => {
               )}
             </div>
           )}
+
+          {currentPage==='ONLINE_PLAY' && onlineGameData && (<div className="pointer-events-auto w-full flex-1 flex flex-col"><OnlinePlayView gameData={onlineGameData} myColor={onlineMyColor} gameCode={onlineGameCode} onExit={()=>{setOnlineGameData(null); setCurrentPage('PLAY_MENU');}} showNotification={showNotification} /></div>)}
 
           {currentPage === 'GAME_PLAY' && (
             botGameConfig && activeGameMode !== null && activeGameMode.startsWith('bot_') ? (

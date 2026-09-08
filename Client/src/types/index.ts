@@ -15,7 +15,8 @@ export type PageState =
   | 'CUSTOM_SETUP' // Serbest Dizilim Modu (Board Editor / Setup)
   | 'GAME_REVIEW' // Oyun Analizi (otomatik motor incelemesi)
   | 'SELF_ANALYSIS' // Kendi Kendine Analiz (serbest sandbox)
-  | 'GAME_PLAY'; // Aktif oyun modu
+  | 'GAME_PLAY' // Aktif oyun modu
+  | 'ONLINE_PLAY'; // Online arkadaş oyunu
 
 // ─── Oyun Modları ────────────────────────────────────────────────────────────
 export type GameMode =

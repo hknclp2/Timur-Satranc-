@@ -21,6 +21,7 @@ interface PlayMenuPageProps {
   onNavigate: (page: PageState) => void;
   showNotification: (message: string, type?: NotificationType) => void;
   onStartGame?: (mode: GameMode, timeSeconds?: number) => void;
+  onStartOnlineGame?: (gameData: any, myColor: import('../types/chess').PlayerColor, gameCode: string) => void;
   onStartScreenPlay?: (config: {
     whiteName: string;
     blackName: string;
@@ -74,6 +75,7 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
   onNavigate,
   showNotification,
   onStartGame,
+  onStartOnlineGame,
   onStartScreenPlay,
   onOpenSetupEditor,
 }) => {
@@ -290,16 +292,7 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
 
       {/* 6. Arkadaşınla Oyna Modalı */}
       {isPlayFriendOpen && (
-        <PlayAFriendModal
-          onClose={() => setIsPlayFriendOpen(false)}
-          onStartOnlineGame={() => {
-            setIsPlayFriendOpen(false);
-            if (onStartGame) {
-              onStartGame('online', 600);
-            }
-          }}
-          showNotification={showNotification}
-        />
+        <PlayAFriendModal onClose={()=>setIsPlayFriendOpen(false)} onStartOnlineGame={(gd, mc, gc)=>{ setIsPlayFriendOpen(false); if (onStartOnlineGame) { onStartOnlineGame(gd, mc, gc); } else if (onStartGame) { onStartGame('online', 600); } }} showNotification={showNotification} />
       )}
     </div>
   );
