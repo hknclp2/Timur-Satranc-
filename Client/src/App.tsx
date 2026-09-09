@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PageState, GameMode, Notification, NotificationType } from './types';
 import { BoardMatrix, CitadelState, PlayerColor } from './types/chess';
+import { useRoute } from './lib/router';
 
 // Bileşenler
 import { SplashScreen } from './components/SplashScreen';
@@ -17,6 +18,7 @@ import { ToastNotification } from './components/ToastNotification';
 import { LearnShell } from './components/learn/LearnShell';
 import { CreditsModal } from './components/CreditsModal';
 import { PlayInPersonModal } from './components/PlayInPersonModal';
+import { PlayAFriendModal } from './components/PlayAFriendModal';
 import { DesktopSidebar } from './components/desktop/DesktopSidebar';
 import { DesktopMainMenu } from './components/desktop/DesktopMainMenu';
 import { ScreenPlayView } from './views/ScreenPlayView';
@@ -41,11 +43,14 @@ interface CustomSetupConfig {
 
 export const App: React.FC = () => {
   const { isDesktop } = useResponsive(1024);
-  const [currentPage, setCurrentPage] = useState<PageState>('SPLASH');
+  // URL senkron SPA yönlendirme (lib/router): setState imzasıyla uyumlu.
+  const [currentPage, setCurrentPage] = useRoute();
+  const [screenPlayLaunched, setScreenPlayLaunched] = useState(false);
   const [activeGameMode, setActiveGameMode] = useState<GameMode>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isCreditsOpen, setIsCreditsOpen] = useState(false);
   const [isInPersonModalOpen, setIsInPersonModalOpen] = useState(false);
+  const [isOnlineModalOpen, setIsOnlineModalOpen] = useState(false);
   const [screenPlayConfig, setScreenPlayConfig] = useState({
     whiteName: 'Emir Timur',
     blackName: 'Yıldırım Bayezid',
@@ -188,6 +193,7 @@ export const App: React.FC = () => {
 
     setCustomSetupConfig(null); // Normal oyun — custom board yok
     setPendingSetupEntry(null);
+    setScreenPlayLaunched(true);
     setScreenPlayConfig({
       whiteName: config.whiteName || 'Emir Timur',
       blackName: config.blackName || 'Yıldırım Bayezid',
@@ -234,6 +240,7 @@ export const App: React.FC = () => {
         : config.incrementSeconds;
     const rotates = pendingSetupEntry ? pendingSetupEntry.boardRotates : config.boardRotates;
     setCustomSetupConfig(config);
+    setScreenPlayLaunched(true);
     setScreenPlayConfig({
       whiteName: config.whiteName,
       blackName: config.blackName,
@@ -244,6 +251,21 @@ export const App: React.FC = () => {
     setPendingSetupEntry(null);
     setCurrentPage('SCREEN_PLAY');
   };
+
+  // Derin link / refresh koruması: config'siz maç ekranına düşülürse
+  // (örn. /game veya /online'a direkt girildiyse) /play'e yönlendir.
+  // Alt durum URL'ye taşınmadığı için (karar) refresh'te maç config'i yoktur.
+  useEffect(() => {
+    if (currentPage === 'ONLINE_PLAY' && !onlineGameData) {
+      setCurrentPage('PLAY_MENU', { replace: true });
+      showNotification('Çevrim içi maç bilgisi bulunamadı, tekrar katıl', 'error');
+    } else if (currentPage === 'GAME_PLAY' && !activeGameMode) {
+      setCurrentPage('PLAY_MENU', { replace: true });
+    } else if (currentPage === 'SCREEN_PLAY' && !screenPlayLaunched) {
+      setCurrentPage('PLAY_MENU', { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, onlineGameData, activeGameMode, screenPlayLaunched]);
 
   return (
     /* 1. Tam ekran web kapsayıcı (mobile-first responsive) */
@@ -256,7 +278,7 @@ export const App: React.FC = () => {
         <div className="relative z-10 w-full flex-1 flex flex-col">
           {currentPage === 'SPLASH' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
-              <SplashScreen onDone={() => setCurrentPage('MAIN_MENU')} />
+              <SplashScreen onDone={() => setCurrentPage('MAIN_MENU', { replace: true })} />
             </div>
           )}
 
@@ -274,6 +296,7 @@ export const App: React.FC = () => {
                     onNavigate={setCurrentPage}
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     onOpenInPersonModal={() => setIsInPersonModalOpen(true)}
+                    onOpenOnlineModal={() => setIsOnlineModalOpen(true)}
                     showNotification={showNotification}
                   />
                 </div>
@@ -330,6 +353,7 @@ export const App: React.FC = () => {
                 initialTurn={customSetupConfig?.startingTurn}
                 onExit={() => {
                   setCustomSetupConfig(null);
+                  setScreenPlayLaunched(false);
                   setCurrentPage('PLAY_MENU');
                 }}
                 showNotification={showNotification}
@@ -544,6 +568,19 @@ export const App: React.FC = () => {
               setIsInPersonModalOpen(false);
               handleStartScreenPlay(config);
             }}
+          />
+        )}
+
+        {/* Arkadaşınla Oyna Modalı (Desktop ana menüden; kökte render edilir ki
+            sidebar stacking context'i modalın üstüne binmesin) */}
+        {isOnlineModalOpen && (
+          <PlayAFriendModal
+            onClose={() => setIsOnlineModalOpen(false)}
+            onStartOnlineGame={(gameData, myColor, gameCode) => {
+              setIsOnlineModalOpen(false);
+              handleStartOnlineGame(gameData, myColor, gameCode);
+            }}
+            showNotification={showNotification}
           />
         )}
 

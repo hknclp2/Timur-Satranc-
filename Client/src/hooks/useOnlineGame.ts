@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getSupabase } from '../lib/supabaseClient';
-import { sendMove, updateGameStatus, type OnlineMoveData } from '../core/online/moveService';
+import { applyGameResult } from '../core/online/ratingService';
+import {
+  abortGame,
+  fetchMoveHistory,
+  respondDrawOffer,
+  sendDrawOffer,
+  sendMove,
+  sendRematchOffer,
+  sendTakebackOffer,
+  updateGameStatus,
+  type OnlineMoveData,
+} from '../core/online/moveService';
 import type { OnlineGame } from '../core/online/roomService';
 import type { MoveHistoryEntry } from './useGame';
 import type { PlayerColor } from '../types/chess';
@@ -24,6 +35,16 @@ export interface UseOnlineGameReturn {
   syncResignation: () => Promise<void>;
   syncDraw: () => Promise<void>;
   syncGameEnd: (winner: PlayerColor | 'draw', reason: string) => Promise<void>;
+  /** syncGameEnd sonrası ELO uygular (hatada oyunu bozmaz, sadece console.error). */
+  syncGameEndWithRating: (winner: PlayerColor | 'draw', reason: string) => Promise<void>;
+  // ─── Faz 2 — online protokol (mevcut sync'leri bozmaz) ───
+  syncDrawOffer: () => Promise<void>;
+  syncRespondDrawOffer: (accept: boolean) => Promise<void>;
+  syncTakebackOffer: () => Promise<void>;
+  syncRematchOffer: () => Promise<void>;
+  syncAbortGame: (reason?: string) => Promise<void>;
+  /** Reconnect sonrası hamle geçmişini çekip döndürür (rebuild için). */
+  rebuildFromHistory: () => Promise<{ moves: any[]; error: any }>;
 }
 
 export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
@@ -176,6 +197,88 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
     []
   );
 
+  const syncGameEndWithRating = useCallback(
+    async (winner: PlayerColor | 'draw', reason: string): Promise<void> => {
+      try {
+        await syncGameEnd(winner, reason);
+      } catch (err) {
+        console.error('[useOnlineGame] syncGameEndWithRating sync failed:', err);
+      }
+      try {
+        const { error } = await applyGameResult(gameDataRef.current.id, winner);
+        if (error) console.error('[useOnlineGame] syncGameEndWithRating rating failed:', error);
+      } catch (err) {
+        console.error('[useOnlineGame] syncGameEndWithRating rating failed:', err);
+      }
+    },
+    [syncGameEnd]
+  );
+
+  // ─── Faz 2 — online protokol sync'leri (updateGameStatus wrapper'ları) ───
+  const syncDrawOffer = useCallback(async (): Promise<void> => {
+    try {
+      const { error } = await sendDrawOffer(gameDataRef.current.id, myColorRef.current);
+      if (error) console.error('[useOnlineGame] syncDrawOffer failed:', error);
+    } catch (err) {
+      console.error('[useOnlineGame] syncDrawOffer failed:', err);
+    }
+  }, []);
+
+  const syncRespondDrawOffer = useCallback(async (accept: boolean): Promise<void> => {
+    try {
+      const { error } = await respondDrawOffer(gameDataRef.current.id, accept);
+      if (error) console.error('[useOnlineGame] syncRespondDrawOffer failed:', error);
+    } catch (err) {
+      console.error('[useOnlineGame] syncRespondDrawOffer failed:', err);
+    }
+  }, []);
+
+  const syncTakebackOffer = useCallback(async (): Promise<void> => {
+    try {
+      const { error } = await sendTakebackOffer(gameDataRef.current.id, myColorRef.current);
+      if (error) console.error('[useOnlineGame] syncTakebackOffer failed:', error);
+    } catch (err) {
+      console.error('[useOnlineGame] syncTakebackOffer failed:', err);
+    }
+  }, []);
+
+  const syncRematchOffer = useCallback(async (): Promise<void> => {
+    try {
+      const { error } = await sendRematchOffer(gameDataRef.current.id, myColorRef.current);
+      if (error) console.error('[useOnlineGame] syncRematchOffer failed:', error);
+    } catch (err) {
+      console.error('[useOnlineGame] syncRematchOffer failed:', err);
+    }
+  }, []);
+
+  const syncAbortGame = useCallback(async (reason = 'abort'): Promise<void> => {
+    try {
+      const { error } = await abortGame(gameDataRef.current.id, reason);
+      if (error) console.error('[useOnlineGame] syncAbortGame failed:', error);
+    } catch (err) {
+      console.error('[useOnlineGame] syncAbortGame failed:', err);
+    }
+  }, []);
+
+  /**
+   * Reconnect sonrası hamle geçmişini DB'den çekip döndürür.
+   * Yerel useGame state'ine OTOMATİK yazmaz (v2'de applyRemoteSnapshot ile
+   * useGame'e dokunmadan eklenecek); çağıran taraf rebuild için kullanır.
+   */
+  const rebuildFromHistory = useCallback(async (): Promise<{ moves: any[]; error: any }> => {
+    try {
+      const { data, error } = await fetchMoveHistory(gameDataRef.current.id);
+      if (error) {
+        console.error('[useOnlineGame] rebuildFromHistory failed:', error);
+        return { moves: [], error };
+      }
+      return { moves: data ?? [], error: null };
+    } catch (err) {
+      console.error('[useOnlineGame] rebuildFromHistory failed:', err);
+      return { moves: [], error: err };
+    }
+  }, []);
+
   const isMyTurn = gameData.current_turn === myColor;
   // KRITIK KARAR (opponentJoined): sadece status==='active' degil;
   // black_player_id doluysa rakip katilmis demektir (beyaz kurucu 'waiting'
@@ -194,5 +297,12 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
     syncResignation,
     syncDraw,
     syncGameEnd,
+    syncGameEndWithRating,
+    syncDrawOffer,
+    syncRespondDrawOffer,
+    syncTakebackOffer,
+    syncRematchOffer,
+    syncAbortGame,
+    rebuildFromHistory,
   };
 }

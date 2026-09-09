@@ -15,12 +15,14 @@ import {
 } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../../types';
 import chessboardImg from '../../assets/Board.png';
+import timurArkaImg from '../../assets/timur-arka.png';
 import okulLogo from '../../assets/okulLogo.png';
 
 interface DesktopMainMenuProps {
   onNavigate: (page: PageState) => void;
   onOpenCredits: () => void;
   onOpenInPersonModal: () => void;
+  onOpenOnlineModal: () => void;
   showNotification: (message: string, type?: NotificationType) => void;
 }
 
@@ -28,11 +30,19 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
   onNavigate,
   onOpenCredits,
   onOpenInPersonModal,
+  onOpenOnlineModal,
   showNotification,
 }) => {
   const [userName] = useState<string>('Misafir');
 
-  const gameModeCards = [
+  const gameModeCards: {
+    id: string;
+    title: string;
+    desc: string;
+    icon: React.ReactNode;
+    action: () => void;
+    badge?: string;
+  }[] = [
     {
       id: 'bot',
       title: 'Bota Karşı Oyna',
@@ -50,14 +60,9 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
     {
       id: 'online',
       title: 'Çevrimiçi Oyna',
-      desc: 'Dünyadaki rakiplerle karşılaş',
+      desc: 'Davet koduyla arkadaşınla karşılaş',
       icon: <Globe size={26} weight="regular" />,
-      action: () =>
-        showNotification(
-          'Çevrimiçi lobi ve eşleştirme modu yakında aktif olacak!',
-          'info'
-        ),
-      badge: 'Yakında',
+      action: onOpenOnlineModal,
     },
     {
       id: 'custom',
@@ -142,8 +147,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
       <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto w-full relative z-20">
 
         {/* KOLON 1 */}
-        <section className="lg:col-span-4 flex flex-col gap-6 text-left">
-          <div>
+        <section className="lg:col-span-4 flex flex-col gap-6 text-left">          <div>
             <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-5xl xl:text-6xl font-black tracking-tight leading-[1.05] text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
               Timur
               <br />
@@ -177,8 +181,16 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
         </section>
 
         {/* KOLON 2: SATRANÇ TAHTASI */}
-        <section className="lg:col-span-4 relative flex items-center justify-center w-full min-h-[320px]">
+        <section className="lg:col-span-5 relative flex items-center justify-center w-full min-h-[320px] overflow-x-clip lg:-translate-x-6 xl:-translate-x-10">
           <div className="absolute w-[280px] h-[280px] bg-[radial-gradient(circle,_rgba(0,212,196,0.12)_0%,_transparent_70%)] rounded-full blur-2xl pointer-events-none z-0 animate-pulse" />
+
+          {/* Arka plan görseli — tahtanın arkasında, çap viewport'a sığar */}
+          <img
+            src={timurArkaImg}
+            alt=""
+            aria-hidden
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(125%,72vh)] max-w-none aspect-square object-contain pointer-events-none z-0 select-none"
+          />
 
           <img
             src={chessboardImg}
@@ -188,7 +200,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
         </section>
 
         {/* KOLON 3: OYUN MODLARI */}
-        <section className="lg:col-span-4 flex flex-col gap-3.5">
+        <section className="lg:col-span-3 flex flex-col gap-4">
 
           {gameModeCards.map((card) => (
             <button
@@ -197,11 +209,11 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
               className="bg-[#f5eedc] hover:bg-[#ede4d0] border border-[#e5dcce] rounded-2xl p-4 flex items-center justify-between text-left cursor-pointer transition-all duration-200 shadow-lg group transform hover:scale-[1.02] active:scale-[0.99]"
             >
 
-              <div className="flex items-center gap-3.5 min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
 
                 {/* SİYAH-BEYAZ İKON */}
                 <div className="w-12 h-12 rounded-xl bg-[#141f1b]/5 border border-[#141f1b]/10 flex items-center justify-center flex-shrink-0 text-[#141f1b]">
-                  <span className="[&>svg]:!text-[#141f1b] [&>svg]:!fill-[#141f1b] [&>svg]:!stroke-[#141f1b]">
+                  <span className="[&>svg]:!text-[#141f1b] [&>svg]:!fill-[#141f1b] [&>svg]:!stroke-[#141f1b] [&>svg]:!w-[26px] [&>svg]:!h-[26px]">
                     {card.icon}
                   </span>
                 </div>
@@ -209,7 +221,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2">
 
-                    <span className="text-[#141f1b] font-batangas font-bold text-base leading-tight">
+                    <span className="text-[#141f1b] font-batangas font-bold text-lg leading-tight">
                       {card.title}
                     </span>
 
@@ -221,7 +233,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
 
                   </div>
 
-                  <span className="text-[#5c6c66] text-xs mt-0.5 truncate">
+                  <span className="text-[#5c6c66] text-sm mt-0.5 truncate">
                     {card.desc}
                   </span>
                 </div>

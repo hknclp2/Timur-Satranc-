@@ -116,6 +116,8 @@ export interface ReviewedMove {
   bestFrom: number;
   bestTo: number;
   bestMoveNotation: string;
+  bestMoveFlags?: string[];
+  bestMovePromotion?: string | null;
   classification: MoveClassificationType;
   lossCp: number;
   evalBeforeCp: number;

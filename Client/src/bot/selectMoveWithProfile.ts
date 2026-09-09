@@ -5,9 +5,13 @@
  *  1. Engine kök adayları skorlar (sıralı).
  *  2. Aday skorlarına ±`evaluationNoise` gürültüsü eklenir, yeniden sıralanır.
  *  3. En iyi `candidateLimit` hamle aday havuzuna alınır.
+ *  3b. Anında-mat koruması (Faz 4, Profil I HARİÇ): rakibe tek hamlelik mat
+ *      (veya patsı-kayıp) veren havuz hamlesi elenir (sığ engine yoklamasıyla;
+ *      havuz boşalırsa elenmemiş havuza dönülür).
  *  4. Zar atılır: `blunderRate` → rastgele legal hamle; yoksa `mistakeRate` →
  *     havuz-DIŞI rastgele legal hamle (yoksa havuza dönülür); yoksa profildeki
- *     ağırlıklı dağılımla havuzdan seçim.
+ *     ağırlıklı dağılımla havuzdan seçim — açılışta (`isOpening`) ise havuzdan
+ *     uniform seçim (açılış çeşitliliği).
  *
  * Zayıf bot tamamen rastgele OYNAMAZ — havuz Engine'in en iyileridir, seçim
  * olasılıksaldır (eğitsel "insan gibi hata" simülasyonu).
@@ -16,7 +20,8 @@
 import type { Move } from '../core/move/Move';
 import type { Position } from '../core/position/Position';
 import { generateLegalMoves } from '../core/rules/generateLegalMoves';
-import type { ScoredMove } from '../engine/search';
+import { makeMove } from '../core/rules/makeMove';
+import { MAX_PLY, scoreRootMoves, STALEMATE_WIN_SCORE, type ScoredMove } from '../engine/search';
 import type { TimurEngine } from '../engine/timurEngine';
 import { BOT_PROFILES, type BotProfile, type BotProfileId } from './profiles';
 
@@ -38,6 +43,17 @@ export interface SelectOptions {
   maxDepth?: number;
   /** Rastgelelik kaynağı (varsayılan Math.random; testte seed'li). */
   rng?: () => number;
+  /**
+   * Açılış çeşitliliği (Faz 4): ilk ~6 hamlede çağrıcı true verir
+   * (örn. `position.flags.fullMoveNumber <= 3`); havuz-içi seçim ağırlıklı
+   * yerine uniform yapılır. Hata zarları (blunder/mistake) aynen çalışır.
+   */
+  isOpening?: boolean;
+}
+
+/** `applyProfileSelection` için seçim opsiyonları (SelectOptions'un enginesiz alt kümesi). */
+export interface ApplyOptions {
+  isOpening?: boolean;
 }
 
 function moveKey(m: Move): string {
@@ -72,7 +88,30 @@ export function selectMoveWithProfile(
   if (scored.length === 0) {
     throw new Error(`selectMoveWithProfile: ${profileId} için aday hamle yok`);
   }
-  return applyProfileSelection(scored, profile, position, opts.rng ?? Math.random);
+  return applyProfileSelection(scored, profile, position, opts.rng ?? Math.random, {
+    isOpening: opts.isOpening,
+  });
+}
+
+/**
+ * Aday hamle rakibe ANINDA kayıp hediye ediyor mu? Hamle uygulanır, rakip
+ * 1-ply yoklanır: en iyi rakip skoru patsı-kayıp eşiğindeyse rakip tek
+ * hamlede mat (veya patsı-galibiyet) buluyor demektir. `scoreRootMoves`
+ * pozisyonu klonlar — girdi kirlenmez.
+ */
+function givesOpponentInstantLoss(position: Position, move: Move): boolean {
+  let after: Position;
+  try {
+    after = makeMove(position, move);
+  } catch {
+    return false; // uygulanamayan aday zaten havuzda barınamaz (üst katman eler)
+  }
+  const r = scoreRootMoves(after, 1);
+  let best = -Infinity;
+  for (const s of r.scored) {
+    if (s.score > best) best = s.score;
+  }
+  return best >= STALEMATE_WIN_SCORE - MAX_PLY;
 }
 
 /**
@@ -85,6 +124,7 @@ export function applyProfileSelection(
   profile: BotProfile,
   position: Position,
   rng: () => number = Math.random,
+  opts: ApplyOptions = {},
 ): SelectedMove {
   if (scored.length === 0) {
     throw new Error(`applyProfileSelection: ${profile.id} için aday hamle yok`);
@@ -98,7 +138,15 @@ export function applyProfileSelection(
   noisy.sort((a, b) => b.score - a.score);
 
   // 2. Aday havuzu.
-  const pool = noisy.slice(0, Math.max(1, Math.min(profile.candidateLimit, noisy.length)));
+  let pool = noisy.slice(0, Math.max(1, Math.min(profile.candidateLimit, noisy.length)));
+
+  // 2b. Anında-mat koruması (Profil I hariç): rakibe tek hamlelik kayıp
+  //      veren havuz hamlesini ele. Tek adayda yoklama anlamsız (alternatif
+  //      yok) — atlanır. Havuz boşalırsa elenmemiş havuza dönülür.
+  if (profile.id !== 'I' && pool.length > 1) {
+    const guarded = pool.filter((s) => !givesOpponentInstantLoss(position, s.move));
+    if (guarded.length > 0) pool = guarded;
+  }
   const poolKeys = new Set(pool.map((s) => moveKey(s.move)));
 
   // 3. Blunder: tamamen rastgele legal hamle.
@@ -113,7 +161,17 @@ export function applyProfileSelection(
     return { move: pickUniform(outside, rng), kind: 'mistake', candidateCount: pool.length, engineScore: null };
   }
 
-  // 5. Ağırlıklı seçim (havuz dağılım önekine göre).
+  // 5. Havuzdan seçim: açılışta uniform (çeşitlilik), yoksa ağırlıklı.
+  //    `kind` bilerek 'weighted' kalır (EngineInterface.selection aynası).
+  if (opts.isOpening && pool.length > 1) {
+    const picked = pickUniform(pool, rng);
+    return {
+      move: picked.move,
+      kind: 'weighted',
+      candidateCount: pool.length,
+      engineScore: picked.score,
+    };
+  }
   const weights = profile.weights.slice(0, pool.length);
   const picked = pool.length === 1 ? pool[0] : pickWeighted(pool, weights, rng);
   return {

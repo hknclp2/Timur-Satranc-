@@ -131,6 +131,32 @@ export function activeLevelId(state: LearnProgressState): number {
   return LEARN_LEVELS[LEARN_LEVELS.length - 1].id;
 }
 
+// ─── Streak deposu (Faz 7, localStorage; mevcut store'a dokunmaz) ─────────────
+const STREAK_KEY = 'timur-learn-streak-v1';
+
+export function getStreak(): number {
+  try {
+    if (typeof localStorage === 'undefined') return 0;
+    const raw = localStorage.getItem(STREAK_KEY);
+    if (raw == null) return 0;
+    const n = JSON.parse(raw) as unknown;
+    if (typeof n !== 'number' || !Number.isFinite(n)) return 0;
+    return Math.max(0, Math.floor(n));
+  } catch {
+    return 0;
+  }
+}
+
+export function setStreak(v: number): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const n = Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0;
+    localStorage.setItem(STREAK_KEY, JSON.stringify(n));
+  } catch {
+    /* yoksay */
+  }
+}
+
 // ─── React hook ──────────────────────────────────────────────────────────────
 export function useLearnProgress(store: LearnProgressStore = learnProgressStore) {
   const [, bump] = useState(0);

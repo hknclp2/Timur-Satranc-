@@ -9,6 +9,7 @@ import { PromotionModal } from '../components/board/PromotionModal';
 import { GameReviewView } from './GameReviewView';
 import { SelfAnalysisView } from './SelfAnalysisView';
 import { defaultMaterialCalculator } from '../core/material/MaterialCalculator';
+import { legacyGameStateToPosition } from '../worker/legacyAdapter';
 import { ArrowCounterClockwise, Flag, Handshake, Play, Pause, X, House } from '@phosphor-icons/react';
 import { NotificationType, PlayerColor } from '../types';
 import { BoardMatrix, CitadelState } from '../types/chess';
@@ -169,6 +170,20 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
   };
 
   // ── Alt görünüm yönlendirmesi (durum korunur: hook unmount olmaz) ──
+  const reviewInitialPosition = useMemo(
+    () =>
+      initialBoard
+        ? legacyGameStateToPosition({
+            board: initialBoard,
+            citadels: initialCitadels ?? { whiteCitadelPiece: null, blackCitadelPiece: null },
+            currentTurn: initialTurn ?? 'white',
+            halfMoveClock: 0,
+            turnNumber: 1,
+            hasUsedKingSwap: { white: false, black: false },
+          } as unknown as Parameters<typeof legacyGameStateToPosition>[0])
+        : undefined,
+    [initialBoard, initialCitadels, initialTurn],
+  );
   if (subView === 'review') {
     return (
       <GameReviewView
@@ -180,6 +195,7 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
         onBack={() => setSubView('game')}
         onOpenSelfAnalysis={() => setSubView('analysis')}
         onRematch={onResetClick}
+        initialPosition={reviewInitialPosition}
       />
     );
   }

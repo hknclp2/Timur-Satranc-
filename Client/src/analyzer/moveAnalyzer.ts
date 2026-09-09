@@ -33,15 +33,13 @@ export interface ClassifyParams {
   lossCp: number;
   ply: number;
   isCheckmate?: boolean;
-  isTacticalForkOrSacrifice?: boolean;
   opponentBlunderedBefore?: boolean;
 }
 
 export function classifyLossDetailed(params: ClassifyParams): MoveClassificationType {
-  const { lossCp, ply, isCheckmate, isTacticalForkOrSacrifice, opponentBlunderedBefore } = params;
+  const { lossCp, ply, isCheckmate, opponentBlunderedBefore } = params;
 
   if (isCheckmate) return 'brilliant';
-  if (isTacticalForkOrSacrifice && lossCp <= 20) return 'brilliant';
 
   // Açılışın ilk 4 yarım hamlesi
   if (ply <= 4 && lossCp <= 45) return 'book';

@@ -10,8 +10,12 @@ import {
 } from '@phosphor-icons/react';
 import { MoveHistoryEntry } from '../hooks/useGame';
 import { PlayerColor } from '../types/chess';
-import { TimurEngine } from '../engine/timurEngine';
 import { analyzeFullGame } from '../analyzer/gameAnalyzer';
+import {
+  REVIEW_ANALYSIS_DEPTH,
+  createReviewEngine,
+  isReviewCancelledError,
+} from '../hooks/useReviewAnalysis';
 import { FullGameReviewReport } from '../analyzer/types';
 import { createInitialGameState } from '../core/engine/boardSetup';
 import { legacyGameStateToPosition, squareToLegacy } from '../worker/legacyAdapter';
@@ -29,6 +33,10 @@ export interface GameReviewViewProps {
   onBack: () => void;
   onOpenSelfAnalysis: () => void;
   onRematch?: () => void;
+  /** Özel dizilimle başlayan maçın başlangıç konumu (verilmezse klasik dizilim). */
+  initialPosition?: import('../core/position/Position').Position;
+  /** İnceleyen taraf — tahta bu renge dönük açılır (taşlar izleyiciye dönük). */
+  perspective?: PlayerColor;
 }
 
 export const GameReviewView: FC<GameReviewViewProps> = ({
@@ -40,25 +48,47 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
   onBack,
   onOpenSelfAnalysis,
   onRematch,
+  initialPosition,
+  perspective = 'white',
 }) => {
   const [activeStage, setActiveStage] = useState<'summary' | 'interactive'>('summary');
   const [report, setReport] = useState<FullGameReviewReport | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [currentPly, setCurrentPly] = useState<number>(1);
-  const [flipped, setFlipped] = useState(false);
+  const [flipped, setFlipped] = useState(perspective === 'black');
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   // Background Game Analysis
   useEffect(() => {
     let isMounted = true;
+    const engine = createReviewEngine();
 
     async function runAnalysis() {
-      // Create initial board position
-      const initialLegacy = createInitialGameState();
-      const initialPos = legacyGameStateToPosition(initialLegacy);
+      // Create initial board position (özel dizilim prop'la gelir; verilmezse klasik)
+      const initialPos = initialPosition ?? legacyGameStateToPosition(createInitialGameState());
 
       // Reconstruct Core Move array from historyEntries
       const moves: Move[] = [];
       let currentPos = initialPos;
+
+      // legacy PieceType -> PieceKind (legacyAdapter.LEGACY_TO_KIND ile aynı eşleme;
+      // yeni import eklememek için blok-içi tablo: queen→General, general→Ferz,
+      // bishop→Alfil, warMachine→Dabbaba, prince→Prince, diğerleri birebir)
+      const LEGACY_TO_KIND: Record<string, NonNullable<Move['promotion']>> = {
+        king: 'king' as unknown as NonNullable<Move['promotion']>,
+        queen: 'general' as unknown as NonNullable<Move['promotion']>,
+        general: 'ferz' as unknown as NonNullable<Move['promotion']>,
+        rook: 'rook' as unknown as NonNullable<Move['promotion']>,
+        knight: 'knight' as unknown as NonNullable<Move['promotion']>,
+        bishop: 'alfil' as unknown as NonNullable<Move['promotion']>,
+        camel: 'camel' as unknown as NonNullable<Move['promotion']>,
+        warMachine: 'dabbaba' as unknown as NonNullable<Move['promotion']>,
+        giraffe: 'giraffe' as unknown as NonNullable<Move['promotion']>,
+        picket: 'picket' as unknown as NonNullable<Move['promotion']>,
+        pawn: 'pawn' as unknown as NonNullable<Move['promotion']>,
+        prince: 'prince' as unknown as NonNullable<Move['promotion']>,
+      };
 
       for (const entry of historyEntries) {
         const fromSq = entry.from.isCitadel
@@ -76,12 +106,28 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
         const piece = currentPos.board[fromSq];
         if (!piece) continue;
 
+        // Bayrak taşıma: KingSwap bayraksız uygulanırsa dost taşı yer,
+        // terfi bayraksız/çevrimsiz uygulanırsa yanlış taşa çözülür
+        // (resolveForApply). History entry'deki legacy alanlardan kur.
+        const specialFlags: Move['specialFlags'] = [];
+        if (entry.isKingSwap) {
+          specialFlags.push('king_swap' as unknown as Move['specialFlags'][number]);
+        }
+        if (entry.isRelocation) {
+          specialFlags.push('relocation' as unknown as Move['specialFlags'][number]);
+        }
+        const promotionKind = entry.promotion ? LEGACY_TO_KIND[entry.promotion] : undefined;
+        if (promotionKind) {
+          specialFlags.push('promotion' as unknown as Move['specialFlags'][number]);
+        }
+
         const move: Move = {
           from: fromSq,
           to: toSq,
           piece,
           capturedPiece: currentPos.board[toSq],
-          specialFlags: [],
+          promotion: promotionKind,
+          specialFlags,
           metadata: {
             isCheck: !!entry.isCheck,
             isCapture: !!entry.capturedPiece,
@@ -93,30 +139,38 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
         currentPos = makeMove(currentPos, move);
       }
 
-      const engine = new TimurEngine();
-
-      const rep = await analyzeFullGame(
-        engine,
-        initialPos,
-        moves,
-        {
-          depth: 3,
-          whiteName,
-          blackName,
-        },
-        (completed, total) => {
-          if (isMounted) {
-            setProgress(Math.round((completed / Math.max(1, total)) * 100));
-          }
-        },
-      );
-
       if (isMounted) {
-        setReport(rep);
-        setProgress(100);
-        if (rep.moves.length > 0) {
-          setCurrentPly(rep.moves[0].ply);
+        setReportError(null);
+      }
+
+      try {
+        const rep = await analyzeFullGame(
+          engine,
+          initialPos,
+          moves,
+          {
+            depth: REVIEW_ANALYSIS_DEPTH,
+            whiteName,
+            blackName,
+          },
+          (completed, total) => {
+            if (isMounted) {
+              setProgress(Math.round((completed / Math.max(1, total)) * 100));
+            }
+          },
+        );
+
+        if (isMounted) {
+          setReport(rep);
+          setProgress(100);
+          if (rep.moves.length > 0) {
+            setCurrentPly(rep.moves[0].ply);
+          }
         }
+      } catch (err) {
+        if (!isMounted) return;
+        if (isReviewCancelledError(err)) return;
+        setReportError(err instanceof Error ? err.message : 'Analiz sırasında bir hata oluştu.');
       }
     }
 
@@ -124,8 +178,9 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
 
     return () => {
       isMounted = false;
+      engine.cancelPending();
     };
-  }, [historyEntries, whiteName, blackName]);
+  }, [historyEntries, whiteName, blackName, initialPosition, retryNonce]);
 
   const title =
     winner === 'draw' || winner === null
@@ -220,13 +275,31 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
               </p>
             </div>
             {/* Progress Bar */}
-            <div className="w-64 h-3 rounded-full bg-black/40 border border-white/10 overflow-hidden mt-2">
-              <div
-                className="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <span className="text-xs font-bold text-white/60">%{progress}</span>
+            {!reportError ? (
+              <>
+                <div className="w-64 h-3 rounded-full bg-black/40 border border-white/10 overflow-hidden mt-2">
+                  <div
+                    className="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-white/60">%{progress}</span>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 mt-2">
+                <p className="text-xs text-red-300 font-bold max-w-64">{reportError}</p>
+                <button
+                  onClick={() => {
+                    setReportError(null);
+                    setProgress(0);
+                    setRetryNonce((n) => n + 1);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-sm font-bold transition-all cursor-pointer"
+                >
+                  Tekrar dene
+                </button>
+              </div>
+            )}
           </div>
         )}
 

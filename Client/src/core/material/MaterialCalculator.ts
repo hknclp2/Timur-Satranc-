@@ -7,19 +7,29 @@
 
 import { Piece, PieceType, PlayerColor } from '../../types/chess';
 
+/**
+ * Canonical display/capture values in pawn units, derived from
+ * `src/engine/evaluate.ts` PIECE_VALUES_CP (value = cp / 100).
+ *
+ * Legacy↔spec mapping (see `src/core/position/Position.ts`):
+ * legacy `queen` (Vezir, straight) → spec `General` 950cp → 9.5
+ * legacy `general` (Fers, diagonal) → spec `Ferz` 300cp → 3
+ * legacy `bishop` (Fil) → spec `Alfil` 200cp → 2
+ * legacy `warMachine` (Mancınık) → spec `Dabbaba` 200cp → 2
+ */
 export const DEFAULT_TIMUR_PIECE_VALUES: Record<PieceType, number> = {
-  pawn: 1,
-  general: 2,
-  queen: 2,
-  warMachine: 3,
-  knight: 3,
-  bishop: 3,
-  camel: 3,
-  picket: 3,
-  giraffe: 4,
-  rook: 5,
+  pawn: 1, // Pawn 100cp
+  general: 3, // Ferz 300cp
+  queen: 9.5, // General 950cp
+  warMachine: 2, // Dabbaba 200cp
+  knight: 3, // Knight 300cp
+  bishop: 2, // Alfil 200cp
+  camel: 2.5, // Camel 250cp
+  picket: 1.5, // Picket 150cp
+  giraffe: 3.5, // Giraffe 350cp
+  rook: 5, // Rook 500cp
   king: 0, // King value is non-material (royal)
-  prince: 4, // Prince value
+  prince: 4, // Prince 400cp (legacy extension, terfi ürünü)
 };
 
 export interface MaterialAdvantageResult {

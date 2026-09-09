@@ -8,6 +8,8 @@ import { BoardContainer } from '../components/game/BoardContainer';
 import { BottomToolbar } from '../components/game/BottomToolbar';
 import { GameOverModal } from '../components/game/GameOverModal';
 import { PromotionModal } from '../components/board/PromotionModal';
+import { GameReviewView } from './GameReviewView';
+import { SelfAnalysisView } from './SelfAnalysisView';
 import { defaultMaterialCalculator } from '../core/material/MaterialCalculator';
 import {
   WifiHigh,
@@ -20,6 +22,7 @@ import {
   Copy,
 } from '@phosphor-icons/react';
 import { NotificationType, PlayerColor } from '../types';
+import { getRating } from '../core/online/ratingService';
 
 interface OnlinePlayViewProps {
   gameData: OnlineGame;
@@ -38,6 +41,7 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [showGameOver, setShowGameOver] = useState(true);
+  const [subView, setSubView] = useState<'game' | 'review' | 'analysis'>('game');
 
   // ─── Online senkronizasyon katmanı ──────────────────────────────────
   const {
@@ -50,6 +54,7 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
     syncResignation,
     syncDraw,
     syncGameEnd,
+    rebuildFromHistory,
   } = useOnlineGame({ gameCode, myColor, initialGameData });
 
   // ─── Yerel oyun motoru (DB snapshot'ıyla başlar) ────────────────────
@@ -107,6 +112,60 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
   const liveBlackName = gameData.black_name || 'Rakip bekleniyor';
   const myName = myColor === 'white' ? liveWhiteName : liveBlackName;
   const opponentName = myColor === 'white' ? liveBlackName : liveWhiteName;
+
+  // ─── Rating rozeti (sadece gösterim, tahta/hamle mantığına dokunmaz) ───
+  const [whiteRating, setWhiteRating] = useState<number | null>(null);
+  const [blackRating, setBlackRating] = useState<number | null>(null);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const whiteId = gameData.white_player_id;
+    const blackId = gameData.black_player_id;
+    if (!whiteId && !blackId) return;
+    setRatingsLoading(true);
+    (async () => {
+      try {
+        const [w, b] = await Promise.all([
+          whiteId ? getRating(whiteId) : Promise.resolve({ data: null }),
+          blackId ? getRating(blackId) : Promise.resolve({ data: null }),
+        ]);
+        if (cancelled) return;
+        setWhiteRating(w.data?.rating ?? null);
+        setBlackRating(b.data?.rating ?? null);
+      } catch {
+        if (!cancelled) {
+          setWhiteRating(null);
+          setBlackRating(null);
+        }
+      } finally {
+        if (!cancelled) setRatingsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameData.white_player_id, gameData.black_player_id]);
+
+  const whiteDisplayName = ratingsLoading
+    ? `${liveWhiteName} (...)`
+    : whiteRating != null
+      ? `${liveWhiteName} (${whiteRating})`
+      : liveWhiteName;
+  const blackDisplayName = ratingsLoading
+    ? `${liveBlackName} (...)`
+    : blackRating != null
+      ? `${liveBlackName} (${blackRating})`
+      : liveBlackName;
+  const myDisplayName = myColor === 'white' ? whiteDisplayName : blackDisplayName;
+  const opponentDisplayName = myColor === 'white' ? blackDisplayName : whiteDisplayName;
+
+  // ─── Reconnect: bağlantı kurulduğunda geçmişi tazele (rebuild tetikleyici) ───
+  useEffect(() => {
+    if (connectionStatus === 'connected') {
+      void rebuildFromHistory();
+    }
+  }, [connectionStatus, rebuildFromHistory]);
   const myTime = myColor === 'white' ? whiteTime : blackTime;
   const opponentTime = opponentColor === 'white' ? whiteTime : blackTime;
 
@@ -248,6 +307,37 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
     );
   }
 
+  // ─── İnceleme / Analiz alt görünümleri (BotPlayView deseni; online'da onRematch yok) ───
+  if (subView === 'review') {
+    return (
+      <GameReviewView
+        historyEntries={historyEntries}
+        whiteName={liveWhiteName}
+        blackName={liveBlackName}
+        winner={gameState.winner ?? gameData.winner ?? 'draw'}
+        statusText={statusText}
+        onBack={() => setSubView('game')}
+        onOpenSelfAnalysis={() => setSubView('analysis')}
+        perspective={myColor}
+      />
+    );
+  }
+
+  if (subView === 'analysis') {
+    return (
+      <SelfAnalysisView
+        whiteName={liveWhiteName}
+        blackName={liveBlackName}
+        initialBoard={displayedBoard}
+        initialCitadels={displayedCitadels}
+        initialTurn={gameState.currentTurn}
+        initialTimeSeconds={0}
+        onExit={() => setSubView('game')}
+        showNotification={showNotification}
+      />
+    );
+  }
+
   // ─── Ana oyun ekranı ────────────────────────────────────────────────
   return (
     <div className="mobile-screen flex flex-col justify-between bg-[#153423] text-white relative overflow-hidden select-none">
@@ -292,7 +382,7 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
       {/* Oyun alanı: rakip -> tahta -> ben */}
       <div className="flex-1 flex flex-col justify-between items-center px-10 py-1 relative z-10 w-full max-w-lg mx-auto overflow-visible">
         <PlayerCard
-          name={opponentName}
+          name={opponentDisplayName}
           side={opponentColor}
           timeSeconds={opponentTime}
           isActive={gameState.currentTurn === opponentColor && !gameState.isGameOver}
@@ -315,7 +405,7 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
         />
 
         <PlayerCard
-          name={myName}
+          name={myDisplayName}
           side={myColor}
           timeSeconds={myTime}
           isActive={gameState.currentTurn === myColor && !gameState.isGameOver}
@@ -330,7 +420,13 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
         onOptions={() => setIsOptionsOpen(true)}
         onTogglePause={togglePause}
         isPaused={isPaused}
-        onSelfAnalysis={() => showNotification?.('Analiz yakında', 'info')}
+        onSelfAnalysis={() => {
+          if (gameState.isGameOver || onlineGameOver) {
+            setSubView('analysis');
+          } else {
+            showNotification?.('Önce maçı bitir', 'info');
+          }
+        }}
         onPrevious={goToPreviousMove}
         onNext={goToNextMove}
         canPrevious={canGoPrevious}
@@ -401,7 +497,13 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
           whiteName={liveWhiteName}
           blackName={liveBlackName}
           totalMoves={historyEntries.length}
-          onGameReview={() => showNotification?.('Oyun incelemesi yakında', 'info')}
+          onGameReview={() => {
+            if (gameState.isGameOver || onlineGameOver) {
+              setSubView('review');
+            } else {
+              showNotification?.('Önce maçı bitir', 'info');
+            }
+          }}
           onRequestRematch={() => showNotification?.('Rövanş isteği yakında', 'info')}
           onFindOpponent={() => showNotification?.('Yeni rakip bulma yakında', 'info')}
           onNewGame={onExit}

@@ -49,9 +49,6 @@ export const ReviewSummaryStage: FC<ReviewSummaryStageProps> = ({
           <div className="bg-white text-gray-900 font-batangas text-2xl font-black px-4 py-1.5 rounded-xl shadow my-1.5">
             %{report.whiteAccuracy}
           </div>
-          <span className="text-[11px] font-bold text-emerald-400">
-            Reyting: ~{report.whiteRatingEstimate}
-          </span>
         </div>
 
         {/* Black Player */}
@@ -65,9 +62,6 @@ export const ReviewSummaryStage: FC<ReviewSummaryStageProps> = ({
           <div className="bg-[#262626] text-white font-batangas text-2xl font-black px-4 py-1.5 rounded-xl shadow my-1.5 border border-white/10">
             %{report.blackAccuracy}
           </div>
-          <span className="text-[11px] font-bold text-cyan-400">
-            Reyting: ~{report.blackRatingEstimate}
-          </span>
         </div>
       </div>
 

@@ -1,7 +1,21 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { ArrowLeft, Trophy, Users, Medal } from '@phosphor-icons/react';
 import { NotificationType } from '../types';
 import { ComingSoonPanel } from './ComingSoonPanel';
+import {
+  listTournaments,
+  joinTournament,
+  type Tournament,
+} from '../core/tournament/tournamentService';
+import { getOrCreatePlayerId } from '../lib/auth';
+
+function toErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === 'string' && error) return error;
+  if (error && typeof (error as { message?: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return fallback;
+}
 
 interface TournamentModalProps {
   onClose: () => void;
@@ -9,7 +23,7 @@ interface TournamentModalProps {
 }
 
 interface TournamentItem {
-  id: number;
+  id: number | string;
   title: string;
   timeControl: string;
   participants: number;
@@ -17,6 +31,24 @@ interface TournamentItem {
   startsIn: string;
   prize: string;
   status: 'active' | 'upcoming';
+}
+
+function toDisplayItem(t: Tournament): TournamentItem {
+  return {
+    id: t.id,
+    title: t.title,
+    timeControl: t.time_control,
+    participants: 0,
+    maxParticipants: t.max_players,
+    startsIn:
+      t.status === 'active'
+        ? 'CANLI (Devam Ediyor)'
+        : t.starts_at
+          ? new Date(t.starts_at).toLocaleString('tr-TR')
+          : 'Yakında',
+    prize: '—',
+    status: t.status === 'active' ? 'active' : 'upcoming',
+  };
 }
 
 const TOURNAMENTS: TournamentItem[] = [
@@ -62,12 +94,55 @@ const TOURNAMENTS: TournamentItem[] = [
   },
 ];
 
-export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
+export const TournamentModal: FC<TournamentModalProps> = ({ onClose, showNotification }) => {
   const [showRegisterInfo, setShowRegisterInfo] = useState(false);
+  const [liveTournaments, setLiveTournaments] = useState<Tournament[] | null>(null);
+  const [joiningId, setJoiningId] = useState<number | string | null>(null);
 
-  const handleJoin = (_tourney: TournamentItem) => {
-    // Kayıt ekranı henüz hazır değil — yer tutucu göster
-    setShowRegisterInfo(true);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await listTournaments();
+        if (cancelled) return;
+        // Başarılı + boş değilse canlı listeyi göster, yoksa statik fallback.
+        if (!error && data && data.length > 0) {
+          setLiveTournaments(data);
+        }
+      } catch {
+        // Hata → statik fallback (sessiz geç).
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isLive = liveTournaments !== null && liveTournaments.length > 0;
+  const displayTournaments: TournamentItem[] = isLive
+    ? (liveTournaments as Tournament[]).map(toDisplayItem)
+    : TOURNAMENTS;
+
+  const handleJoin = async (tourney: TournamentItem) => {
+    // Fallback (statik liste) → kayıt ekranı henüz hazır değil, yer tutucu göster.
+    if (!isLive) {
+      setShowRegisterInfo(true);
+      return;
+    }
+    if (joiningId !== null) return;
+    setJoiningId(tourney.id);
+    try {
+      const { error } = await joinTournament(String(tourney.id), getOrCreatePlayerId());
+      if (error) {
+        showNotification(toErrorMessage(error, 'Turnuvaya kayıt olunamadı.'), 'error');
+        return;
+      }
+      showNotification('Turnuvaya kaydoldun! Bol şans.', 'success');
+    } catch {
+      showNotification('Turnuvaya kayıt olunamadı. Bağlantını kontrol et.', 'error');
+    } finally {
+      setJoiningId(null);
+    }
   };
 
   if (showRegisterInfo) {
@@ -105,7 +180,7 @@ export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
             Büyük Timur Satrancı arenasında yarış, puan topla ve imparatorluk unvanlarını kazan!
           </p>
 
-          {TOURNAMENTS.map((t) => (
+          {displayTournaments.map((t) => (
             <div
               key={t.id}
               className="bg-[#f5eedc] rounded-2xl p-4 flex flex-col gap-3 shadow-md border border-[#e5dcce] hover:border-[#00d4c4] transition-all"
@@ -140,10 +215,15 @@ export const TournamentModal: FC<TournamentModalProps> = ({ onClose }) => {
               </div>
 
               <button
-                onClick={() => handleJoin(t)}
-                className="w-full mt-1 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-2.5 rounded-xl shadow transition-all cursor-pointer text-sm"
+                onClick={() => void handleJoin(t)}
+                disabled={joiningId === t.id}
+                className="w-full mt-1 bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-98 text-[#0d2818] font-batangas font-bold py-2.5 rounded-xl shadow transition-all cursor-pointer text-sm disabled:opacity-50"
               >
-                {t.status === 'active' ? 'Arenaya Katıl' : 'Kayıt Ol'}
+                {joiningId === t.id
+                  ? 'Kaydediliyor...'
+                  : t.status === 'active'
+                    ? 'Arenaya Katıl'
+                    : 'Kayıt Ol'}
               </button>
             </div>
           ))}

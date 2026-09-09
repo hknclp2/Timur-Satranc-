@@ -62,22 +62,32 @@ export interface PieceRotationOptions {
   pieceColor?: PlayerColor;
   currentTurn?: PlayerColor;
   boardRotates?: boolean;
+  /**
+   * İzleyici siyah taraftaysa true (tahta çerçevesi 180° dönüktür).
+   * Taşlar HER DAİM izleyiciye dönük olur — sıra kimdeyse ona değil.
+   */
+  flipped?: boolean;
 }
 
 /**
- * Calculates piece rotation:
- * - In normal mode (fixed board): All pieces turn toward the player whose turn it currently is (White: 0°, Black: 180°).
- * - In boardRotates mode: Board container itself flips, so piece local rotation is 0°.
+ * Taş rotasyonu (izleyici-bazlı):
+ * - boardRotates modunda (yerel, tahta sırayla döner): çerçevenin tersine
+ *   dengele, taşlar hamle sırası gelene dönük olur (eski davranış korunur).
+ * - flipped izleyicide (siyah, çerçeve 180°): sabit 180° ile çerçeveyi
+ *   dengele → taşlar siyah izleyiciye hep düz görünür.
+ * - Normalde (beyaz izleyici): 0° → taşlar beyaza hep düz görünür.
  */
 export function getPieceRotation({
   currentTurn = 'white',
   boardRotates = false,
+  flipped = false,
 }: PieceRotationOptions): number {
   if (boardRotates) {
     // Counter-rotate pieces to keep them upright when board is flipped 180°
     return currentTurn === 'black' ? -180 : 0;
   }
-  return currentTurn === 'black' ? 180 : 0;
+  if (flipped) return 180;
+  return 0;
 }
 
 interface PieceViewProps {
@@ -88,6 +98,8 @@ interface PieceViewProps {
   size?: 'sm' | 'md' | 'lg' | 'responsive';
   currentTurn?: PlayerColor;
   boardRotates?: boolean;
+  /** İzleyici siyah taraftaysa true — taşlar izleyiciye dönük kalır. */
+  flipped?: boolean;
   disableRotation?: boolean;
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -101,6 +113,7 @@ export const PieceView: FC<PieceViewProps> = ({
   size = 'responsive',
   currentTurn = 'white',
   boardRotates = false,
+  flipped = false,
   disableRotation = false,
   draggable = true,
   onDragStart,
@@ -122,8 +135,9 @@ export const PieceView: FC<PieceViewProps> = ({
       pieceColor: piece.color,
       currentTurn,
       boardRotates,
+      flipped,
     });
-  }, [disableRotation, piece.color, currentTurn, boardRotates]);
+  }, [disableRotation, piece.color, currentTurn, boardRotates, flipped]);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData(

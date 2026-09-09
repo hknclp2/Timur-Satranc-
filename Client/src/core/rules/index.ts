@@ -5,5 +5,11 @@
  */
 
 export { generateLegalMoves, isLegalMove } from './generateLegalMoves';
+export {
+  buildLegalMoves,
+  filterKingSafety,
+  generatePseudoTargets,
+  type KingSafetyOpts,
+} from './pipeline';
 export { makeMove, makeMoveInPlace, undoMoveInPlace, type UndoRecord } from './makeMove';
 export { isCheck, isGameOver, getGameResult } from './gameResult';

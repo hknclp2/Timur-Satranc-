@@ -11,6 +11,12 @@
 import { MoveHistoryEntry } from '../hooks/useGame';
 import { PlayerColor } from '../types/chess';
 import { defaultMaterialCalculator } from '../core/material/MaterialCalculator';
+import type { Position } from '../core/position/Position';
+import { fullEvaluate } from '../engine/fullEvaluation';
+import {
+  accuracyFromLosses as thresholdsAccuracyFromLosses,
+  classifyLoss as thresholdsClassifyLoss,
+} from '../analyzer/thresholds';
 
 export type MoveClassification =
   | 'brilliant' // Mükemmel
@@ -77,27 +83,33 @@ function bonusForEntry(entry: MoveHistoryEntry): number {
   return b;
 }
 
-export function classifySwing(swingForMover: number, isCheckmate: boolean): MoveClassification {
+/**
+ * §7.7 eşikleri (`analyzer/thresholds.ts`) → bu modülün 6'lı sınıflandırması.
+ * `brilliant` yalnızca mat yapan hamleye ayrılır; diğerleri birebir eşlenir:
+ * Excellent→best, Good→good, Inaccuracy→inaccuracy, Mistake→mistake, Blunder→blunder.
+ * Kayıp cp birimindedir (piyon kaybı × 100).
+ */
+function toEngineClassification(lossCp: number, isCheckmate: boolean): MoveClassification {
   if (isCheckmate) return 'brilliant';
-  if (swingForMover >= 0.1) return 'best';
-  if (swingForMover >= -0.3) return 'good';
-  if (swingForMover >= -0.9) return 'inaccuracy';
-  if (swingForMover >= -2.0) return 'mistake';
-  return 'blunder';
+  const cls = thresholdsClassifyLoss(lossCp);
+  switch (cls) {
+    case 'Excellent':
+      return 'best';
+    case 'Good':
+      return 'good';
+    case 'Inaccuracy':
+      return 'inaccuracy';
+    case 'Mistake':
+      return 'mistake';
+    default:
+      return 'blunder';
+  }
 }
 
 function suggestionFor(m: AnalyzedMove): string | undefined {
   if (m.classification === 'best' || m.classification === 'brilliant') return undefined;
   const side = m.player === 'white' ? 'Beyaz' : 'Siyah';
   return `${side} için motor önerisi: taşları korumaya öncelik veren daha sakin bir devam yolu vardı (${m.notation} yerine gelişim hamlesi).`;
-}
-
-function accuracyFromLosses(losses: number[]): number {
-  if (losses.length === 0) return 100;
-  const avg = losses.reduce((a, b) => a + b, 0) / losses.length;
-  // Scale: ~0.15 pawn avg loss => ~95, ~1.0 => ~75, ~2.5+ => ~50.
-  const acc = 100 - avg * 22 - Math.max(0, avg - 1) * 8;
-  return Math.max(20, Math.min(100, Math.round(acc)));
 }
 
 export interface GameAnalysis {
@@ -109,7 +121,39 @@ export interface GameAnalysis {
   counts: Record<MoveClassification, number>;
 }
 
-export function analyzeGame(entries: MoveHistoryEntry[]): GameAnalysis {
+/**
+ * `fullEvaluate` (6 bileşenli tam eval) için zobrist-string anahtarlı önbellekli
+ * sarmalayıcı. `engine/search.ts`'ye dokunmadan varsayılan analiz yoluna
+ * opt-in tam-eval desteği verir.
+ */
+export function cachedFullEvaluate(
+  position: Position,
+  cache?: Map<string, number>,
+): number {
+  if (!cache) return fullEvaluate(position);
+  const key = position.zobristHash.toString();
+  const hit = cache.get(key);
+  if (hit !== undefined) return hit;
+  const value = fullEvaluate(position);
+  cache.set(key, value);
+  return value;
+}
+
+export interface AnalyzeGameOptions {
+  /**
+   * Hamle-sonrası konumlar (beyaz-göreli eval için).
+   * Uzunluk `entries.length + 1` ise positions[i+1], `entries.length` ise
+   * positions[i] hamle-sonrası konum sayılır. Verilmezse materyal snapshot
+   * yoluna düşülür (varsayılan davranış korunur).
+   */
+  positions?: Position[];
+  /** Verilip positions yoksa etkisiz. Verilmezse positions varsa true sayılır. */
+  useFullEvaluation?: boolean;
+  /** Zobrist-string → sideToMove-göreli cp. Verilmezse önbelleksiz çalışır. */
+  evalCache?: Map<string, number>;
+}
+
+export function analyzeGame(entries: MoveHistoryEntry[], opts: AnalyzeGameOptions = {}): GameAnalysis {
   const moves: AnalyzedMove[] = [];
   const evalCurve: number[] = [0];
   const counts: Record<MoveClassification, number> = {
@@ -124,15 +168,32 @@ export function analyzeGame(entries: MoveHistoryEntry[]): GameAnalysis {
   const blackLosses: number[] = [];
 
   let prevEval = 0;
+  const useFull = (opts.useFullEvaluation ?? opts.positions !== undefined) && opts.positions !== undefined;
   entries.forEach((entry, i) => {
-    const material = evaluateCapturedSnapshot(entry.capturedPiecesState);
-    const evalAfter = material + bonusForEntry(entry);
+    let evalAfter: number;
+    if (useFull) {
+      const positions = opts.positions as Position[];
+      const afterPos =
+        positions.length === entries.length + 1 ? positions[i + 1] : positions[i];
+      if (afterPos) {
+        const fullCp = cachedFullEvaluate(afterPos, opts.evalCache);
+        const whitePawns = (afterPos.sideToMove === 'white' ? fullCp : -fullCp) / 100;
+        evalAfter = whitePawns + bonusForEntry(entry);
+      } else {
+        const material = evaluateCapturedSnapshot(entry.capturedPiecesState);
+        evalAfter = material + bonusForEntry(entry);
+      }
+    } else {
+      const material = evaluateCapturedSnapshot(entry.capturedPiecesState);
+      evalAfter = material + bonusForEntry(entry);
+    }
     // swing from mover's perspective: white wants +, black wants -
     const swingForMover =
       entry.player === 'white' ? evalAfter - prevEval : prevEval - evalAfter;
-    const classification = classifySwing(swingForMover, !!entry.isCheckmate);
-    counts[classification] += 1;
     const loss = Math.max(0, -swingForMover);
+    const lossCp = Math.round(loss * 100);
+    const classification = toEngineClassification(lossCp, !!entry.isCheckmate);
+    counts[classification] += 1;
     if (entry.player === 'white') whiteLosses.push(loss);
     else blackLosses.push(loss);
 
@@ -153,11 +214,14 @@ export function analyzeGame(entries: MoveHistoryEntry[]): GameAnalysis {
     prevEval = evalAfter;
   });
 
+  // Doğruluk TEK kaynaktan: `analyzer/thresholds.ts` (100*exp(-loss/280), cp).
+  // Bu modülün kayıpları piyon biriminde tutulur → cp'ye çevrilip delege edilir.
+  const toCpLosses = (losses: number[]): number[] => losses.map((l) => Math.round(l * 100));
   return {
     moves,
     evalCurve,
-    whiteAccuracy: accuracyFromLosses(whiteLosses),
-    blackAccuracy: accuracyFromLosses(blackLosses),
+    whiteAccuracy: thresholdsAccuracyFromLosses(toCpLosses(whiteLosses)),
+    blackAccuracy: thresholdsAccuracyFromLosses(toCpLosses(blackLosses)),
     counts,
   };
 }

@@ -4,6 +4,7 @@ import { PageState, NotificationType } from '../types';
 import logoImg from '../assets/logo.png';
 import okulLogo from '../assets/okulLogo.png';
 import chessboardImg from '../assets/Board.png';
+import timurArkaImg from '../assets/timur-arka.png';
 
 interface MainMenuPageProps {
   onNavigate: (page: PageState) => void;
@@ -63,9 +64,16 @@ export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, onOpenCredits,
       </div>
 
       {/* Satranç tahtası görseli */}
-      <div className="flex-1 flex items-center justify-center px-6 py-2 relative z-10">
+      <div className="flex-1 flex items-center justify-center px-6 py-2 relative z-10 overflow-x-clip">
         <div className="relative w-full max-w-[330px]">
           <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(0,212,196,0.12)_0%,_transparent_70%)] blur-2xl pointer-events-none" />
+          {/* Arka plan görseli — tahtanın arkasında, çap ekrana sığar */}
+          <img
+            src={timurArkaImg}
+            alt=""
+            aria-hidden
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(125%,52vh)] max-w-none aspect-square object-contain pointer-events-none z-0 select-none"
+          />
           <img
             src={chessboardImg}
             alt="3D Timur Satranç Tahtası"

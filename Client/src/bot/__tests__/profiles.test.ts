@@ -71,8 +71,8 @@ export function runBotTests(): TestSummary {
   );
   const one = BOT_PROFILES.I;
   ok(
-    one.movetimeMs === 200 && one.maxDepth === 3 && one.candidateLimit === 8 &&
-    one.evaluationNoise === 150 && one.mistakeRate === 0.35 && one.blunderRate === 0.12,
+    one.movetimeMs === 150 && one.maxDepth === 2 && one.candidateLimit === 10 &&
+    one.evaluationNoise === 220 && one.mistakeRate === 0.4 && one.blunderRate === 0.15,
     'P03: Profil I parametreleri tablodaki gibi',
   );
 

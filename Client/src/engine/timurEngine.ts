@@ -26,12 +26,52 @@ export const DEFAULT_SEARCH_DEPTH = 3;
 /** ID'de derinlik üst sınırı (`depth` verilmezse; V profili movetime ile sınırlar). */
 export const DEFAULT_MAX_DEPTH = 64;
 
+/**
+ * Engine arama opsiyonları (hardening): özel değerlendirme fonksiyonu.
+ * Verilmezse materyal `evaluate` kullanılır (varsayılan davranış korunur).
+ * Kullanım: `findBestMove(pos, limits, undefined, { evaluate: fullEvaluate })`
+ * ya da `findBestMove(pos, limits, { evaluate: fullEvaluate })`.
+ */
+export interface TimurEngineSearchOpts {
+  evaluate?: (position: Position) => number;
+}
+
+/** `findBestMove` 3. parametresinin opts mu profil mi olduğunu ayırt eder. */
+function splitProfileOpts(
+  profileOrOpts?: BotProfile | TimurEngineSearchOpts,
+  maybeOpts?: TimurEngineSearchOpts,
+): { profile?: BotProfile; opts?: TimurEngineSearchOpts } {
+  if (
+    profileOrOpts !== undefined &&
+    profileOrOpts !== null &&
+    typeof profileOrOpts === 'object' &&
+    'evaluate' in (profileOrOpts as Record<string, unknown>)
+  ) {
+    return { profile: undefined, opts: profileOrOpts as TimurEngineSearchOpts };
+  }
+  return { profile: profileOrOpts as BotProfile | undefined, opts: maybeOpts };
+}
+
 export class TimurEngine implements EngineInterface {
   async findBestMove(
     position: Position,
     limits: SearchLimits,
-    _profile?: BotProfile,
+    profile?: BotProfile,
+    opts?: TimurEngineSearchOpts,
+  ): Promise<BestMoveResult>;
+  async findBestMove(
+    position: Position,
+    limits: SearchLimits,
+    opts?: TimurEngineSearchOpts,
+  ): Promise<BestMoveResult>;
+  async findBestMove(
+    position: Position,
+    limits: SearchLimits,
+    profileOrOpts?: BotProfile | TimurEngineSearchOpts,
+    maybeOpts?: TimurEngineSearchOpts,
   ): Promise<BestMoveResult> {
+    const { profile: _profile, opts } = splitProfileOpts(profileOrOpts, maybeOpts);
+    void _profile;
     if (generateLegalMoves(position).length === 0) {
       throw new Error('TimurEngine.findBestMove: legal hamle yok (oyun bitmiş olabilir)');
     }
@@ -43,6 +83,7 @@ export class TimurEngine implements EngineInterface {
         maxDepth,
         deadlineMs: started + Math.max(1, limits.movetimeMs),
         nodeLimit: limits.nodes,
+        evaluate: opts?.evaluate,
       });
       if (r.pv.length === 0) {
         throw new Error('TimurEngine.findBestMove: arama hat döndürmedi');
@@ -59,6 +100,7 @@ export class TimurEngine implements EngineInterface {
     const depth = limits.depth ?? DEFAULT_SEARCH_DEPTH;
     const { score, pv, nodes } = searchRoot(position, depth, {
       nodeLimit: limits.nodes,
+      evaluate: opts?.evaluate,
     });
     if (pv.length === 0) {
       throw new Error('TimurEngine.findBestMove: arama hat döndürmedi');
@@ -73,11 +115,18 @@ export class TimurEngine implements EngineInterface {
     };
   }
 
+  async analyze(position: Position, limits: SearchLimits): Promise<AnalysisResult>;
   async analyze(
     position: Position,
     limits: SearchLimits,
+    opts?: TimurEngineSearchOpts,
+  ): Promise<AnalysisResult>;
+  async analyze(
+    position: Position,
+    limits: SearchLimits,
+    opts?: TimurEngineSearchOpts,
   ): Promise<AnalysisResult> {
-    const best = await this.findBestMove(position, limits);
+    const best = await this.findBestMove(position, limits, undefined, opts);
     return {
       position,
       bestMove: best.bestMove,

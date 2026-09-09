@@ -5,8 +5,11 @@
  * tamamen rastgele oynamaz — Engine'in en iyi N hamlesi arasından ağırlıklı
  * olasılıkla seçer (satranç mantığı içinde "insan gibi hata").
  *
- * Tablo v1 başlangıç değeridir; Faz 5 self-play/kullanıcı testiyle
- * yeniden ayarlanacak (spec kalibrasyon notu).
+ * Faz 4 kalibrasyonu (bot hissi): I bariz zayıf (sığ arama + geniş havuz +
+ * yüksek hata), II-III orta bant, IV neredeyse hatasız, V tam güç.
+ * I'in kuyruğu 10 adaya uzatıldı (candidateLimit=10 → weights 10 eleman).
+ * Değerler `bot/__tests__/calibration.test.ts` sapma/win-rate testleriyle
+ * doğrulanır; Faz 5 self-play/kullanıcı testiyle yeniden ayarlanabilir.
  */
 
 export type BotProfileId = 'I' | 'II' | 'III' | 'IV' | 'V';
@@ -37,49 +40,50 @@ export interface BotProfile {
 const I: BotProfile = {
   id: 'I',
   name: 'Çok Kolay',
-  movetimeMs: 200,
-  maxDepth: 3,
-  candidateLimit: 8,
-  evaluationNoise: 150,
-  mistakeRate: 0.35,
-  blunderRate: 0.12,
-  weights: [35, 25, 15, 10, 6, 4, 3, 2],
+  movetimeMs: 150,
+  maxDepth: 2,
+  candidateLimit: 10,
+  evaluationNoise: 220,
+  mistakeRate: 0.4,
+  blunderRate: 0.15,
+  // Düzleştirilmiş dağılım (10 aday, toplam 100).
+  weights: [22, 18, 15, 12, 10, 8, 6, 4, 3, 2],
 };
 
 const II: BotProfile = {
   id: 'II',
   name: 'Kolay',
-  movetimeMs: 500,
-  maxDepth: 5,
-  candidateLimit: 6,
-  evaluationNoise: 80,
-  mistakeRate: 0.2,
-  blunderRate: 0.05,
-  weights: [50, 25, 12, 7, 4, 2],
+  movetimeMs: 400,
+  maxDepth: 3,
+  candidateLimit: 7,
+  evaluationNoise: 120,
+  mistakeRate: 0.25,
+  blunderRate: 0.07,
+  weights: [35, 22, 15, 11, 8, 5, 4],
 };
 
 const III: BotProfile = {
   id: 'III',
   name: 'Orta',
-  movetimeMs: 1000,
-  maxDepth: 7,
+  movetimeMs: 800,
+  maxDepth: 5,
   candidateLimit: 4,
-  evaluationNoise: 30,
+  evaluationNoise: 40,
   mistakeRate: 0.08,
   blunderRate: 0.01,
-  weights: [70, 18, 8, 4],
+  weights: [60, 22, 11, 7],
 };
 
 const IV: BotProfile = {
   id: 'IV',
   name: 'Zor',
-  movetimeMs: 2000,
-  maxDepth: 10,
+  movetimeMs: 1500,
+  maxDepth: 8,
   candidateLimit: 3,
   evaluationNoise: 10,
   mistakeRate: 0.02,
-  blunderRate: 0.002,
-  weights: [88, 9, 3],
+  blunderRate: 0,
+  weights: [80, 14, 6],
 };
 
 const V: BotProfile = {

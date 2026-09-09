@@ -129,3 +129,66 @@ export async function fetchMoveHistory(
 
   return { data: data as any[], error: null };
 }
+
+// ─── Faz 2 — Online protokol: teklif / abort servisleri ──────────────
+// NOT: updateGameStatus wrapper kullanılır; updated_at otomatik yazılır.
+// Yeni kolonlar (draw_offer_by vb.) migration 02 ile gelir; eski satırlarda
+// null olabilir. roomService.OnlineGame tipine dokunmadan `as` cast ile
+// ilerlenir (tip genişletmesi protocol.ts'teki OnlineGameWithProtocol'tadır).
+
+export async function sendDrawOffer(
+  gameId: string,
+  offeredBy: string
+): Promise<{ data: OnlineGame | null; error: any }> {
+  return updateGameStatus(gameId, {
+    draw_offer_by: offeredBy,
+  } as Partial<OnlineGame>);
+}
+
+export async function respondDrawOffer(
+  gameId: string,
+  accept: boolean
+): Promise<{ data: OnlineGame | null; error: any }> {
+  if (accept) {
+    return updateGameStatus(gameId, {
+      status: 'ended',
+      winner: 'draw',
+      end_reason: 'agreement',
+      status_reason: 'agreement',
+      draw_offer_by: null,
+    } as Partial<OnlineGame>);
+  }
+  return updateGameStatus(gameId, {
+    draw_offer_by: null,
+  } as Partial<OnlineGame>);
+}
+
+export async function sendTakebackOffer(
+  gameId: string,
+  offeredBy: string
+): Promise<{ data: OnlineGame | null; error: any }> {
+  return updateGameStatus(gameId, {
+    takeback_offer_by: offeredBy,
+  } as Partial<OnlineGame>);
+}
+
+export async function sendRematchOffer(
+  gameId: string,
+  offeredBy: string
+): Promise<{ data: OnlineGame | null; error: any }> {
+  return updateGameStatus(gameId, {
+    rematch_offer_by: offeredBy,
+  } as Partial<OnlineGame>);
+}
+
+export async function abortGame(
+  gameId: string,
+  reason = 'abort'
+): Promise<{ data: OnlineGame | null; error: any }> {
+  return updateGameStatus(gameId, {
+    status: 'ended',
+    winner: null,
+    end_reason: reason,
+    status_reason: reason,
+  });
+}

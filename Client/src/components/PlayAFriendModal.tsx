@@ -1,9 +1,10 @@
-import React, { FC, useState, useCallback } from 'react';
+import React, { FC, useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, Users, Spinner, SignIn } from '@phosphor-icons/react';
 import { NotificationType, PlayerColor } from '../types';
 import { createRoom, joinRoom } from '../core/online/roomService';
 import type { OnlineGame } from '../core/online/roomService';
 import { getOrCreatePlayerId, getPlayerName, setPlayerName } from '../lib/auth';
+import { getRating } from '../core/online/ratingService';
 import { isSupabaseConfigured } from '../lib/supabaseClient';
 
 interface PlayAFriendModalProps {
@@ -29,6 +30,26 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
   const [joinCode, setJoinCode] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [myRating, setMyRating] = useState<number | null>(null);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setRatingLoading(true);
+    void getRating(getOrCreatePlayerId())
+      .then(({ data }) => {
+        if (!cancelled) setMyRating(data?.rating ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setMyRating(null);
+      })
+      .finally(() => {
+        if (!cancelled) setRatingLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const resolveName = useCallback(() => {
     const name = playerNameInput.trim() || getPlayerName() || 'Misafir';
@@ -119,7 +140,9 @@ export const PlayAFriendModal: FC<PlayAFriendModalProps> = ({
 
           {/* İsim Girişi */}
           <div className="bg-[#1a4228] rounded-xl p-3 border border-white/10">
-            <label className="text-white/70 text-xs mb-1 block">Oyuncu Adın</label>
+            <label className="text-white/70 text-xs mb-1 block">
+              Oyuncu Adın {ratingLoading ? '(…)' : myRating != null ? `(${myRating})` : '(-)'}
+            </label>
             <input
               type="text"
               placeholder="Bir isim gir (opsiyonel)"

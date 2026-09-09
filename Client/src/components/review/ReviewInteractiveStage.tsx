@@ -39,12 +39,16 @@ export const ReviewInteractiveStage: FC<ReviewInteractiveStageProps> = ({
     if (!activeMove) return null;
     const piece = activeMove.positionBefore.board[activeMove.bestFrom];
     if (!piece) return null;
+    // bestMoveFlags alanından; SADECE specialFlags + promotion kopyalanır.
+    const flags = (activeMove.bestMoveFlags ?? []) as unknown as import('../../core/move/Move').Move['specialFlags'];
+    const promotion = (activeMove.bestMovePromotion ?? undefined) as unknown as import('../../core/move/Move').Move['promotion'];
     return makeMove(activeMove.positionBefore, {
       from: activeMove.bestFrom,
       to: activeMove.bestTo,
       piece,
       capturedPiece: activeMove.positionBefore.board[activeMove.bestTo],
-      specialFlags: [],
+      specialFlags: [...flags],
+      promotion,
       metadata: { isCheck: false, isCapture: false, algebraic: activeMove.bestMoveNotation },
     });
   }, [activeMove]);

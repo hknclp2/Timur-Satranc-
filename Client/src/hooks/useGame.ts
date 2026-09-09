@@ -40,6 +40,8 @@ export interface MoveHistoryEntry {
   };
   isCheck?: boolean;
   isCheckmate?: boolean;
+  isKingSwap?: boolean;
+  isRelocation?: boolean;
 }
 
 export interface UseGameProps {
@@ -260,7 +262,7 @@ export function useGame({
       to: entry.to,
       capturedPiece: entry.capturedPiece,
       promotion: entry.promotion,
-      isKingSwap: entry.isCheck,
+      isKingSwap: entry.isKingSwap,
     };
   }, [currentViewedIndex, lastMove, historyEntries]);
 
@@ -458,6 +460,8 @@ export function useGame({
           capturedPiecesState: newCaptured,
           isCheck: statusResult.isCheck,
           isCheckmate: statusResult.isCheckmate,
+          isKingSwap: move.isKingSwap,
+          isRelocation: move.isRelocation,
         };
 
         setHistoryEntries((prevEntries) => [...prevEntries, historyEntry]);

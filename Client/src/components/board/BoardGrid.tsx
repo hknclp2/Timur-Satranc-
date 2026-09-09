@@ -147,6 +147,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
           onCitadelDragEnd={handleDragEnd}
           currentTurn={turn}
           boardRotates={boardRotates}
+          flipped={flipped}
         />
 
         {/* White Citadel (Right of Row 2 / Y=1) */}
@@ -169,6 +170,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
           onCitadelDragEnd={handleDragEnd}
           currentTurn={turn}
           boardRotates={boardRotates}
+          flipped={flipped}
         />
 
         {/* 11x10 Inner Board Grid */}
@@ -294,6 +296,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
                           isTarget={isCaptureTarget}
                           currentTurn={turn}
                           boardRotates={boardRotates}
+                          flipped={flipped}
                         />
                       </div>
                     )}

@@ -15,7 +15,7 @@
  */
 
 import { TimurEngine } from '../engine/timurEngine';
-import { MATE_SCORE, MAX_PLY, scoreRootMoves, type ScoredMove } from '../engine/search';
+import { MATE_SCORE, MAX_PLY, scoreRootMoves, searchIterative, type ScoredMove } from '../engine/search';
 import { TranspositionTable } from '../engine/tt/transpositionTable';
 import { BOT_PROFILES, type BotProfileId } from '../bot/profiles';
 import { applyProfileSelection } from '../bot/selectMoveWithProfile';
@@ -89,6 +89,33 @@ export async function handleFindBestMove(
     return { type: 'cancelled', requestId: req.requestId };
   }
   if (!last) {
+    // Timeout-güvenliği fallback'i (hardening): manuel ID'de tamamlanan
+    // derinlik YOKSA `searchIterative` sonucunu kullan (cevap garantilidir:
+    // kısmi sonuç ya da ilk legal hamle + statik eval; pv boş dönmez).
+    // Mevcut protokol korunur — aynı `best_move_result` şekli döner.
+    try {
+      const fb = searchIterative(position, {
+        maxDepth,
+        deadlineMs: Date.now() + 25,
+      });
+      if (fb.pv.length > 0) {
+        return {
+          type: 'best_move_result',
+          requestId: req.requestId,
+          result: {
+            bestMove: fb.pv[0],
+            evaluationCp: fb.score,
+            depthReached: fb.depthReached,
+            nodesSearched: nodes + fb.nodes,
+            timeMs: Date.now() - started,
+            principalVariation: fb.pv,
+            selection: 'best',
+          },
+        };
+      }
+    } catch {
+      /* yoksay — aşağıda error döner */
+    }
     return errorResponse(req.requestId, 'Aday hamle üretilemedi (oyun bitmiş olabilir)');
   }
 

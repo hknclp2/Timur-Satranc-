@@ -19,6 +19,8 @@ interface CitadelBadgeProps {
   onCitadelDragEnd?: () => void;
   currentTurn?: PlayerColor;
   boardRotates?: boolean;
+  /** İzleyici siyah taraftaysa true (çerçeve 180° dönüktür) — taş izleyiciye dönük kalır. */
+  flipped?: boolean;
 }
 
 export const CitadelBadge: FC<CitadelBadgeProps> = ({
@@ -37,6 +39,7 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
   onCitadelDragEnd,
   currentTurn = 'white',
   boardRotates = false,
+  flipped = false,
 }) => {
   const isLeft = side === 'left';
   const citadelPos: BoardPosition = {
@@ -108,6 +111,7 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
             size="responsive"
             currentTurn={currentTurn}
             boardRotates={boardRotates}
+            flipped={flipped}
           />
         </div>
       ) : (

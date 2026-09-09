@@ -19,6 +19,9 @@ import {
   evalToWhiteShare,
   formatEval,
 } from '../analysis/analysisEngine';
+import { legacyGameStateToPosition, legacyGameStateToSerialized, positionToLegacyBoardAndCitadels } from '../worker/legacyAdapter';
+import { deserializePosition, type SerializedPosition } from '../worker/protocol';
+import { fullEvaluate } from '../engine/fullEvaluation';
 
 export interface SelfAnalysisViewProps {
   whiteName?: string;
@@ -34,8 +37,10 @@ export interface SelfAnalysisViewProps {
 interface Variation {
   id: number;
   name: string;
+  forkPly: number;
   /** Snapshot of notations forked at creation + appended sandbox notes. */
   moves: string[];
+  snapshotBefore: SerializedPosition;
   createdAtMove: number;
 }
 
@@ -69,12 +74,26 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
   const [variations, setVariations] = useState<Variation[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draftName, setDraftName] = useState('');
+  const [previewId, setPreviewId] = useState<number | null>(null);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 
-  const liveEval = useMemo(
-    () => evaluateCapturedSnapshot(game.displayedCapturedPieces),
-    [game.displayedCapturedPieces],
-  );
+  const liveEval = useMemo(() => {
+    const fallback = evaluateCapturedSnapshot(game.displayedCapturedPieces);
+    const gs = game.gameState;
+    if (gs.isCheckmate || gs.isStalemate || gs.winner) {
+      if (gs.winner === 'white') return 20;
+      if (gs.winner === 'black') return -20;
+      return 0;
+    }
+    try {
+      const pos = legacyGameStateToPosition(gs);
+      const cp = fullEvaluate(pos);
+      const whitePawns = pos.sideToMove === 'white' ? cp / 100 : -cp / 100;
+      return Number.isNaN(whitePawns) ? fallback : whitePawns;
+    } catch {
+      return fallback;
+    }
+  }, [game.gameState, game.displayedCapturedPieces]);
   const whiteShare = evalToWhiteShare(liveEval);
 
   const currentMoveNo = game.historyEntries.length;
@@ -82,12 +101,16 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
   const addVariation = () => {
     const id = Date.now();
     const fork = game.historyEntries.map((e) => e.notation);
+    const forkPly = currentMoveNo;
+    const snapshotBefore = legacyGameStateToSerialized(game.gameState);
     setVariations((prev) => [
       ...prev,
       {
         id,
         name: `Varyasyon ${prev.length + 1}`,
+        forkPly,
         moves: [...fork],
+        snapshotBefore,
         createdAtMove: currentMoveNo,
       },
     ]);
@@ -95,15 +118,20 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
   };
 
   const appendLineToVariation = (id: number) => {
-    const line = game.historyEntries.map((e) => e.notation).join(' ');
+    const currentLine = game.historyEntries.map((e) => e.notation);
     setVariations((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, moves: line ? line.split(' ') : [] } : v)),
+      prev.map((v) => {
+        if (v.id !== id) return v;
+        const forkLen = v.forkPly ?? v.createdAtMove;
+        return { ...v, moves: [...v.moves.slice(0, forkLen), ...currentLine.slice(forkLen)] };
+      }),
     );
     showNotification?.('Varyasyon güncel çizgiyle güncellendi', 'info');
   };
 
   const deleteVariation = (id: number) => {
     setVariations((prev) => prev.filter((v) => v.id !== id));
+    setPreviewId((prev) => (prev === id ? null : prev));
   };
 
   const saveVariationName = () => {
@@ -228,6 +256,14 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
+                      onClick={() => setPreviewId(previewId === v.id ? null : v.id)}
+                      aria-label="Varyasyonu önizle"
+                      title="Çatal anındaki konumu salt-okunur önizle (geçmişe yazılmaz)"
+                      className="text-[11px] font-bold bg-white/10 hover:bg-white/20 px-2 py-1.5 rounded-lg cursor-pointer"
+                    >
+                      {previewId === v.id ? 'Kapat' : 'Önizle'}
+                    </button>
+                    <button
                       onClick={() => {
                         setEditingId(v.id);
                         setDraftName(v.name);
@@ -260,6 +296,44 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
               )}
             </div>
           ))}
+
+          {previewId !== null &&
+            (() => {
+              const pv = variations.find((x) => x.id === previewId);
+              if (!pv) return null;
+              try {
+                const pos = deserializePosition(pv.snapshotBefore);
+                const preview = positionToLegacyBoardAndCitadels(pos);
+                return (
+                  <div className="bg-black/40 border border-emerald-500/30 rounded-xl px-2.5 py-2 mb-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold truncate">
+                        Önizleme: {pv.name}
+                        <span className="text-white/40 font-semibold"> • çatal anı (salt-okunur)</span>
+                      </span>
+                      <button
+                        onClick={() => setPreviewId(null)}
+                        className="text-[11px] font-bold bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg cursor-pointer"
+                      >
+                        Kapat
+                      </button>
+                    </div>
+                    <BoardContainer
+                      board={preview.board}
+                      citadels={preview.citadels}
+                      selectedPos={null}
+                      validMoves={[]}
+                      onSquareClick={() => {}}
+                    />
+                    <p className="text-[10px] text-white/40 font-semibold">
+                      Önizleme canlı tahtayı değiştirmez — orijinal geçmişe yazılmaz.
+                    </p>
+                  </div>
+                );
+              } catch {
+                return null;
+              }
+            })()}
         </div>
       </div>
 

@@ -8,23 +8,35 @@
  */
 declare const process: any;
 import { runGameCoreTests } from './gameCore.test';
+import { runExportTests } from '../notation/__tests__/export.test';
 import { runEngineTests } from '../../engine/__tests__/engine.test';
 import { runEvalTests } from '../../engine/__tests__/evaluation.test';
+import { runHardeningTests } from '../../engine/__tests__/hardening.test';
 import { runBotTests } from '../../bot/__tests__/profiles.test';
+import { runCalibrationTests } from '../../bot/__tests__/calibration.test';
 import { runWorkerTests } from '../../worker/__tests__/worker.test';
 import { runAnalyzerTests } from '../../analyzer/__tests__/analyzer.test';
 import { runBotGameTests } from '../../bot/__tests__/botgame.test';
+import { runThresholdTests } from '../../analyzer/__tests__/thresholds.test';
+import { runLearnTests } from '../../learn/__tests__/learn.test';
+import { runReviewRegressionTests } from '../../analyzer/__tests__/reviewRegression.test';
 
 async function main(): Promise<void> {
   const core = runGameCoreTests();
+  const exp = runExportTests();
   const eng = await runEngineTests();
   const ev = runEvalTests();
+  const hard = await runHardeningTests();
   const bot = runBotTests();
+  const calib = runCalibrationTests();
   const worker = await runWorkerTests();
   const analyzer = await runAnalyzerTests();
   const botgame = await runBotGameTests();
-  const passed = core.passed + eng.passed + ev.passed + bot.passed + worker.passed + analyzer.passed + botgame.passed;
-  const failed = core.failed + eng.failed + ev.failed + bot.failed + worker.failed + analyzer.failed + botgame.failed;
+  const thresholds = runThresholdTests();
+  const learn = runLearnTests();
+  const review = await runReviewRegressionTests();
+  const passed = core.passed + exp.passed + eng.passed + ev.passed + hard.passed + bot.passed + calib.passed + worker.passed + analyzer.passed + botgame.passed + thresholds.passed + learn.passed + review.passed;
+  const failed = core.failed + exp.failed + eng.failed + ev.failed + hard.failed + bot.failed + calib.failed + worker.failed + analyzer.failed + botgame.failed + thresholds.failed + learn.failed + review.failed;
   console.log(`TOTAL: ${passed} passed, ${failed} failed`);
   if (typeof process !== 'undefined') process.exit(failed === 0 ? 0 : 1);
   if (failed !== 0) throw new Error(`${failed} test failed`);

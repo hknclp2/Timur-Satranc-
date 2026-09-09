@@ -285,6 +285,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
         statusText={statusText}
         onBack={() => setSubView('game')}
         onOpenSelfAnalysis={() => setSubView('analysis')}
+        perspective={humanSide}
         onRematch={() => {
           resetGame();
           setMatchCrowns(3);
@@ -404,6 +405,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
             hintMove={hintMove}
             turn={gameState.currentTurn}
             boardRotates={false}
+            flipped={humanSide === 'black'}
             onSquareClick={handleSelectSquare}
             onDropMove={handleDropMove}
           />
