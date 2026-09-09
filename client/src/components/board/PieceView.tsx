@@ -1,60 +1,34 @@
 import React, { FC, useMemo } from 'react';
 import { Piece, PieceType, PlayerColor } from '../../types/chess';
 
-// White Piece Assets
-import bAt from '../../assets/pieces/b_at.png';
-import bDeve from '../../assets/pieces/b_deve.png';
-import bFil from '../../assets/pieces/b_fil.png';
-import bGeneral from '../../assets/pieces/b_general.png';
-import bKale from '../../assets/pieces/b_kale.png';
-import bKazik from '../../assets/pieces/b_kazik.png';
-import bMancinik from '../../assets/pieces/b_mancinik.png';
-import bPiyon from '../../assets/pieces/b_piyon.png';
-import bSah from '../../assets/pieces/b_sah.png';
-import bVezir from '../../assets/pieces/b_vezir.png';
-import bZurafa from '../../assets/pieces/b_zurafa.png';
-
-// Black Piece Assets
-import sAt from '../../assets/pieces/s_at.png';
-import sDeve from '../../assets/pieces/s_deve.png';
-import sFil from '../../assets/pieces/s_fil.png';
-import sGeneral from '../../assets/pieces/s_general.png';
-import sKale from '../../assets/pieces/s_kale.png';
-import sKazik from '../../assets/pieces/s_kazik.png';
-import sMancinik from '../../assets/pieces/s_mancinik.png';
-import sPiyon from '../../assets/pieces/s_piyon.png';
-import sSah from '../../assets/pieces/s_sah.png';
-import sVezir from '../../assets/pieces/s_vezir.png';
-import sZurafa from '../../assets/pieces/s_zurafa.png';
-
 export const PIECE_ASSETS: Record<PlayerColor, Record<PieceType, string>> = {
   white: {
-    pawn: bPiyon,
-    rook: bKale,
-    knight: bAt,
-    bishop: bFil,
-    queen: bVezir,
-    king: bSah,
-    general: bGeneral,
-    giraffe: bZurafa,
-    picket: bKazik,
-    camel: bDeve,
-    warMachine: bMancinik,
-    prince: bSah,
+    pawn: '/images/pieces/b_piyon.png',
+    rook: '/images/pieces/b_kale.png',
+    knight: '/images/pieces/b_at.png',
+    bishop: '/images/pieces/b_fil.png',
+    queen: '/images/pieces/b_vezir.png',
+    king: '/images/pieces/b_sah.png',
+    general: '/images/pieces/b_general.png',
+    giraffe: '/images/pieces/b_zurafa.png',
+    picket: '/images/pieces/b_kazik.png',
+    camel: '/images/pieces/b_deve.png',
+    warMachine: '/images/pieces/b_mancinik.png',
+    prince: '/images/pieces/b_sah.png',
   },
   black: {
-    pawn: sPiyon,
-    rook: sKale,
-    knight: sAt,
-    bishop: sFil,
-    queen: sVezir,
-    king: sSah,
-    general: sGeneral,
-    giraffe: sZurafa,
-    picket: sKazik,
-    camel: sDeve,
-    warMachine: sMancinik,
-    prince: sSah,
+    pawn: '/images/pieces/s_piyon.png',
+    rook: '/images/pieces/s_kale.png',
+    knight: '/images/pieces/s_at.png',
+    bishop: '/images/pieces/s_fil.png',
+    queen: '/images/pieces/s_vezir.png',
+    king: '/images/pieces/s_sah.png',
+    general: '/images/pieces/s_general.png',
+    giraffe: '/images/pieces/s_zurafa.png',
+    picket: '/images/pieces/s_kazik.png',
+    camel: '/images/pieces/s_deve.png',
+    warMachine: '/images/pieces/s_mancinik.png',
+    prince: '/images/pieces/s_sah.png',
   },
 };
 
@@ -119,7 +93,7 @@ export const PieceView: FC<PieceViewProps> = ({
   onDragStart,
 }) => {
   const imgSrc = useMemo(() => {
-    return PIECE_ASSETS[piece.color]?.[piece.type] || bPiyon;
+    return PIECE_ASSETS[piece.color]?.[piece.type] || '/images/pieces/b_piyon.png';
   }, [piece.color, piece.type]);
 
   const sizeClasses = {

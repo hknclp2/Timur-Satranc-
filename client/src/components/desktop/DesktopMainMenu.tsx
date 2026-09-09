@@ -14,9 +14,9 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../../types';
-import chessboardImg from '../../assets/Board.png';
-import timurArkaImg from '../../assets/timur-arka.png';
-import okulLogo from '../../assets/okulLogo.png';
+const chessboardImg = '/images/Board.png';
+const timurArkaImg = '/images/timur-arka.png';
+const okulLogo = '/images/okulLogo.png';
 
 interface DesktopMainMenuProps {
   onNavigate: (page: PageState) => void;

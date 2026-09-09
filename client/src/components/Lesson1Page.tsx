@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { ArrowLeft, Trophy } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../types';
-import logoImg from '../assets/logo.png';
+const logoImg = '/images/logo.png';
 
 interface Lesson1PageProps {
   onNavigate: (page: PageState) => void;

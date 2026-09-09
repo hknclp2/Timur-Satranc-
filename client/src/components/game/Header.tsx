@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { ArrowLeft } from '@phosphor-icons/react';
-import ekrandaOynaIcon from '../../assets/ekrandaoyna.png';
+const ekrandaOynaIcon = '/images/ekrandaoyna.png';
 import { NotationHeader } from './NotationHeader';
 import { MoveHistoryEntry } from '../../hooks/useGame';
 

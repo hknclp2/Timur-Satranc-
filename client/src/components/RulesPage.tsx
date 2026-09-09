@@ -6,32 +6,20 @@ import { EngineNote } from './learn/EngineNote';
 import { MicroBadgeLegend } from './learn/MicroBadgeLegend';
 
 // Taş görselleri (PDF sırasına göre; Şehzade/Yedek Şah için şah görseli yedeği)
-import sSah from '../assets/pieces/s_sah.png';
-import sVezir from '../assets/pieces/s_vezir.png';
-import sKale from '../assets/pieces/s_kale.png';
-import sFil from '../assets/pieces/s_fil.png';
-import sAt from '../assets/pieces/s_at.png';
-import sDeve from '../assets/pieces/s_deve.png';
-import sZurafa from '../assets/pieces/s_zurafa.png';
-import sMancinik from '../assets/pieces/s_mancinik.png';
-import sPiyon from '../assets/pieces/s_piyon.png';
-import sGeneral from '../assets/pieces/s_general.png';
-import sKazik from '../assets/pieces/s_kazik.png';
-
 const PIECE_IMGS: Record<string, string> = {
-  king: sSah,
-  queen: sVezir,
-  rook: sKale,
-  bishop: sFil,
-  knight: sAt,
-  camel: sDeve,
-  giraffe: sZurafa,
-  warMachine: sMancinik,
-  pawn: sPiyon,
-  general: sGeneral,
-  picket: sKazik,
-  prince: sSah,
-  masnua: sSah,
+  king: '/images/pieces/s_sah.png',
+  queen: '/images/pieces/s_vezir.png',
+  rook: '/images/pieces/s_kale.png',
+  bishop: '/images/pieces/s_fil.png',
+  knight: '/images/pieces/s_at.png',
+  camel: '/images/pieces/s_deve.png',
+  giraffe: '/images/pieces/s_zurafa.png',
+  warMachine: '/images/pieces/s_mancinik.png',
+  pawn: '/images/pieces/s_piyon.png',
+  general: '/images/pieces/s_general.png',
+  picket: '/images/pieces/s_kazik.png',
+  prince: '/images/pieces/s_sah.png',
+  masnua: '/images/pieces/s_sah.png',
 };
 
 interface RulesPageProps {
