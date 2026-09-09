@@ -45,7 +45,7 @@ export const RulesPage: FC<RulesPageProps> = ({ onNavigate, rulesTab, setRulesTa
   const piecesData: PieceData[] = PIECE_GUIDES.map((g) => ({
     name: g.name,
     symbol: g.symbol,
-    img: PIECE_IMGS[g.key] ?? sPiyon,
+    img: PIECE_IMGS[g.key] ?? '/images/pieces/s_piyon.png',
     move: g.move,
     value: g.value,
     color: g.color,
