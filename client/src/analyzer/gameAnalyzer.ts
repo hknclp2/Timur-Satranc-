@@ -6,6 +6,7 @@ import type { Move } from '../core/move/Move';
 import type { Position, Side } from '../core/position/Position';
 import { makeMove } from '../core/rules/makeMove';
 import type { EngineInterface } from '../engine/EngineInterface';
+import type { BestMoveResult } from '../engine/EngineInterface';
 import { analyzeMove, analyzeMoveDetailed, MoveClass, StaticEvaluator } from './moveAnalyzer';
 import { explainMove, generateCoachExplanation, generateCoachIntroSummary } from './explain';
 import {
@@ -59,6 +60,12 @@ export interface GameAnalyzerOptions {
   depth?: number;
   whiteName?: string;
   blackName?: string;
+  /**
+   * Eşzamanlı motor araması sayısı (paralel worker havuzuyla kullanılır).
+   * Varsayılan 1 = eski seri davranış. Arama deterministik olduğu için
+   * değer rapor içeriğini değiştirmez, sadece duvar-saatini kısaltır.
+   */
+  concurrency?: number;
 }
 
 export async function analyzeGame(
@@ -238,14 +245,50 @@ export async function analyzeFullGame(
   let currentPos = initial;
   let opponentBlunderedBefore = false;
 
+  // Faz 1: tüm ply konumlarını önden tekrarla (saf, hızlı).
+  // Her ply'nin araması yalnızca kendi konumuna bağlıdır — birbirinden bağımsızdır.
+  const positions: Position[] = new Array(moves.length);
+  {
+    let pos = initial;
+    for (let i = 0; i < moves.length; i++) {
+      positions[i] = pos;
+      pos = makeMove(pos, moves[i]);
+    }
+  }
+
+  // Faz 2: eşzamanlı motor aramaları (sonuçlar ply indeksine yazılır, sıra korunur).
+  const workerCount =
+    moves.length === 0
+      ? 0
+      : Math.max(1, Math.min(Math.floor(opts.concurrency ?? 1), moves.length));
+  const bestResults: BestMoveResult[] = new Array(moves.length);
+  {
+    let next = 0;
+    let completed = 0;
+    const runner = async (): Promise<void> => {
+      while (true) {
+        const i = next;
+        next += 1;
+        if (i >= moves.length) return;
+        bestResults[i] = await engine.findBestMove(positions[i], { depth });
+        completed += 1;
+        onProgress?.(completed, moves.length);
+      }
+    };
+    const runners: Promise<void>[] = [];
+    for (let k = 0; k < workerCount; k++) runners.push(runner());
+    await Promise.all(runners);
+  }
+
+  // Faz 3: seri montaj (sınıflandırma + zincirleme durum sırayla hesaplanır).
   for (let i = 0; i < moves.length; i++) {
     const ply = i + 1;
     const moveNumber = Math.floor(i / 2) + 1;
     const move = moves[i];
     const playedBy: Side = currentPos.sideToMove;
 
-    // Motor hamle-öncesi konumu arar
-    const bestResult = await engine.findBestMove(currentPos, { depth });
+    // Motor hamle-öncesi konumu arar (Faz 2'de hesaplandı)
+    const bestResult = bestResults[i];
     const bestMove = bestResult.bestMove;
     const bestEvalCp = bestResult.evaluationCp;
 
@@ -317,7 +360,6 @@ export async function analyzeFullGame(
       analyzed.classification === 'blunder' || analyzed.classification === 'mistake';
 
     currentPos = posAfter;
-    onProgress?.(i + 1, moves.length);
   }
 
   const whiteAccuracy = computeAverageAccuracy(whiteLosses);

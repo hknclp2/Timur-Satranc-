@@ -13,7 +13,8 @@ import { PlayerColor } from '../types/chess';
 import { analyzeFullGame } from '../analyzer/gameAnalyzer';
 import {
   REVIEW_ANALYSIS_DEPTH,
-  createReviewEngine,
+  createReviewEnginePool,
+  getReviewEnginePoolSize,
   isReviewCancelledError,
 } from '../hooks/useReviewAnalysis';
 import { FullGameReviewReport } from '../analyzer/types';
@@ -23,6 +24,7 @@ import { makeMove } from '../core/rules/makeMove';
 import { Move } from '../core/move/Move';
 import { ReviewSummaryStage } from '../components/review/ReviewSummaryStage';
 import { ReviewInteractiveStage } from '../components/review/ReviewInteractiveStage';
+import { ReviewLoadingStage } from '../components/review/ReviewLoadingStage';
 
 export interface GameReviewViewProps {
   historyEntries: MoveHistoryEntry[];
@@ -59,10 +61,11 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
   const [reportError, setReportError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
-  // Background Game Analysis
+  // Background Game Analysis (paralel worker havuzu — sonuçlar seriyle özdeş)
   useEffect(() => {
     let isMounted = true;
-    const engine = createReviewEngine();
+    const poolSize = getReviewEnginePoolSize();
+    const engine = createReviewEnginePool(poolSize);
 
     async function runAnalysis() {
       // Create initial board position (özel dizilim prop'la gelir; verilmezse klasik)
@@ -152,6 +155,7 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
             depth: REVIEW_ANALYSIS_DEPTH,
             whiteName,
             blackName,
+            concurrency: poolSize,
           },
           (completed, total) => {
             if (isMounted) {
@@ -179,6 +183,7 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
     return () => {
       isMounted = false;
       engine.cancelPending();
+      engine.dispose?.();
     };
   }, [historyEntries, whiteName, blackName, initialPosition, retryNonce]);
 
@@ -261,46 +266,21 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
       </div>
 
       {/* ── Main Body ── */}
-      <div className="flex-1 w-full max-w-lg mx-auto px-3 py-2 flex flex-col overflow-y-auto custom-scrollbar">
-        {/* Loading Progress State */}
+      <div className={`flex-1 w-full mx-auto px-3 py-2 flex flex-col overflow-y-auto custom-scrollbar ${report ? 'max-w-lg' : 'max-w-xl'}`}>
+        {/* Loading Progress State — büyük canlı tahta + kademeli hamleler */}
         {!report && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 animate-fade-in text-center">
-            <div className="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-400 animate-spin flex items-center justify-center shadow-lg" />
-            <div>
-              <h2 className="font-batangas text-xl font-bold text-emerald-200">
-                Oyun Analiz Ediliyor
-              </h2>
-              <p className="text-xs text-white/50 mt-1">
-                Motor her hamleyi inceliyor ve en iyi devam yollarını hesaplıyor...
-              </p>
-            </div>
-            {/* Progress Bar */}
-            {!reportError ? (
-              <>
-                <div className="w-64 h-3 rounded-full bg-black/40 border border-white/10 overflow-hidden mt-2">
-                  <div
-                    className="bg-gradient-to-r from-emerald-500 to-cyan-400 h-full transition-all duration-300 rounded-full"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-xs font-bold text-white/60">%{progress}</span>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2 mt-2">
-                <p className="text-xs text-red-300 font-bold max-w-64">{reportError}</p>
-                <button
-                  onClick={() => {
-                    setReportError(null);
-                    setProgress(0);
-                    setRetryNonce((n) => n + 1);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-sm font-bold transition-all cursor-pointer"
-                >
-                  Tekrar dene
-                </button>
-              </div>
-            )}
-          </div>
+          <ReviewLoadingStage
+            historyEntries={historyEntries}
+            progress={progress}
+            flipped={flipped}
+            initialPosition={initialPosition}
+            reportError={reportError}
+            onRetry={() => {
+              setReportError(null);
+              setProgress(0);
+              setRetryNonce((n) => n + 1);
+            }}
+          />
         )}
 
         {/* Stage 1: Summary Overview */}

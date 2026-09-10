@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { X, Heart } from '@phosphor-icons/react';
-const okulLogo = '/images/okulLogo.png';
-const logoImg = '/images/logo.png';
+import okulLogo from '../assets/okulLogo.png';
+import logoImg from '../assets/logo.png';
 
 interface CreditsModalProps {
   isOpen: boolean;

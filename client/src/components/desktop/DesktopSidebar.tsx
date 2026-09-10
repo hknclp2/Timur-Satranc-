@@ -9,7 +9,7 @@ import {
   BookOpen,
 } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../../types';
-const logoImg = '/images/logo.png';
+import logoImg from '../../assets/logo.png';
 
 interface DesktopSidebarProps {
   currentPage: PageState;

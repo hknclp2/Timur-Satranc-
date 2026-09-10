@@ -1,9 +1,10 @@
 import React, { FC } from 'react';
 import { ShoppingCart, User, Gear } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../types';
-const okulLogo = '/images/okulLogo.png';
-const chessboardImg = '/images/Board.png';
-const timurArkaImg = '/images/timur-arka.png';
+import logoImg from '../assets/logo.png';
+import okulLogo from '../assets/okulLogo.png';
+import chessboardImg from '../assets/Board.png';
+import timurArkaImg from '../assets/timur-arka.png';
 
 interface MainMenuPageProps {
   onNavigate: (page: PageState) => void;

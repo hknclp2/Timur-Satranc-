@@ -22,9 +22,9 @@ import type {
 } from '../engine/EngineInterface';
 import type { Position } from '../core/position/Position';
 import {
+  EngineClient,
   getSharedEngineClient,
   type Cancellable,
-  type EngineClient,
 } from '../worker/engineClient';
 import {
   createBrowserWorker,
@@ -39,6 +39,8 @@ export interface ReviewEngine extends Pick<EngineInterface, 'findBestMove'> {
   cancelPending: () => void;
   /** true: worker hattı; false: sessiz TimurEngine fallback'u. */
   readonly isWorkerBacked: boolean;
+  /** Havuzlu motorlarda worker'ları sonlandırır (tekil motorlarda tanımsız). */
+  dispose?: () => void;
 }
 
 function tryGetSharedClient(): EngineClient | null {
@@ -109,6 +111,105 @@ export function createReviewEngine(): ReviewEngine {
       } finally {
         if (active === req) active = null;
       }
+    },
+  };
+}
+
+/** Paralel analiz havuzu boyutu: çekirdek sayısına göre, 2–6 aralığında. */
+export function getReviewEnginePoolSize(): number {
+  let cores = 4;
+  try {
+    const hc = (globalThis as unknown as { navigator?: { hardwareConcurrency?: unknown } })
+      .navigator?.hardwareConcurrency;
+    if (typeof hc === 'number' && Number.isFinite(hc) && hc > 0) {
+      cores = Math.floor(hc);
+    }
+  } catch {
+    /* yoksay — varsayılan 4 çekirdek */
+  }
+  return Math.min(6, Math.max(2, cores - 1));
+}
+
+/**
+ * Paralel review motoru: her biri kendi worker'ında N bağımsız istemci.
+ * Hamle aramaları round-robin dağıtılır; arama deterministik olduğu için
+ * sonuçlar seri çalışmayla birebir aynıdır, duvar-saati ~N'de birine iner.
+ * Worker kurulamazsa sessizce seri `createReviewEngine` yoluna düşülür.
+ */
+export function createReviewEnginePool(size: number = getReviewEnginePoolSize()): ReviewEngine {
+  const count = Math.max(1, Math.floor(size));
+  const clients: EngineClient[] = [];
+  try {
+    if (!isWorkerSupported()) throw new Error('worker desteklenmiyor');
+    for (let i = 0; i < count; i++) {
+      const worker = createBrowserWorker();
+      if (!worker) throw new Error('worker üretilemedi');
+      clients.push(new EngineClient(() => worker));
+    }
+  } catch {
+    for (const c of clients) {
+      try {
+        c.dispose();
+      } catch {
+        /* yoksay */
+      }
+    }
+    return createReviewEngine();
+  }
+
+  let cursor = 0;
+  let active: Cancellable<AnalysisResult>[] = [];
+  const untrack = (req: Cancellable<AnalysisResult>): void => {
+    const idx = active.indexOf(req);
+    if (idx >= 0) active.splice(idx, 1);
+  };
+  const cancelAll = (): void => {
+    const pending = active;
+    active = [];
+    for (const req of pending) {
+      try {
+        req.cancel();
+      } catch {
+        /* yoksay */
+      }
+    }
+  };
+
+  return {
+    isWorkerBacked: true,
+    cancelPending: cancelAll,
+    dispose: () => {
+      cancelAll();
+      for (const c of clients) {
+        try {
+          c.dispose();
+        } catch {
+          /* yoksay */
+        }
+      }
+    },
+    findBestMove: (position: Position, _limits?: SearchLimits): Promise<BestMoveResult> => {
+      void _limits;
+      const client = clients[cursor++ % clients.length];
+      const req = client.analyze(position, { depth: REVIEW_ANALYSIS_DEPTH });
+      active.push(req);
+      return req.then(
+        (res) => {
+          untrack(req);
+          return {
+            bestMove: res.bestMove,
+            evaluationCp: res.evaluationCp,
+            depthReached: res.depthReached,
+            nodesSearched: res.nodesSearched,
+            timeMs: res.timeMs,
+            principalVariation: res.principalVariation,
+          };
+        },
+        (err) => {
+          untrack(req);
+          throw err;
+        },
+      );
     },
   };
 }

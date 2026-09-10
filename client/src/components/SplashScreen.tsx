@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react';
-const logoImg = '/images/logo.png';
+import logoImg from '../assets/logo.png';
 
 interface SplashScreenProps {
   onDone: () => void;
