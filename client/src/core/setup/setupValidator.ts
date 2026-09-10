@@ -27,8 +27,14 @@ export function validateSetupPosition(position: SetupPosition): {
     }
   }
 
-  if (position.citadels.whiteCitadelPiece?.type === 'king') whiteKing++;
-  if (position.citadels.blackCitadelPiece?.type === 'king') blackKing++;
+  if (position.citadels.whiteCitadelPiece?.type === 'king') {
+    if (position.citadels.whiteCitadelPiece.color === 'white') whiteKing++;
+    else blackKing++;
+  }
+  if (position.citadels.blackCitadelPiece?.type === 'king') {
+    if (position.citadels.blackCitadelPiece.color === 'black') blackKing++;
+    else whiteKing++;
+  }
 
   if (totalPieces === 0) {
     errors.push('Tahta boş. En az birer şah dizmelisiniz.');

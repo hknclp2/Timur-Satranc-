@@ -81,7 +81,14 @@ export async function ensureRating(
       .select()
       .single();
 
-    if (error) return { data: null, error };
+    if (error) {
+      // Yarış: aynı anda başka bir istemci satırı oluşturmuş olabilir (23505)
+      // → hata yerine yeniden oku, idempotent davran.
+      if ((error as { code?: string })?.code === '23505') {
+        return getRating(playerId);
+      }
+      return { data: null, error };
+    }
     return { data: rowToRating(data, playerId), error: null };
   } catch (err) {
     return { data: null, error: err };

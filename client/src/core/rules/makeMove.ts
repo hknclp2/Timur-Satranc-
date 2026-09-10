@@ -143,6 +143,11 @@ function afterFlags(
   f.halfMoveClock = pawnMove || captured !== null ? 0 : f.halfMoveClock + 1;
   if (position.sideToMove === 'black') f.fullMoveNumber += 1;
   f.repetitionCount = { ...f.repetitionCount };
+  // P1 DÜZELTME: girişteki konumun kendi sayacı yoksa (legacy adaptör /
+  // eski test-iskeletleri boş map ile başlatır) ilk oluşumu 1 say.
+  // Doğru başlatılmış konumlarda (map[cur]=1) etkisizdir.
+  const curKey = (position.zobristHash as bigint).toString();
+  if (!(curKey in f.repetitionCount)) f.repetitionCount[curKey] = 1;
   f.repetitionCount[nextHashKey] = (f.repetitionCount[nextHashKey] ?? 0) + 1;
   if (resolved.isKingSwap) {
     f.hasUsedKingSwap = {
@@ -246,6 +251,8 @@ export function makeMoveInPlace(position: Position, move: Move): UndoRecord {
     nextSide,
   );
   position.zobristHash = nextHash;
+  const prevKey = (undo.prevHash as bigint).toString();
+  if (!(prevKey in f.repetitionCount)) f.repetitionCount[prevKey] = 1;
   f.repetitionCount[nextHash.toString()] = (f.repetitionCount[nextHash.toString()] ?? 0) + 1;
   return undo;
 }

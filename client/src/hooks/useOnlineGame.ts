@@ -59,6 +59,20 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
   const myColorRef = useRef<PlayerColor>(myColor);
   myColorRef.current = myColor;
 
+  // Tekrar-gönderim guard'ı: aynı hamle numarası bir kez sync'lenir
+  // (çift tıklama / yeniden render çift-tetiklemesine karşı).
+  const lastSentMoveRef = useRef<number | null>(null);
+  // ELO guard'ı: oyun başına tek rating uygulaması
+  // (handler + efekt çift-tetiklemesine karşı; durum yazımı idempotent olduğu
+  // için her çağrıda denenir, rating yalnızca ilk başarılı denemede uygulanır).
+  const ratingAppliedRef = useRef(false);
+
+  // Oda değişince guard'ları sıfırla (aynı hook örneği yeni oyunda kullanılabilir).
+  useEffect(() => {
+    lastSentMoveRef.current = null;
+    ratingAppliedRef.current = false;
+  }, [gameCode]);
+
   // --- Realtime senkronizasyon: rakip hamleleri / durum degisiklikleri ---
   useEffect(() => {
     const supabase = getSupabase();
@@ -105,6 +119,8 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
     try {
       const gameId = gameDataRef.current.id;
       const moveNumber = moveIndex + 1;
+      if (lastSentMoveRef.current === moveNumber) return;
+      lastSentMoveRef.current = moveNumber;
       // Hamleden SONRAKI durum DB'ye yazilir: sira rakibe gecer.
       const nextTurn: PlayerColor = entry.player === 'white' ? 'black' : 'white';
       // KRITIK KARAR (pieceType): MoveHistoryEntry.capturedPiece YENILEN tastir,
@@ -145,7 +161,11 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
         is_checkmate: !!(entry as any).isCheckmate,
       };
       const { error } = await sendMove(gameId, move);
-      if (error) console.error('[useOnlineGame] syncMove failed:', error);
+      if (error) {
+        // Başarısız gönderim tekrar denenebilsin: guard'ı geri al.
+        if (lastSentMoveRef.current === moveNumber) lastSentMoveRef.current = null;
+        console.error('[useOnlineGame] syncMove failed:', error);
+      }
     } catch (err) {
       console.error('[useOnlineGame] syncMove failed:', err);
     }
@@ -204,10 +224,17 @@ export function useOnlineGame(props: UseOnlineGameProps): UseOnlineGameReturn {
       } catch (err) {
         console.error('[useOnlineGame] syncGameEndWithRating sync failed:', err);
       }
+      if (ratingAppliedRef.current) return;
+      ratingAppliedRef.current = true;
       try {
         const { error } = await applyGameResult(gameDataRef.current.id, winner);
-        if (error) console.error('[useOnlineGame] syncGameEndWithRating rating failed:', error);
+        if (error) {
+          // Geçici hata olabilir (ağ/yarış) → sonraki tetiklemede tekrar denensin.
+          ratingAppliedRef.current = false;
+          console.error('[useOnlineGame] syncGameEndWithRating rating failed:', error);
+        }
       } catch (err) {
+        ratingAppliedRef.current = false;
         console.error('[useOnlineGame] syncGameEndWithRating rating failed:', err);
       }
     },

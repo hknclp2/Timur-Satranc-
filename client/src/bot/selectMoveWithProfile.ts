@@ -21,7 +21,7 @@ import type { Move } from '../core/move/Move';
 import type { Position } from '../core/position/Position';
 import { generateLegalMoves } from '../core/rules/generateLegalMoves';
 import { makeMove } from '../core/rules/makeMove';
-import { MAX_PLY, scoreRootMoves, STALEMATE_WIN_SCORE, type ScoredMove } from '../engine/search';
+import { MATE_SCORE, MAX_PLY, scoreRootMoves, STALEMATE_WIN_SCORE, type ScoredMove } from '../engine/search';
 import type { TimurEngine } from '../engine/timurEngine';
 import { BOT_PROFILES, type BotProfile, type BotProfileId } from './profiles';
 
@@ -81,11 +81,36 @@ export function selectMoveWithProfile(
   opts: SelectOptions = {},
 ): SelectedMove {
   const profile = BOT_PROFILES[profileId];
-  const depth = opts.maxDepth ?? profile.maxDepth;
+  // Worker hattıyla aynı anlambilim (engineWorker.handleFindBestMove):
+  // MANUEL iterative deepening — SON TAMAMLANAN derinliğin adayları
+  // kullanılır, yarım iterasyon atılır. Tek-derinlikli çağrı YOK
+  // (fail-soft bound'lı kısmi liste havuzu kirletirdi; V'in
+  // maxDepth=Infinity değeri burada MAX_PLY ile sınırlanır).
+  const maxDepth = Math.max(1, Math.min(Math.floor(opts.maxDepth ?? profile.maxDepth), MAX_PLY));
   const movetimeMs = opts.movetimeMs ?? profile.movetimeMs;
+  const deadline = Date.now() + Math.max(1, movetimeMs);
 
-  const { scored } = engine.findTopMoves(position, { depth, movetimeMs });
-  if (scored.length === 0) {
+  let last: ScoredMove[] | null = null;
+  let fallback: ScoredMove[] | null = null;
+  for (let d = 1; d <= maxDepth; d++) {
+    if (Date.now() > deadline) break;
+    const r = engine.findTopMoves(position, {
+      depth: d,
+      movetimeMs: Math.max(1, deadline - Date.now()),
+    });
+    if (r.scored.length === 0) break; // hamle yok
+    if (fallback === null) fallback = r.scored;
+    if (r.completed) {
+      last = r.scored;
+      let best = -Infinity;
+      for (const s of r.scored) if (s.score > best) best = s.score;
+      if (best > MATE_SCORE - MAX_PLY) break; // zorunlu mat
+    } else {
+      break; // yarım iterasyon atılır, önceki tamamlanan kullanılır
+    }
+  }
+  const scored = last ?? fallback;
+  if (!scored || scored.length === 0) {
     throw new Error(`selectMoveWithProfile: ${profileId} için aday hamle yok`);
   }
   return applyProfileSelection(scored, profile, position, opts.rng ?? Math.random, {
@@ -117,7 +142,7 @@ function givesOpponentInstantLoss(position: Position, move: Move): boolean {
 /**
  * Skorlanmış aday havuzuna profil seçimini uygular (saf fonksiyon — engine
  * YOK). Worker kendi ID döngüsünü koşup son tamamlanan derinliğin skorlarıyla
- * bunu çağırır; `selectMoveWithProfile` ise tek derinlikli kısayoldur.
+ * bunu çağırır; `selectMoveWithProfile` aynı ID döngüsünün senkron kısayoludur.
  */
 export function applyProfileSelection(
   scored: ScoredMove[],
@@ -130,7 +155,10 @@ export function applyProfileSelection(
     throw new Error(`applyProfileSelection: ${profile.id} için aday hamle yok`);
   }
 
-  // 1. Gürültü + sıralama.
+  // 1. Gürültü + sıralama. Temiz skorlar ayrı tutulur — `engineScore`
+  //    her zaman GÜRÜLTÜSÜZ döner (worker `evaluationCp`'yi bundan yazar).
+  const cleanByMove = new Map(scored.map((s) => [s.move, s.score] as [Move, number]));
+  const cleanScoreOf = (m: Move): number | null => cleanByMove.get(m) ?? null;
   const noisy: ScoredMove[] = scored.map((s) => ({
     ...s,
     score: s.score + (rng() * 2 - 1) * profile.evaluationNoise,
@@ -169,7 +197,7 @@ export function applyProfileSelection(
       move: picked.move,
       kind: 'weighted',
       candidateCount: pool.length,
-      engineScore: picked.score,
+      engineScore: cleanScoreOf(picked.move),
     };
   }
   const weights = profile.weights.slice(0, pool.length);
@@ -178,6 +206,6 @@ export function applyProfileSelection(
     move: picked.move,
     kind: profile.candidateLimit === 1 ? 'best' : 'weighted',
     candidateCount: pool.length,
-    engineScore: picked.score,
+    engineScore: cleanScoreOf(picked.move),
   };
 }

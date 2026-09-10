@@ -70,7 +70,18 @@ export class EngineClient {
         reject: reject as never,
       });
     });
-    this.worker.postMessage({ type: 'init', requestId: initId } satisfies WorkerRequest);
+    try {
+      // Constructor içindeki init gönderimi fırlatırsa (örn. termine
+      // edilmiş fabrika) constructor patlamamalı: ready reddedilir, sonraki
+      // istekler `send().catch` yoluyla temiz reddedilir (pending sızmaz).
+      this.worker.postMessage({ type: 'init', requestId: initId } satisfies WorkerRequest);
+    } catch (err) {
+      const entry = this.pending.get(initId);
+      if (entry) {
+        this.pending.delete(initId);
+        entry.reject(err as never);
+      }
+    }
   }
 
   private handleMessage(res: WorkerResponse): void {

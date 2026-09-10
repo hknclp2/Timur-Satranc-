@@ -49,6 +49,13 @@ CREATE TABLE public.online_games (
   end_reason TEXT,
   status_reason TEXT,
 
+  -- Faz 2 protokol teklif alanları (migrations/02_online_protocol.sql ile birebir;
+  -- yeni kurulumlarda hazır gelir, 02 idempotent olduğu için tekrar çalıştırılabilir)
+  draw_offer_by TEXT,
+  takeback_offer_by TEXT,
+  rematch_offer_by TEXT,
+  rematch_of UUID,
+
   -- Son hamle bilgisi (highlight için)
   last_move JSONB,
 

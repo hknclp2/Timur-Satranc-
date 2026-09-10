@@ -21,20 +21,29 @@ export interface WorkerResponsePayload {
 }
 
 // Worker event listener
-self.onmessage = (event: MessageEvent<WorkerCalculatePayload>) => {
-  const { type, depth, color } = event.data;
-  if (type === 'CALCULATE_BEST_MOVE') {
-    const startTime = performance.now();
-
-    // Placeholder calculation response (to be connected with core/bot evaluation engine)
-    const response: WorkerResponsePayload = {
-      type: 'BEST_MOVE_RESULT',
-      bestMove: null,
-      score: 0,
-      depth,
-      evaluationTimeMs: performance.now() - startTime,
-    };
-
-    self.postMessage(response);
-  }
+// NOT: legacy yer tutucu (yeni protokol `worker/` altındadır). Ana thread'e
+// yanlışlıkla import edilirse `self` tanımsız olur → guard şart.
+const workerSelf = globalThis as unknown as {
+  onmessage?: ((event: MessageEvent<WorkerCalculatePayload>) => void) | null;
+  postMessage?: (message: WorkerResponsePayload) => void;
 };
+if (typeof workerSelf.postMessage === 'function') {
+  const postMessage = workerSelf.postMessage.bind(workerSelf);
+  workerSelf.onmessage = (event: MessageEvent<WorkerCalculatePayload>) => {
+    const { type, depth } = event.data;
+    if (type === 'CALCULATE_BEST_MOVE') {
+      const startTime = performance.now();
+
+      // Placeholder calculation response (to be connected with core/bot evaluation engine)
+      const response: WorkerResponsePayload = {
+        type: 'BEST_MOVE_RESULT',
+        bestMove: null,
+        score: 0,
+        depth,
+        evaluationTimeMs: performance.now() - startTime,
+      };
+
+      postMessage(response);
+    }
+  };
+}

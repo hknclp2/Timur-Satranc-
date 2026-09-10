@@ -1,5 +1,9 @@
 const PLAYER_ID_KEY = 'timur_player_id';
 const PLAYER_NAME_KEY = 'timur_player_name';
+// Oyuncu adı üst sınırı (PlayAFriendModal input maxLength=20 ile aynı).
+const MAX_PLAYER_NAME_LEN = 20;
+// Bozuk/şişirilmiş saklı ID'leri onarmak için üst sınır.
+const MAX_PLAYER_ID_LEN = 64;
 
 function isBrowser(): boolean {
   return typeof localStorage !== 'undefined';
@@ -21,11 +25,12 @@ export function getOrCreatePlayerId(): string {
     return generateShortId();
   }
   try {
-    let id = localStorage.getItem(PLAYER_ID_KEY);
-    if (!id) {
-      id = generateShortId();
-      localStorage.setItem(PLAYER_ID_KEY, id);
+    const stored = localStorage.getItem(PLAYER_ID_KEY);
+    if (stored && stored.trim().length > 0 && stored.length <= MAX_PLAYER_ID_LEN) {
+      return stored;
     }
+    const id = generateShortId();
+    localStorage.setItem(PLAYER_ID_KEY, id);
     return id;
   } catch {
     return generateShortId();
@@ -48,7 +53,7 @@ export function setPlayerName(name: string): void {
     return;
   }
   try {
-    localStorage.setItem(PLAYER_NAME_KEY, name);
+    localStorage.setItem(PLAYER_NAME_KEY, (name ?? '').trim().slice(0, MAX_PLAYER_NAME_LEN));
   } catch {
     // storage yazilamazsa sessiz gec
   }

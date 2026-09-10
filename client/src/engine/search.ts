@@ -76,12 +76,37 @@ function terminalScore(position: Position, ply: number): number | null {
 }
 
 function pollTimeout(ctx: Ctx): void {
-  // Her düğümde Date.now() YOK (pahalı) — 1024 düğümde bir yoklama.
+  // Node limiti HER düğümde (ucuz tamsayı karşılaştırma); Date.now() pahalı
+  // olduğu için deadline 1024 düğümde bir yoklanır.
+  if (ctx.nodes >= ctx.nodeLimit) {
+    throw new SearchTimeout();
+  }
   if ((ctx.nodes & 1023) === 0) {
-    if (ctx.nodes >= ctx.nodeLimit || Date.now() > ctx.deadlineMs) {
+    if (Date.now() > ctx.deadlineMs) {
       throw new SearchTimeout();
     }
   }
+}
+
+/**
+ * Terminal kazanç bandı alt sınırı (mat + pat-kazancı; ikisi de ply-cezalı).
+ * TT'de saklanan ply-bağımlı skorlar bu eşiğin dışında tanınır ve
+ * saklama/okuma sırasında ply'den bağımsız forma çevrilir (klasik
+ * mate-score adjustment; aksi halde farklı ply'den okunan TT girdisi
+ * yanlış mat mesafesi döndürür).
+ */
+const TERMINAL_BAND = STALEMATE_WIN_SCORE - MAX_PLY;
+
+function ttScoreToStored(score: number, ply: number): number {
+  if (score > TERMINAL_BAND) return score + ply;
+  if (score < -TERMINAL_BAND) return score - ply;
+  return score;
+}
+
+function ttScoreFromStored(stored: number, ply: number): number {
+  if (stored > TERMINAL_BAND) return stored - ply;
+  if (stored < -TERMINAL_BAND) return stored + ply;
+  return stored;
 }
 
 /**
@@ -128,10 +153,11 @@ function negamax(
 
   const ttEntry = ctx.tt?.get(position.zobristHash);
   if (ttEntry && ttEntry.depth >= depth) {
-    if (ttEntry.flag === TTFlag.Exact) return { score: ttEntry.score, pv: [] };
-    if (ttEntry.flag === TTFlag.Lower && ttEntry.score > alpha) alpha = ttEntry.score;
-    else if (ttEntry.flag === TTFlag.Upper && ttEntry.score < beta) beta = ttEntry.score;
-    if (alpha >= beta) return { score: ttEntry.score, pv: [] };
+    const ttScore = ttScoreFromStored(ttEntry.score, ply);
+    if (ttEntry.flag === TTFlag.Exact) return { score: ttScore, pv: [] };
+    if (ttEntry.flag === TTFlag.Lower && ttScore > alpha) alpha = ttScore;
+    else if (ttEntry.flag === TTFlag.Upper && ttScore < beta) beta = ttScore;
+    if (alpha >= beta) return { score: ttScore, pv: [] };
   }
 
   const moves = generateLegalMoves(position);
@@ -174,7 +200,7 @@ function negamax(
       bestScore <= alphaOrig ? TTFlag.Upper : bestScore >= beta ? TTFlag.Lower : TTFlag.Exact;
     ctx.tt.set(position.zobristHash, {
       depth,
-      score: bestScore,
+      score: ttScoreToStored(bestScore, ply),
       flag,
       bestFrom: bestMove.from,
       bestTo: bestMove.to,
@@ -271,6 +297,12 @@ export function searchIterative(
   let timedOut = false;
 
   for (let d = 1; d <= maxDepth; d++) {
+    // Node bütçesi tükendiyse yeni derinliğe başlama (kalan <= 0 ile
+    // scoreRootMoves'e girmek 1024 düğümlük aşmaya yol açardı).
+    if (opts.nodeLimit !== undefined && totalNodes >= opts.nodeLimit) {
+      timedOut = true;
+      break;
+    }
     // Klon üzerinde çalış (yarım iterasyon kirletirse orijinal korunur).
     const clone = clonePosition(position);
     try {
@@ -316,15 +348,23 @@ export function searchIterative(
 
   if (!last) {
     // Hiçbir hamle üretilemedi (oyun bitmiş) ya da anında timeout:
-    // ilk legal hamle + statik eval fallback'i.
+    // terminal skor konvansiyonuyla cevap ver (statik eval DEĞİL —
+    // mat/pat bandı korunur), hamle varsa ilk sıralı hamle + statik eval.
+    const draw = terminalScore(position, 0);
+    if (draw !== null) {
+      return { score: draw, pv: [], nodes: totalNodes, depthReached: 0, timedOut, ttHits: tt?.hits ?? 0 };
+    }
     const moves = generateLegalMoves(position);
     if (moves.length === 0) {
-      return { score: evaluateFn(position), pv: [], nodes: totalNodes, depthReached: 0, timedOut, ttHits: tt?.hits ?? 0 };
+      const mated = isCheck(position, position.sideToMove);
+      const tScore = mated ? -MATE_SCORE : -STALEMATE_WIN_SCORE;
+      return { score: tScore, pv: [], nodes: totalNodes, depthReached: 0, timedOut, ttHits: tt?.hits ?? 0 };
     }
     const ordered = sortMoves(moves, null, order);
-    const undo = makeMoveInPlace(position, ordered[0]);
-    const score = -evaluateFn(position);
-    undoMoveInPlace(position, ordered[0], undo);
+    const tmp = clonePosition(position);
+    const undo = makeMoveInPlace(tmp, ordered[0]);
+    const score = -evaluateFn(tmp);
+    undoMoveInPlace(tmp, ordered[0], undo);
     return {
       score,
       pv: [ordered[0]],
@@ -376,7 +416,7 @@ function clonePosition(position: Position): Position {
   };
 }
 
-/** Kök araması (sabit derinlik). Girdi pozisyonu DEĞİŞTİRMEZ (make/undo dengeli). */
+/** Kök araması (sabit derinlik). Girdi pozisyonu DEĞİŞTİRMEZ (klon üzerinde koşar). */
 export function searchRoot(
   position: Position,
   depth: number,
@@ -391,6 +431,27 @@ export function searchRoot(
     evaluate: opts.evaluate ?? evaluate,
     order: opts.orderMoves !== false,
   };
-  const { score, pv } = negamax(position, safeDepth, -Infinity, Infinity, 0, ctx);
-  return { score, pv, nodes: ctx.nodes };
+  // Klon üzerinde koş: timeout negamax'ı make/undo arasında keserse bile
+  // orijinal pozisyon kirlenmez. Timeout'ta terminal-duyarlı fallback döner
+  // (SearchTimeout dışarı sızmaz — cevap HER ZAMAN vardır).
+  const work = clonePosition(position);
+  try {
+    const { score, pv } = negamax(work, safeDepth, -Infinity, Infinity, 0, ctx);
+    return { score, pv, nodes: ctx.nodes };
+  } catch (e) {
+    if (!(e instanceof SearchTimeout)) throw e;
+    const draw = terminalScore(position, 0);
+    if (draw !== null) return { score: draw, pv: [], nodes: ctx.nodes };
+    const moves = generateLegalMoves(position);
+    if (moves.length === 0) {
+      const mated = isCheck(position, position.sideToMove);
+      return { score: mated ? -MATE_SCORE : -STALEMATE_WIN_SCORE, pv: [], nodes: ctx.nodes };
+    }
+    const ordered = sortMoves(moves, null, ctx.order);
+    const tmp = clonePosition(position);
+    const undo = makeMoveInPlace(tmp, ordered[0]);
+    const score = -ctx.evaluate(tmp);
+    undoMoveInPlace(tmp, ordered[0], undo);
+    return { score, pv: [ordered[0]], nodes: ctx.nodes };
+  }
 }

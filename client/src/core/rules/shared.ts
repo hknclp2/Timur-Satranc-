@@ -369,6 +369,19 @@ export function findSafeRelocationSquare(
   for (let sq = 0; sq < BOARD_COLS * BOARD_ROWS; sq++) {
     const p = arr[sq];
     if (p && p.side === foe) {
+      if (p.kind === PieceKind.Pawn) {
+        // Piyon SADECE çapraz-yakalama karelerine saldırır (boş olsa bile);
+        // düz-ileri itiş saldırı değildir (isAttacked ile aynı model).
+        const c = squareToCoord(sq);
+        if (c) {
+          const dir = p.side === 'white' ? 1 : -1;
+          for (const dx of [-1, 1]) {
+            const t = coordToSquare(c.col + dx, c.row + dir);
+            if (t !== null && isBoardSquare(t)) attacked.add(t);
+          }
+        }
+        continue;
+      }
       for (const t of pseudoTargets(p, sq, board, citadels)) {
         if (isBoardSquare(t.to)) attacked.add(t.to);
       }
@@ -415,6 +428,12 @@ export function findKingSquare(
  * Kare saldırısı — moveRules.ts:469-487 portu.
  * QUIRK (birebir korundu): saldırgan taraması SADECE tahta karelerindedir;
  * hisar içindeki rakip taş saldırgan sayılmaz (legacy de saymaz).
+ * DÜZELTME (P1): piyonlar SADECE çapraz-yakalama karelerine saldırır
+ * (dolu/boş fark etmez); düz-ileri itiş saldırı değildir. Legacy
+ * `pseudoTargets` ileri-itmeyi de üretir (boşsa) ve çaprazı SADECE doluysa
+ * üretir — `isAttacked` boş-kare sorgularında (relocation-güvenliği) iki
+ * yönde de yanlış sonuç verirdi. Dolu şah-karesi sorguları (mat/şah)
+ * tesadüfen doğruydu (kurban varken çapraz üretilir, ileri bloklanır).
  */
 export function isAttacked(
   board: BoardArray | (Piece | null)[],
@@ -426,6 +445,16 @@ export function isAttacked(
   for (let s = 0; s < BOARD_COLS * BOARD_ROWS; s++) {
     const p = arr[s];
     if (p && p.side === bySide) {
+      if (p.kind === PieceKind.Pawn) {
+        const c = squareToCoord(s);
+        if (!c) continue;
+        const dir = p.side === 'white' ? 1 : -1;
+        for (const dx of [-1, 1]) {
+          const t = coordToSquare(c.col + dx, c.row + dir);
+          if (t !== null && t === sq) return true;
+        }
+        continue;
+      }
       const moves = pseudoTargets(p, s, board, citadels);
       for (const m of moves) {
         if (m.to === sq) return true;
@@ -440,7 +469,8 @@ export interface UndoRecord {
   to: SquareIndex;
   landing: SquareIndex; // taşın GERÇEKTE durduğu kare (relocation'da `to`'dan farklı)
   movedBefore: Piece; // hamle-öncesi kopya
-  capturedBefore: Piece | null;
+  capturedBefore: Piece | null; // `to` karesindeki hamle-öncesi taş (yakalama)
+  landingBefore: Piece | null; // relocation'da `landing` karesindeki hamle-öncesi taş (normalde boş)
   targetBefore: Piece | null; // kingSwap'ta takas edilen dost taş (hamle-öncesi kopya)
   prevHalfMoveClock: number;
   prevFullMoveNumber: number;
@@ -493,6 +523,7 @@ export function applyMoveToArrays(
     landing: to,
     movedBefore: { ...(read(from) as Piece) },
     capturedBefore: null,
+    landingBefore: null,
     targetBefore: null,
     prevHalfMoveClock: 0,
     prevFullMoveNumber: 1,
@@ -507,6 +538,7 @@ export function applyMoveToArrays(
     const target = read(to) as Piece;
     undo.targetBefore = { ...target };
     undo.capturedBefore = null;
+    undo.landingBefore = null;
     write(to, { ...king, hasMoved: true });
     write(from, { ...target });
     // `position` alanı yeni çekirdekte taşın içinde tutulmaz (kare = indeks).
@@ -514,13 +546,23 @@ export function applyMoveToArrays(
   }
 
   // 2. Normal hamle (moveRules.ts:117-153).
+  // P0 DÜZELTME: relocation'da yakalama `to` karesindedir (piyon çapraz
+  // taş alıp güvenli-kareye ışınlanır); eski kod `landing` karesini
+  // okuyup `to`'daki düşmanı tahtada BIRAKIYORDU (taş çoğalması).
   const moving = read(from) as Piece;
   write(from, null);
   const effectiveKind = opts.promotion ?? moving.kind;
   // Relocation: taş hedef yerine güvenli-kareye konur (useGame satır ~354-363).
   const landing = opts.relocationTo ?? to;
   undo.landing = landing;
-  undo.capturedBefore = read(landing);
+  if (landing !== to) {
+    undo.capturedBefore = read(to);
+    undo.landingBefore = read(landing);
+    write(to, null);
+  } else {
+    undo.capturedBefore = read(to);
+    undo.landingBefore = null;
+  }
   const placed: Piece = {
     ...moving,
     kind: effectiveKind,
@@ -550,6 +592,12 @@ export function revertMoveInArrays(
   if (isKingSwap) {
     write(undo.from, { ...undo.movedBefore });
     write(undo.to, undo.targetBefore ? { ...undo.targetBefore } : null);
+    return;
+  }
+  if (undo.landing !== undo.to) {
+    write(undo.landing, undo.landingBefore ? { ...undo.landingBefore } : null);
+    write(undo.to, undo.capturedBefore ? { ...undo.capturedBefore } : null);
+    write(undo.from, { ...undo.movedBefore });
     return;
   }
   write(undo.landing, undo.capturedBefore ? { ...undo.capturedBefore } : null);

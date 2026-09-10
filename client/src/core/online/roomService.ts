@@ -22,6 +22,12 @@ export interface OnlineGame {
   winner: 'white' | 'black' | 'draw' | null;
   end_reason: string | null;
   status_reason: string | null;
+  // Faz 2 protokol kolonları (migration 02_online_protocol). Eski satırlarda
+  // eksik olabileceği için opsiyonel tutulur.
+  draw_offer_by?: string | null;
+  takeback_offer_by?: string | null;
+  rematch_offer_by?: string | null;
+  rematch_of?: string | null;
   last_move: { from: any; to: any; notation: string; player: 'white' | 'black' } | null;
   move_count: number;
   created_at: string;
@@ -47,6 +53,24 @@ function isValidCode(code: string): boolean {
   return code.length === 6;
 }
 
+// Oyuncu adı üst sınırı (PlayAFriendModal input maxLength=20 ile aynı).
+const MAX_PLAYER_NAME_LEN = 20;
+
+function isNonBlankId(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function normalizePlayerName(name: string): string {
+  return (name ?? '').trim().slice(0, MAX_PLAYER_NAME_LEN);
+}
+
+/** Supabase "satır yok" hatasını kullanıcı dostu mesaja çevirir. */
+function isNotFoundError(error: any): boolean {
+  return !!error && ((error as any).code === 'PGRST116' || (error as any).status === 406);
+}
+
+const ROOM_NOT_FOUND_ERROR = () => new Error('Oda bulunamadı. Kodu kontrol et (örnek: TMAB12).');
+
 export async function createRoom(
   whitePlayerId: string,
   whiteName: string
@@ -54,6 +78,14 @@ export async function createRoom(
   const supabase = getSupabase();
   if (!supabase) {
     return { data: null, error: NOT_CONFIGURED_ERROR() };
+  }
+
+  if (!isNonBlankId(whitePlayerId)) {
+    return { data: null, error: new Error('Oyuncu kimliği üretilemedi. Sayfayı yenileyip tekrar dene.') };
+  }
+  const cleanWhiteName = normalizePlayerName(whiteName);
+  if (!cleanWhiteName) {
+    return { data: null, error: new Error('Oyuncu adı gerekli.') };
   }
 
   const { board, citadels } = createInitialBoardSetup();
@@ -69,7 +101,7 @@ export async function createRoom(
         code,
         white_player_id: whitePlayerId,
         black_player_id: null,
-        white_name: whiteName,
+        white_name: cleanWhiteName,
         black_name: null,
         status: 'waiting',
         current_turn: 'white',
@@ -124,6 +156,9 @@ export async function findRoom(
     .single();
 
   if (error) {
+    if (isNotFoundError(error)) {
+      return { data: null, error: ROOM_NOT_FOUND_ERROR() };
+    }
     return { data: null, error };
   }
 
@@ -141,6 +176,14 @@ export async function joinRoom(
     return { data: null, error: new Error('Oda kodu 6 karakter olmali (ornek: TMAB12).') };
   }
 
+  if (!isNonBlankId(playerId)) {
+    return { data: null, error: new Error('Oyuncu kimliği üretilemedi. Sayfayı yenileyip tekrar dene.') };
+  }
+  const cleanPlayerName = normalizePlayerName(playerName);
+  if (!cleanPlayerName) {
+    return { data: null, error: new Error('Oyuncu adı gerekli.') };
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return { data: null, error: NOT_CONFIGURED_ERROR() };
@@ -154,6 +197,9 @@ export async function joinRoom(
     .single();
 
   if (findError || !room) {
+    if (!findError || isNotFoundError(findError)) {
+      return { data: null, error: ROOM_NOT_FOUND_ERROR() };
+    }
     return { data: null, error: findError ?? new Error('Oda bulunamadi.') };
   }
 
@@ -174,7 +220,7 @@ export async function joinRoom(
     .from('online_games')
     .update({
       black_player_id: playerId,
-      black_name: playerName,
+      black_name: cleanPlayerName,
       status: 'active',
       updated_at: new Date().toISOString(),
     })

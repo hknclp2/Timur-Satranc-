@@ -13,9 +13,9 @@ import {
   type TestSummary,
 } from '../../core/__tests__/gameCore.test';
 import { deserializePosition, serializePosition } from '../protocol';
-import { engineMoveToLegacy, legacyGameStateToPosition } from '../legacyAdapter';
+import { engineMoveToLegacy, legacyGameStateToPosition, positionToLegacyBoardAndCitadels } from '../legacyAdapter';
 import { EngineClient, type WorkerLike } from '../engineClient';
-import { handleFindBestMove } from '../engineWorker';
+import { handleAnalyze, handleFindBestMove } from '../engineWorker';
 
 /** Sahte worker: ana thread→worker mesajlarını yakalar, test sürücüsü yanıt verir. */
 class FakeWorker implements WorkerLike {
@@ -232,6 +232,99 @@ export async function runWorkerTests(): Promise<TestSummary> {
     new Set<string>(),
   );
   ok(w9.type === 'error', 'W17: bilinmeyen profil error döner (worker ölmez)');
+
+  // ---- W10. bozuk girdi fırlatmaz → error (pending sızıntısı yok, P0)
+  let w18Threw = false;
+  let w18: Awaited<ReturnType<typeof handleFindBestMove>> | undefined;
+  try {
+    w18 = await handleFindBestMove(
+      {
+        type: 'find_best_move',
+        requestId: 'w18',
+        position: { ...serializePosition(mateRig()), zobristHash: 'bozuk-hash!!' },
+        profileId: 'V',
+        maxDepth: 1,
+        movetimeMs: 50,
+      },
+      new Set<string>(),
+    );
+  } catch {
+    w18Threw = true;
+  }
+  ok(!w18Threw && w18?.type === 'error', 'W18: bozuk hash fırlatmaz, error döner');
+
+  // ---- W11. analyze önceden-cancel → 'cancelled' + küme temizlenir (P1)
+  const cancelledAnalyze = new Set<string>(['a19']);
+  const w19 = await handleAnalyze(
+    {
+      type: 'analyze',
+      requestId: 'a19',
+      position: serializePosition(mateRig()),
+      limits: { depth: 1 },
+    },
+    cancelledAnalyze,
+  );
+  ok(w19.type === 'cancelled' && cancelledAnalyze.size === 0, 'W19: analyze cancel bayrağını tüketir + küme temizlenir');
+
+  // ---- W12. init gönderimi patlayan fabrika → constructor patlamaz, istek reddedilir (P1)
+  class ThrowingWorker implements WorkerLike {
+    onmessage: ((event: { data: unknown }) => void) | null = null;
+    postMessage(): void {
+      throw new Error('dead worker');
+    }
+    terminate(): void {
+      /* yok */
+    }
+  }
+  let ctorThrew = false;
+  let badClient: EngineClient | null = null;
+  try {
+    badClient = new EngineClient(() => new ThrowingWorker());
+  } catch {
+    ctorThrew = true;
+  }
+  ok(!ctorThrew, 'W20a: init postMessage patlasa da constructor patlamaz');
+  if (badClient) {
+    const rb = badClient.findBestMove(mateRig(), 'III');
+    let badRejected = false;
+    try {
+      await rb;
+    } catch {
+      badRejected = true;
+    }
+    ok(badRejected, 'W20b: init başarısızsa bekleyen istek temiz reddedilir');
+    badClient.dispose();
+  } else {
+    ok(false, 'W20b: init başarısızsa bekleyen istek temiz reddedilir');
+  }
+
+  // ---- W13. 12 taşta legacy↔engine ters-yön eşleşmesi
+  const pairs: [string, PieceKind][] = [
+    ['king', PieceKind.King],
+    ['queen', PieceKind.General],
+    ['general', PieceKind.Ferz],
+    ['rook', PieceKind.Rook],
+    ['knight', PieceKind.Knight],
+    ['bishop', PieceKind.Alfil],
+    ['camel', PieceKind.Camel],
+    ['warMachine', PieceKind.Dabbaba],
+    ['giraffe', PieceKind.Giraffe],
+    ['picket', PieceKind.Picket],
+    ['pawn', PieceKind.Pawn],
+    ['prince', PieceKind.Prince],
+  ];
+  let roundTripOk = true;
+  for (const [legacyType, kind] of pairs) {
+    const fx = legacyFixture();
+    fx.board[2][2] = { id: `t-${legacyType}`, type: legacyType as never, color: 'white', position: { x: 2, y: 2 } };
+    const convRt = legacyGameStateToPosition(fx);
+    const back = positionToLegacyBoardAndCitadels(convRt);
+    if (convRt.board[tq(2, 2)]?.kind !== kind || (back.board[2][2]?.type as string) !== legacyType) {
+      roundTripOk = false;
+      console.error(`❌ FAIL: round-trip ${legacyType}`);
+    }
+  }
+  ok(roundTripOk, 'W21: 12 taşta legacy↔engine eşleşmesi ters-yönde tutarlı');
 
   client.dispose();
   client2.dispose();

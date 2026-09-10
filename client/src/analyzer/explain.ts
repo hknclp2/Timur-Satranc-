@@ -120,9 +120,10 @@ export function generateCoachExplanation(
     tacticalNote = `Dikkat: ${pieceNameTR(movedKind)} korumasız bir kareye indi, rakip taşı bedavaya alabilir.`;
   }
 
-  // 4. Çatal (Fork)
+  // 4. Çatal (Fork) — taş korumasız kaldıysa övgü uyarıyı ezmemeli
+  // (aksi halde blunder yorumunun içinde "çatal attı!" methiyesi belirir).
   const landedPiece = after.board[landing];
-  if (landedPiece && movedKind !== PieceKind.King) {
+  if (landedPiece && movedKind !== PieceKind.King && !isHung) {
     const victims = pseudoTargets(landedPiece, landing, after.board, after.citadels)
       .map((t) => after.board[t.to])
       .filter((p) => p !== null && p.side === foe && p.kind !== PieceKind.King)

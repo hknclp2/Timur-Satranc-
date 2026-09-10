@@ -48,11 +48,12 @@ export function classifyLossDetailed(params: ClassifyParams): MoveClassification
   if (lossCp <= CLASS_THRESHOLDS.bestMax) return 'great';
   if (lossCp <= CLASS_THRESHOLDS.goodMax) return 'good';
   if (lossCp <= CLASS_THRESHOLDS.inaccuracyMax) return 'inaccuracy';
-  if (lossCp <= CLASS_THRESHOLDS.mistakeMax) return 'mistake';
 
+  // 'miss', 'mistake' aralığını (181-300) gölgelememeli: önce kontrol edilir.
   if (opponentBlunderedBefore && lossCp > 180) {
     return 'miss';
   }
+  if (lossCp <= CLASS_THRESHOLDS.mistakeMax) return 'mistake';
 
   return 'blunder';
 }

@@ -52,14 +52,15 @@ export async function handleFindBestMove(
   req: FindBestMoveRequest,
   cancelled: Set<string> = cancelledIds,
 ): Promise<WorkerResponse> {
-  const profile = BOT_PROFILES[req.profileId as BotProfileId];
-  if (!profile) {
-    return errorResponse(req.requestId, `Bilinmeyen profil: ${req.profileId}`);
-  }
-  const movetimeMs = req.movetimeMs ?? profile.movetimeMs;
-  const maxDepth = Math.min(req.maxDepth ?? profile.maxDepth, MAX_PLY);
-  const deadline = Date.now() + Math.max(1, movetimeMs);
-  const position = deserializePosition(req.position);
+  try {
+    const profile = BOT_PROFILES[req.profileId as BotProfileId];
+    if (!profile) {
+      return errorResponse(req.requestId, `Bilinmeyen profil: ${req.profileId}`);
+    }
+    const movetimeMs = req.movetimeMs ?? profile.movetimeMs;
+    const maxDepth = Math.min(req.maxDepth ?? profile.maxDepth, MAX_PLY);
+    const deadline = Date.now() + Math.max(1, movetimeMs);
+    const position = deserializePosition(req.position);
 
   const tt = new TranspositionTable();
   let last: ScoredMove[] | null = null;
@@ -72,6 +73,10 @@ export async function handleFindBestMove(
       cancelled.delete(req.requestId);
       return { type: 'cancelled', requestId: req.requestId };
     }
+    // Derinlik-arası macrotask yield: senkron arama sürerken kuyrukta
+    // bekleyen `cancel` onmessage'inin işlenebilmesi için (yield yoksa iptal
+    // ancak arama bitip handler döndükten sonra eklenir → etkisiz + sızıntı).
+    await new Promise<void>((res) => setTimeout(res, 0));
     if (Date.now() > deadline) break;
     const r = scoreRootMoves(position, d, { deadlineMs: deadline, tt });
     nodes += r.nodes;
@@ -135,13 +140,31 @@ export async function handleFindBestMove(
       selection: selected.kind,
     },
   };
+  } catch (err) {
+    // Bozuk girdi (geçersiz hash vb.) yanıtsız kalmamalı: client `pending`
+    // map'inde asılı kalır + dispatch'te unhandled rejection olurdu (P0).
+    cancelled.delete(req.requestId);
+    return errorResponse(req.requestId, err instanceof Error ? err.message : String(err));
+  }
 }
 
-export async function handleAnalyze(req: AnalyzeRequest): Promise<WorkerResponse> {
+export async function handleAnalyze(
+  req: AnalyzeRequest,
+  cancelled: Set<string> = cancelledIds,
+): Promise<WorkerResponse> {
+  if (cancelled.has(req.requestId)) {
+    cancelled.delete(req.requestId);
+    return { type: 'cancelled', requestId: req.requestId };
+  }
   try {
     const result = await engine.analyze(deserializePosition(req.position), req.limits ?? {});
+    if (cancelled.has(req.requestId)) {
+      cancelled.delete(req.requestId);
+      return { type: 'cancelled', requestId: req.requestId };
+    }
     return { type: 'analysis_result', requestId: req.requestId, result };
   } catch (err) {
+    cancelled.delete(req.requestId);
     return errorResponse(req.requestId, err instanceof Error ? err.message : String(err));
   }
 }
@@ -156,6 +179,12 @@ async function route(req: WorkerRequest): Promise<WorkerResponse | null> {
       return handleAnalyze(req);
     case 'cancel':
       cancelledIds.add(req.requestId);
+      // Bitmiş/bilinmeyen hedefe gelen iptaller tüketilmez; kümenin sınırsız
+      // büyümesini engelle (en eski girdiyi at).
+      if (cancelledIds.size > 512) {
+        const oldest = cancelledIds.values().next().value;
+        if (oldest !== undefined) cancelledIds.delete(oldest);
+      }
       return null; // yanıt yok — client isteği zaten reddetti
     default:
       return errorResponse(
@@ -182,6 +211,15 @@ if (
     }
     void route(req).then((res) => {
       if (res) workerScope.postMessage(res);
+    }).catch((err: unknown) => {
+      // Handler fırlatırsa client yanıtsız kalmamalı (pending sızıntısı).
+      try {
+        workerScope.postMessage(
+          errorResponse(req.requestId, err instanceof Error ? err.message : String(err)),
+        );
+      } catch {
+        /* yoksay */
+      }
     });
   };
 }

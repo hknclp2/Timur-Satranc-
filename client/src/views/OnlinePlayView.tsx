@@ -52,8 +52,9 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
     isGameOver: onlineGameOver,
     syncMove,
     syncResignation,
-    syncDraw,
-    syncGameEnd,
+    syncGameEndWithRating,
+    syncDrawOffer,
+    syncRespondDrawOffer,
     rebuildFromHistory,
   } = useOnlineGame({ gameCode, myColor, initialGameData });
 
@@ -166,6 +167,32 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
       void rebuildFromHistory();
     }
   }, [connectionStatus, rebuildFromHistory]);
+
+  // ─── Bağlantı durumu bildirimi (sessiz kopuş yerine kullanıcıya yansıt) ───
+  const prevConnRef = useRef(connectionStatus);
+  useEffect(() => {
+    const prev = prevConnRef.current;
+    prevConnRef.current = connectionStatus;
+    if (prev === connectionStatus) return;
+    if (connectionStatus === 'disconnected') {
+      showNotification?.('Bağlantı kesildi. Yeniden bağlanılıyor...', 'error');
+    } else if (connectionStatus === 'error') {
+      showNotification?.('Çevrim içi bağlantı kurulamadı. Hamlelerin iletilmeyebilir.', 'error');
+    } else if (connectionStatus === 'connected' && (prev === 'disconnected' || prev === 'error')) {
+      showNotification?.('Yeniden bağlanıldı', 'success');
+    }
+  }, [connectionStatus, showNotification]);
+
+  // ─── Gelen beraberlik teklifi bildirimi (teklif değişiminde tek seferlik) ───
+  const prevOfferRef = useRef<string | null>(null);
+  useEffect(() => {
+    const cur = gameData.draw_offer_by ?? null;
+    const prev = prevOfferRef.current;
+    prevOfferRef.current = cur;
+    if (cur && cur === opponentColor && prev !== cur && !onlineGameOver) {
+      showNotification?.('Rakip beraberlik teklif etti', 'info');
+    }
+  }, [gameData.draw_offer_by, opponentColor, onlineGameOver, showNotification]);
   const myTime = myColor === 'white' ? whiteTime : blackTime;
   const opponentTime = opponentColor === 'white' ? whiteTime : blackTime;
 
@@ -200,14 +227,22 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
     }
   }, [gameData.move_count, goToLive, showNotification]);
 
-  // ─── Yerel oyun sonu → DB'ye bildir ─────────────────────────────────
+  // ─── Yerel oyun sonu → DB'ye bildir + ELO uygula (oyun başına tek; guard hook'ta) ───
   useEffect(() => {
     if (gameState.isGameOver && !onlineGameOver) {
-      void syncGameEnd(gameState.winner ?? 'draw', gameState.status);
+      // resignGame/agreeDraw status alanını güncellemediği için bayat 'IN_PROGRESS'
+      // yazılmasın: berabere→'agreement', kazananlı→'resignation' varsay.
+      const reason =
+        gameState.status && gameState.status !== 'IN_PROGRESS'
+          ? gameState.status
+          : gameState.winner === 'draw'
+            ? 'agreement'
+            : 'resignation';
+      void syncGameEndWithRating(gameState.winner ?? 'draw', reason);
     }
-  }, [gameState.isGameOver, gameState.winner, gameState.status, onlineGameOver, syncGameEnd]);
+  }, [gameState.isGameOver, gameState.winner, gameState.status, onlineGameOver, syncGameEndWithRating]);
 
-  // ─── Rakip bitirdi (terk / beraberlik) → yerel motora yansıt ────────
+  // ─── Rakip bitirdi (terk / beraberlik / uzaktan mat) → yerel motora yansıt ────────
   useEffect(() => {
     if (onlineGameOver && !gameState.isGameOver) {
       if (gameData.end_reason === 'resignation') {
@@ -215,6 +250,11 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
         resignGame(resigningSide);
       } else if (gameData.winner === 'draw') {
         agreeDraw();
+      } else if (gameData.winner === 'white' || gameData.winner === 'black') {
+        // Mat/stalemate vb. uzaktan bitiş: yerel motor snapshot almadığı için (v2'de
+        // applyRemoteSnapshot eklenecek) kazananı aynala; sebep metni yaklaşıktır.
+        const losingSide: PlayerColor = gameData.winner === 'white' ? 'black' : 'white';
+        resignGame(losingSide);
       }
     }
   }, [onlineGameOver, gameState.isGameOver, gameData.end_reason, gameData.winner, resignGame, agreeDraw]);
@@ -232,9 +272,17 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
     setIsOptionsOpen(false);
   };
 
-  const handleDraw = () => {
-    agreeDraw();
-    void syncDraw();
+  const handleDrawOffer = () => {
+    // Rakip teklif etmişse bu buton kabul işlevi görür; yoksa teklif gönderir.
+    // Tek taraflı anında-beraberlik YOK (önceden syncDraw ile rakip onayı
+    // alınmadan oyun bitiyordu).
+    if (gameData.draw_offer_by === opponentColor) {
+      void syncRespondDrawOffer(true);
+      agreeDraw();
+    } else {
+      void syncDrawOffer();
+      showNotification?.('Beraberlik teklifi gönderildi', 'info');
+    }
     setIsOptionsOpen(false);
   };
 
@@ -370,6 +418,43 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
         </div>
       </div>
 
+      {/* Beraberlik teklifi bandı (Faz 2 protokol) */}
+      {gameData.draw_offer_by === opponentColor && !onlineGameOver && !gameState.isGameOver && (
+        <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-amber-500/15 border-b border-amber-400/30 text-amber-200 text-xs font-bold relative z-20">
+          <span>Rakip beraberlik teklif etti</span>
+          <button
+            onClick={() => {
+              void syncRespondDrawOffer(true);
+              agreeDraw();
+            }}
+            className="bg-emerald-500/80 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg transition-all cursor-pointer"
+          >
+            Kabul Et
+          </button>
+          <button
+            onClick={() => {
+              void syncRespondDrawOffer(false);
+            }}
+            className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1 rounded-lg transition-all cursor-pointer"
+          >
+            Reddet
+          </button>
+        </div>
+      )}
+      {gameData.draw_offer_by === myColor && !onlineGameOver && !gameState.isGameOver && (
+        <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-white/5 border-b border-white/10 text-[#A7BDB1] text-xs font-bold relative z-20">
+          <span>Beraberlik teklifi gönderildi, rakip bekleniyor...</span>
+          <button
+            onClick={() => {
+              void syncRespondDrawOffer(false);
+            }}
+            className="bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1 rounded-lg transition-all cursor-pointer"
+          >
+            Vazgeç
+          </button>
+        </div>
+      )}
+
       {/* Başlık + notasyon */}
       <Header
         onBack={() => setIsOptionsOpen(true)}
@@ -467,12 +552,16 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
               </button>
 
               <button
-                onClick={handleDraw}
+                onClick={handleDrawOffer}
                 disabled={gameState.isGameOver || onlineGameOver}
                 className="w-full bg-[#274e39] hover:bg-[#326449] active:scale-98 text-[#f4eedd] font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 border border-white/10 shadow transition-all cursor-pointer text-sm disabled:opacity-30"
               >
                 <Handshake size={18} weight="bold" className="text-amber-300" />
-                <span>Beraberlik Teklif Et / Bitir</span>
+                <span>
+                  {gameData.draw_offer_by === opponentColor
+                    ? 'Beraberlik Teklifini Kabul Et'
+                    : 'Beraberlik Teklif Et'}
+                </span>
               </button>
 
               <button

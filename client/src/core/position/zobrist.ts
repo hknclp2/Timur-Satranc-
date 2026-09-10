@@ -31,6 +31,12 @@ const PAWN_OF_KEYS = [
   '',
 ] as const;
 
+// P1 DÜZELTME: `pawnStage` (0/1/2) hashe dahil — aynı karede aynı `pawnOf`
+// ama farklı kademedeki piyonlar FARKLI gelecek-hamlelere sahiptir
+// (stage0 relocation, stage1 prince). Eski kod ikisini aynı hashe
+// eşliyordu (tekrar/TT çakışması).
+const PAWN_STAGE_KEYS = ['', '0', '1', '2'] as const;
+
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -69,10 +75,12 @@ function buildTable(): void {
       for (const side of ['white', 'black'] as Side[]) {
         if (kind === PieceKind.Pawn) {
           for (const pawnOf of PAWN_OF_KEYS) {
-            inner.set(
-              `${kind}|${side}|${pawnOf}`,
-              randomBigint64(rand),
-            );
+            for (const stage of PAWN_STAGE_KEYS) {
+              inner.set(
+                `${kind}|${side}|${pawnOf}|${stage}`,
+                randomBigint64(rand),
+              );
+            }
           }
         } else {
           inner.set(pieceKey(kind, side), randomBigint64(rand));
@@ -91,12 +99,13 @@ export function hashContribution(
   kind: PieceKind,
   side: Side,
   pawnOf?: PieceKind,
+  pawnStage?: 0 | 1 | 2,
 ): bigint {
   const inner = TABLE.get(square);
   if (!inner) return 0n;
   const key =
     kind === PieceKind.Pawn
-      ? `${kind}|${side}|${pawnOf ?? ''}`
+      ? `${kind}|${side}|${pawnOf ?? ''}|${pawnStage ?? ''}`
       : pieceKey(kind, side);
   return inner.get(key) ?? 0n;
 }
@@ -117,8 +126,9 @@ export function computeZobristForArrays(
       kind: PieceKind;
       side: Side;
       pawnOf?: PieceKind;
+      pawnStage?: 0 | 1 | 2;
     } | null;
-    if (p) h ^= hashContribution(sq, p.kind, p.side, p.pawnOf);
+    if (p) h ^= hashContribution(sq, p.kind, p.side, p.pawnOf, p.pawnStage);
   }
   h ^= SIDE_KEY[sideToMove];
   return h;
