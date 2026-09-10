@@ -49,6 +49,14 @@ export function useGameState(options: UseGameStateOptions = {}) {
   const stateRef = useRef(gameState);
   stateRef.current = gameState;
 
+  // Callback'ler ref üzerinden okunur: hem interval etkisi her render'da
+  // yeniden kurulmaz hem de updater'lar saf kalır (StrictMode çift-çağrısında
+  // onGameOver/onMoveMade iki kez ateşlenmez).
+  const onGameOverRef = useRef(options.onGameOver);
+  onGameOverRef.current = options.onGameOver;
+  const onMoveMadeRef = useRef(options.onMoveMade);
+  onMoveMadeRef.current = options.onMoveMade;
+
   // ─── Zamanlayıcı (Timer) Mantığı ──────────────────────────────────────────
   useEffect(() => {
     if (gameState.isPaused || gameState.isGameOver) return;
@@ -57,64 +65,83 @@ export function useGameState(options: UseGameStateOptions = {}) {
     if (initialTime <= 0) return;
 
     const timer = setInterval(() => {
-      setGameState((prev) => {
-        if (prev.isPaused || prev.isGameOver) return prev;
+      // Saf okuma: ref üzerinden karar ver, yan etkiler updater DIŞINDA.
+      // (StrictMode'da updater çift çalışır; içerideki callback iki kez koşardı.)
+      const snap = stateRef.current;
+      if (snap.isPaused || snap.isGameOver) return;
 
-        if (prev.turn === 'white') {
-          const nextTime = Math.max(0, prev.whiteTime - 1);
-          if (nextTime === 0) {
-            options.onGameOver?.('black', 'Beyazın süresi bitti!');
-            return {
-              ...prev,
-              whiteTime: 0,
-              isGameOver: true,
-              winner: 'black',
-              statusText: 'Zaman bitti! Siyah kazandı.',
-            };
-          }
-          return { ...prev, whiteTime: nextTime };
+      if (snap.turn === 'white') {
+        const nextTime = Math.max(0, snap.whiteTime - 1);
+        if (nextTime === 0) {
+          onGameOverRef.current?.('black', 'Beyazın süresi bitti!');
+          setGameState((prev) =>
+            prev.isGameOver
+              ? prev
+              : {
+                  ...prev,
+                  whiteTime: 0,
+                  isGameOver: true,
+                  winner: 'black',
+                  statusText: 'Zaman bitti! Siyah kazandı.',
+                }
+          );
         } else {
-          const nextTime = Math.max(0, prev.blackTime - 1);
-          if (nextTime === 0) {
-            options.onGameOver?.('white', 'Siyahın süresi bitti!');
-            return {
-              ...prev,
-              blackTime: 0,
-              isGameOver: true,
-              winner: 'white',
-              statusText: 'Zaman bitti! Beyaz kazandı.',
-            };
-          }
-          return { ...prev, blackTime: nextTime };
+          setGameState((prev) =>
+            prev.isPaused || prev.isGameOver ? prev : { ...prev, whiteTime: nextTime }
+          );
         }
-      });
+      } else {
+        const nextTime = Math.max(0, snap.blackTime - 1);
+        if (nextTime === 0) {
+          onGameOverRef.current?.('white', 'Siyahın süresi bitti!');
+          setGameState((prev) =>
+            prev.isGameOver
+              ? prev
+              : {
+                  ...prev,
+                  blackTime: 0,
+                  isGameOver: true,
+                  winner: 'white',
+                  statusText: 'Zaman bitti! Beyaz kazandı.',
+                }
+          );
+        } else {
+          setGameState((prev) =>
+            prev.isPaused || prev.isGameOver ? prev : { ...prev, blackTime: nextTime }
+          );
+        }
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState.isPaused, gameState.isGameOver, gameState.turn, initialTime, options]);
+  }, [gameState.isPaused, gameState.isGameOver, gameState.turn, initialTime]);
 
   // ─── Simülasyon Fonksiyonları ─────────────────────────────────────────────
 
   // Hamle Yapma (Sırayı diğer oyuncuya geçirir)
   const makeSimulatedMove = useCallback(() => {
+    // Callback updater DIŞINDA koşar (StrictMode çift-çağrı güvenliği).
+    const snap = stateRef.current;
+    if (snap.isGameOver) return;
+    const nextTurn: PlayerTurn = snap.turn === 'white' ? 'black' : 'white';
+    const nextHistoryIdx = snap.historyIndex + 1;
+    onMoveMadeRef.current?.(nextHistoryIdx, nextTurn);
     setGameState((prev) => {
       if (prev.isGameOver) return prev;
 
-      const nextTurn: PlayerTurn = prev.turn === 'white' ? 'black' : 'white';
-      const nextPlayerName = nextTurn === 'white' ? prev.whiteName : prev.blackName;
-      const nextHistoryIdx = prev.historyIndex + 1;
-
-      options.onMoveMade?.(nextHistoryIdx, nextTurn);
+      const t: PlayerTurn = prev.turn === 'white' ? 'black' : 'white';
+      const nextPlayerName = t === 'white' ? prev.whiteName : prev.blackName;
+      const nextIdx = prev.historyIndex + 1;
 
       return {
         ...prev,
-        turn: nextTurn,
-        statusText: `${nextPlayerName} hamle sırası (Hamle #${nextHistoryIdx})`,
-        historyIndex: nextHistoryIdx,
-        totalHistoryLength: Math.max(prev.totalHistoryLength, nextHistoryIdx),
+        turn: t,
+        statusText: `${nextPlayerName} hamle sırası (Hamle #${nextIdx})`,
+        historyIndex: nextIdx,
+        totalHistoryLength: Math.max(prev.totalHistoryLength, nextIdx),
       };
     });
-  }, [options]);
+  }, []);
 
   // Hamle Geri Alma (Undo)
   const handleUndo = useCallback(() => {

@@ -8,7 +8,7 @@
 export type PlayerColor = 'white' | 'black';
 
 /**
- * 11 Unique Pieces of Timur Chess:
+ * 12 Unique Pieces of Timur Chess:
  * - Pawn (Piyade)
  * - Rook (Kale / Rukh)
  * - Knight (At / Faras)

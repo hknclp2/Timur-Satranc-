@@ -8,7 +8,7 @@
  * - Validasyon core/setup üzerinden yapılır (ileride analiz motoru bağlanacak)
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { BoardMatrix, CitadelState, Piece, PieceType, PlayerColor, BoardPosition } from '../types/chess';
 import { createInitialBoardSetup, createPiece } from '../core/engine/boardSetup';
 import { validateSetupPosition } from '../core/setup/setupValidator';
@@ -45,6 +45,12 @@ export function useSetupEditor() {
   const [startingTurn, setStartingTurn] = useState<PlayerColor>('white');
   // Dokunmatik / tıklayarak taşıma için seçili kaynak kare
   const [selectedFrom, setSelectedFrom] = useState<AnyPos | null>(null);
+  // handleDropMove sabit kimlikli kalır (aşağıda handleSquareClick onu yakalar);
+  // güncel tahta/hisar ref üzerinden okunur — iç içe setState yok.
+  const boardRef = useRef(board);
+  boardRef.current = board;
+  const citadelsRef = useRef(citadels);
+  citadelsRef.current = citadels;
 
   /** Tahtayı başlangıç dizilimine sıfırla */
   const resetToInitial = useCallback(() => {
@@ -113,6 +119,7 @@ export function useSetupEditor() {
             return { ...prev, whiteCitadelPiece: newPiece };
           });
         } else {
+          if (pos.y < 0 || pos.y > 9 || pos.x < 0 || pos.x > 10) return;
           setBoard((prev) => {
             const newBoard = prev.map((row) => [...row]);
             newBoard[pos.y][pos.x] = newPiece;
@@ -155,54 +162,67 @@ export function useSetupEditor() {
   );
 
   /** Sürükle-bırak: editör içinde taşı (tahta ↔ tahta ↔ hisar) */
+  // setState updater'ları saf tutulur: iç içe setBoard/setCitadels çağrılmaz
+  // (StrictMode'da updater çift çalışır; iç içe çağrı taşı ikiler ya da kaybederdi).
   const handleDropMove = useCallback((from: AnyPos, to: AnyPos) => {
     if (samePos(from, to)) return;
     setSelectedFrom(null);
+    if (!to.isCitadel && (to.y < 0 || to.y > 9 || to.x < 0 || to.x > 10)) return;
+    if (!from.isCitadel && (from.y < 0 || from.y > 9 || from.x < 0 || from.x > 10)) return;
 
-    // Kaynak parçayı oku
-    let movingPiece: Piece | null = null;
-
-    // Hedefe yerleştirme + kaynaktan silme işlemini toplu yap
+    // Hisardan çıkan taşı ref snapshot'ından oku; yerleştirme + kaynaktan silme
+    // ardışık (ama İÇ İÇE OLMAYAN) set'lerle yapılır.
     if (from.isCitadel) {
-      setCitadels((prevCit) => {
-        const piece = from.citadelSide === 'left' ? prevCit.blackCitadelPiece : prevCit.whiteCitadelPiece;
-        if (!piece) return prevCit;
-        movingPiece = piece;
-
-        const cleared = { ...prevCit };
-        if (from.citadelSide === 'left') cleared.blackCitadelPiece = null;
-        else cleared.whiteCitadelPiece = null;
-
-        if (to.isCitadel) {
-          if (to.citadelSide === 'left') cleared.blackCitadelPiece = { ...piece, position: { ...to } };
-          else cleared.whiteCitadelPiece = { ...piece, position: { ...to } };
-        } else {
-          setBoard((prevBoard) => {
-            const newBoard = prevBoard.map((row) => [...row]);
-            newBoard[to.y][to.x] = { ...piece, position: { x: to.x, y: to.y } };
-            return newBoard;
-          });
-        }
-        return cleared;
+      const snapCit = citadelsRef.current;
+      const piece = from.citadelSide === 'left' ? snapCit.blackCitadelPiece : snapCit.whiteCitadelPiece;
+      if (!piece) return;
+      if (to.isCitadel) {
+        const moved: Piece = { ...piece, position: { ...to } };
+        setCitadels((prev) => {
+          const cleared = { ...prev };
+          if (from.citadelSide === 'left') cleared.blackCitadelPiece = null;
+          else cleared.whiteCitadelPiece = null;
+          if (to.citadelSide === 'left') cleared.blackCitadelPiece = moved;
+          else cleared.whiteCitadelPiece = moved;
+          return cleared;
+        });
+        return;
+      }
+      const placed: Piece = { ...piece, position: { x: to.x, y: to.y } };
+      setCitadels((prev) => {
+        if (from.citadelSide === 'left') return { ...prev, blackCitadelPiece: null };
+        return { ...prev, whiteCitadelPiece: null };
+      });
+      setBoard((prev) => {
+        const newBoard = prev.map((row) => [...row]);
+        newBoard[to.y][to.x] = placed;
+        return newBoard;
       });
       return;
     }
 
-    setBoard((prevBoard) => {
-      const src = prevBoard[from.y]?.[from.x];
-      if (!src) return prevBoard;
-      movingPiece = src;
-      const newBoard = prevBoard.map((row) => [...row]);
+    const src = boardRef.current[from.y]?.[from.x];
+    if (!src) return;
+    if (to.isCitadel) {
+      const moved: Piece = { ...src, position: { ...to } };
+      setBoard((prev) => {
+        if (!prev[from.y]?.[from.x]) return prev;
+        const newBoard = prev.map((row) => [...row]);
+        newBoard[from.y][from.x] = null;
+        return newBoard;
+      });
+      setCitadels((prev) => {
+        if (to.citadelSide === 'left') return { ...prev, blackCitadelPiece: moved };
+        return { ...prev, whiteCitadelPiece: moved };
+      });
+      return;
+    }
+    const moved: Piece = { ...src, position: { x: to.x, y: to.y } };
+    setBoard((prev) => {
+      if (!prev[from.y]?.[from.x]) return prev;
+      const newBoard = prev.map((row) => [...row]);
       newBoard[from.y][from.x] = null;
-
-      if (to.isCitadel) {
-        setCitadels((prev) => {
-          if (to.citadelSide === 'left') return { ...prev, blackCitadelPiece: { ...src, position: { ...to } } };
-          return { ...prev, whiteCitadelPiece: { ...src, position: { ...to } } };
-        });
-      } else {
-        newBoard[to.y][to.x] = { ...src, position: { x: to.x, y: to.y } };
-      }
+      newBoard[to.y][to.x] = moved;
       return newBoard;
     });
   }, []);
@@ -220,6 +240,7 @@ export function useSetupEditor() {
           return { ...prev, whiteCitadelPiece: newPiece };
         });
       } else {
+        if (to.y < 0 || to.y > 9 || to.x < 0 || to.x > 10) return;
         setBoard((prev) => {
           const newBoard = prev.map((row) => [...row]);
           newBoard[to.y][to.x] = newPiece;

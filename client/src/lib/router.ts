@@ -18,6 +18,8 @@
  *   /local       → SCREEN_PLAY
  *   /game        → GAME_PLAY
  *   /online      → ONLINE_PLAY
+ *   /review      → GAME_REVIEW (tek başına veri taşımaz; App guard'ı PLAY_MENU'ye yönlendirir)
+ *   /analysis    → SELF_ANALYSIS (tek başına veri taşımaz; App guard'ı PLAY_MENU'ye yönlendirir)
  * Bilinmeyen yol → MAIN_MENU + URL '/'ye normalize edilir.
  */
 
@@ -37,6 +39,8 @@ const ROUTES: Record<string, PageState> = {
   '/local': 'SCREEN_PLAY',
   '/game': 'GAME_PLAY',
   '/online': 'ONLINE_PLAY',
+  '/review': 'GAME_REVIEW',
+  '/analysis': 'SELF_ANALYSIS',
 };
 
 const PATHS: Record<PageState, string> = {
@@ -53,8 +57,8 @@ const PATHS: Record<PageState, string> = {
   SCREEN_PLAY: '/local',
   GAME_PLAY: '/game',
   ONLINE_PLAY: '/online',
-  GAME_REVIEW: '/',
-  SELF_ANALYSIS: '/',
+  GAME_REVIEW: '/review',
+  SELF_ANALYSIS: '/analysis',
 };
 
 const TITLES: Record<string, string> = {
@@ -70,6 +74,8 @@ const TITLES: Record<string, string> = {
   '/local': 'Ekranda Oyna | Timur Satrancı',
   '/game': 'Maç | Timur Satrancı',
   '/online': 'Online Maç | Timur Satrancı',
+  '/review': 'Oyun Analizi | Timur Satrancı',
+  '/analysis': 'Kendi Kendine Analiz | Timur Satrancı',
 };
 
 export interface NavigateOptions {

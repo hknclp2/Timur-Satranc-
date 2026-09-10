@@ -19,6 +19,7 @@ const PROMOTION_CHOICES: { type: PieceType; label: string }[] = [
   { type: 'picket', label: 'Nöbetçi' },
   { type: 'camel', label: 'Deve' },
   { type: 'warMachine', label: 'Mancınık' },
+  { type: 'prince', label: 'Şehzade' },
 ];
 
 export const PromotionModal: FC<PromotionModalProps> = ({

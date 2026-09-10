@@ -21,6 +21,11 @@ import { runThresholdTests } from '../../analyzer/__tests__/thresholds.test';
 import { runLearnTests } from '../../learn/__tests__/learn.test';
 import { runReviewRegressionTests } from '../../analyzer/__tests__/reviewRegression.test';
 import { runReviewConcurrencyTests } from '../../analyzer/__tests__/reviewConcurrency.test';
+import { runGameHooksTests } from '../../hooks/__tests__/gameHooks.test';
+import { runAgent1RegressionTests } from '../rules/__tests__/agent1.regression.test';
+import { runSearchAuditTests } from '../../engine/__tests__/searchAudit.test';
+import { runSelectionTests } from '../../bot/__tests__/selection.test';
+import { runAnalysisLineFixesTests } from '../../analyzer/__tests__/analysisLineFixes.test';
 
 async function main(): Promise<void> {
   const core = runGameCoreTests();
@@ -37,8 +42,13 @@ async function main(): Promise<void> {
   const learn = runLearnTests();
   const review = await runReviewRegressionTests();
   const concur = await runReviewConcurrencyTests();
-  const passed = core.passed + exp.passed + eng.passed + ev.passed + hard.passed + bot.passed + calib.passed + worker.passed + analyzer.passed + botgame.passed + thresholds.passed + learn.passed + review.passed + concur.passed;
-  const failed = core.failed + exp.failed + eng.failed + ev.failed + hard.failed + bot.failed + calib.failed + worker.failed + analyzer.failed + botgame.failed + thresholds.failed + learn.failed + review.failed + concur.failed;
+  const hooksT = runGameHooksTests();
+  const agent1 = runAgent1RegressionTests();
+  const audit = runSearchAuditTests();
+  const select = runSelectionTests();
+  const linefix = runAnalysisLineFixesTests();
+  const passed = core.passed + exp.passed + eng.passed + ev.passed + hard.passed + bot.passed + calib.passed + worker.passed + analyzer.passed + botgame.passed + thresholds.passed + learn.passed + review.passed + concur.passed + hooksT.passed + agent1.passed + audit.passed + select.passed + linefix.passed;
+  const failed = core.failed + exp.failed + eng.failed + ev.failed + hard.failed + bot.failed + calib.failed + worker.failed + analyzer.failed + botgame.failed + thresholds.failed + learn.failed + review.failed + concur.failed + hooksT.failed + agent1.failed + audit.failed + select.failed + linefix.failed;
   console.log(`TOTAL: ${passed} passed, ${failed} failed`);
   if (typeof process !== 'undefined') process.exit(failed === 0 ? 0 : 1);
   if (failed !== 0) throw new Error(`${failed} test failed`);

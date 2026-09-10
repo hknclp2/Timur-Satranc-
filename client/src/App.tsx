@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PageState, GameMode, Notification, NotificationType } from './types';
 import { BoardMatrix, CitadelState, PlayerColor } from './types/chess';
 import { useRoute } from './lib/router';
@@ -107,9 +107,10 @@ export const App: React.FC = () => {
     setSlideIdx(0);
   };
 
-  // Bildirim tetikleyici
+  // Bildirim tetikleyici (id: aynı milisaniyedeki çağrılar çakışmasın diye sayaçlı)
+  const notifSeq = useRef(0);
   const showNotification = (message: string, type: NotificationType = 'info') => {
-    const id = Date.now();
+    const id = Date.now() * 1000 + (notifSeq.current++ % 1000);
     setNotifications((prev) => [...prev, { id, message, type }]);
 
     setTimeout(() => {
@@ -131,11 +132,34 @@ export const App: React.FC = () => {
   const [onlineMyColor, setOnlineMyColor] = useState<PlayerColor>('white');
   const [onlineGameCode, setOnlineGameCode] = useState<string>('');
 
-  // Oyuna başlama akışı
-  const handleStartGameMode = (mode: GameMode) => {
-    setActiveGameMode(mode);
-    setBotGameConfig(null);
-    setCurrentPage('GAME_PLAY');
+  // Oyuna başlama akışı (hızlı yollar — her mod gerçek hedefine yönlenir;
+  // tahtasız GameHUD ekranı ölü-son değildir)
+  const handleStartGameMode = (mode: GameMode, timeSeconds?: number) => {
+    if (mode === 'local_pass_and_play') {
+      // Gerçek görünüm SCREEN_PLAY; varsayılan isimlerle doğrudan başlat
+      const minutes = Math.max(1, Math.round((timeSeconds ?? 600) / 60));
+      handleStartScreenPlay({
+        whiteName: 'Emir Timur',
+        blackName: 'Yıldırım Bayezid',
+        timeControl: String(minutes),
+        boardRotates: false,
+        gameType: 'Normal',
+      });
+      return;
+    }
+    if (mode === 'online') {
+      // Hızlı eşleşme yok — davet kodu akışına yönlendir
+      setIsOnlineModalOpen(true);
+      return;
+    }
+    if (mode && mode.startsWith('bot_')) {
+      setActiveGameMode(mode);
+      setBotGameConfig(null);
+      setCurrentPage('GAME_PLAY');
+      return;
+    }
+    // 'custom' / 'coach_*' için oynanabilir görünüm yok — ölü ekrana gitme
+    showNotification('Bu oyun modu yakında açılıyor!', 'info');
   };
 
   // Bot oyunu başlatma (BotSelectPage: kart+taç → I–V profili, süre saniye, artış, taraf)
@@ -154,6 +178,7 @@ export const App: React.FC = () => {
     }
     setActiveGameMode(mode);
     setBotGameConfig({ mode, timeSeconds, profileId, incrementSeconds, botSide });
+    setBotPlayKey((k) => k + 1);
     setCurrentPage('GAME_PLAY');
   };
 
@@ -169,11 +194,31 @@ export const App: React.FC = () => {
   const handleExitGame = () => {
     setActiveGameMode(null);
     setBotGameConfig(null);
-    setCurrentPage('MAIN_MENU');
+    setCurrentPage('PLAY_MENU');
   };
 
-  // Yeniden başlatma
+  // Bot maçından çıkış — zincir PLAY_MENU ↔ BOT_SELECT ↔ GAME_PLAY olduğu için
+  // bot listesine dönülür (GameOverModal'daki "Botu Değiştir" de burayı kullanır).
+  const handleExitBotGame = () => {
+    setActiveGameMode(null);
+    setBotGameConfig(null);
+    setCurrentPage('BOT_SELECT');
+  };
+
+  // Maç view'larını config değişiminde zorla remount et (useGame yalnızca
+  // mount'ta init olur; aynı sayfada yeni config gelirse eski tahta/saat kalır).
+  const [botPlayKey, setBotPlayKey] = useState(0);
+  const [screenPlayKey, setScreenPlayKey] = useState(0);
+
+  // Yeniden başlatma (o anki maçı remount ile sıfırla)
   const handleResetGame = () => {
+    if (botGameConfig) {
+      setBotPlayKey((k) => k + 1);
+    } else if (screenPlayLaunched) {
+      setScreenPlayKey((k) => k + 1);
+    } else {
+      setCurrentPage('PLAY_MENU');
+    }
   };
 
   // Ekranda Oyna akışı (normal, zaman kontrolü seçilerek)
@@ -194,6 +239,7 @@ export const App: React.FC = () => {
     setCustomSetupConfig(null); // Normal oyun — custom board yok
     setPendingSetupEntry(null);
     setScreenPlayLaunched(true);
+    setScreenPlayKey((k) => k + 1);
     setScreenPlayConfig({
       whiteName: config.whiteName || 'Emir Timur',
       blackName: config.blackName || 'Yıldırım Bayezid',
@@ -241,6 +287,7 @@ export const App: React.FC = () => {
     const rotates = pendingSetupEntry ? pendingSetupEntry.boardRotates : config.boardRotates;
     setCustomSetupConfig(config);
     setScreenPlayLaunched(true);
+    setScreenPlayKey((k) => k + 1);
     setScreenPlayConfig({
       whiteName: config.whiteName,
       blackName: config.blackName,
@@ -262,6 +309,10 @@ export const App: React.FC = () => {
     } else if (currentPage === 'GAME_PLAY' && !activeGameMode) {
       setCurrentPage('PLAY_MENU', { replace: true });
     } else if (currentPage === 'SCREEN_PLAY' && !screenPlayLaunched) {
+      setCurrentPage('PLAY_MENU', { replace: true });
+    } else if (currentPage === 'GAME_REVIEW' || currentPage === 'SELF_ANALYSIS') {
+      // Tek başına veri taşımayan sayfalar (inceleme/sandbox yalnızca maç
+      // içi subView olarak yaşar) — boş ekran yerine oyun menüsüne yönlendir.
       setCurrentPage('PLAY_MENU', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -343,6 +394,7 @@ export const App: React.FC = () => {
           {currentPage === 'SCREEN_PLAY' && (
             <div className="pointer-events-auto w-full flex-1 flex flex-col">
               <ScreenPlayView
+                key={screenPlayKey}
                 whiteName={screenPlayConfig.whiteName}
                 blackName={screenPlayConfig.blackName}
                 initialTimeSeconds={screenPlayConfig.initialTimeSeconds}
@@ -534,23 +586,24 @@ export const App: React.FC = () => {
             botGameConfig && activeGameMode !== null && activeGameMode.startsWith('bot_') ? (
               <div className="pointer-events-auto w-full flex-1 flex flex-col">
                 <BotPlayView
+                  key={botPlayKey}
                   whiteName={botGameConfig.botSide === 'white' ? `Bot · ${BOT_PROFILES[botGameConfig.profileId].name}` : 'Siz'}
                   blackName={botGameConfig.botSide === 'black' ? `Bot · ${BOT_PROFILES[botGameConfig.profileId].name}` : 'Siz'}
                   initialTimeSeconds={botGameConfig.timeSeconds}
                   incrementSeconds={botGameConfig.incrementSeconds}
                   botSide={botGameConfig.botSide}
                   botProfileId={botGameConfig.profileId}
-                  onExit={handleExitGame}
+                  onExit={handleExitBotGame}
                   showNotification={showNotification}
                 />
               </div>
-            ) : (
+            ) : activeGameMode ? (
               <GameHUD
                 gameMode={activeGameMode}
                 onExitGame={handleExitGame}
                 onResetGame={handleResetGame}
               />
-            )
+            ) : null
           )}
         </div>
 

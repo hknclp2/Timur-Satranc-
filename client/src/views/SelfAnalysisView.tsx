@@ -391,6 +391,9 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
               onClick={() => {
                 game.resetGame();
                 setVariations([]);
+                setPreviewId(null);
+                setEditingId(null);
+                setDraftName('');
                 setIsOptionsOpen(false);
               }}
               className="w-full bg-[#f4eedd] hover:bg-[#eae2cf] text-[#141f1b] font-bold py-3 px-4 rounded-xl cursor-pointer text-sm"

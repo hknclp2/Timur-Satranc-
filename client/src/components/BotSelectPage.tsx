@@ -101,12 +101,22 @@ export const BOT_LEVELS: BotLevelConfig[] = [
 const BOT_CROWNS_STORAGE_KEY = 'timur_bot_crowns_v1';
 
 export function getSavedBotCrowns(): Record<BotProfileId, number> {
+  const fallback: Record<BotProfileId, number> = { I: 0, II: 0, III: 0, IV: 0, V: 0 };
   try {
     const raw = localStorage.getItem(BOT_CROWNS_STORAGE_KEY);
-    if (!raw) return { I: 0, II: 0, III: 0, IV: 0, V: 0 };
-    return JSON.parse(raw);
+    if (!raw) return fallback;
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return fallback;
+    const p = parsed as Partial<Record<BotProfileId, unknown>>;
+    return {
+      I: Number(p.I) > 0 ? Number(p.I) : 0,
+      II: Number(p.II) > 0 ? Number(p.II) : 0,
+      III: Number(p.III) > 0 ? Number(p.III) : 0,
+      IV: Number(p.IV) > 0 ? Number(p.IV) : 0,
+      V: Number(p.V) > 0 ? Number(p.V) : 0,
+    };
   } catch {
-    return { I: 0, II: 0, III: 0, IV: 0, V: 0 };
+    return fallback;
   }
 }
 

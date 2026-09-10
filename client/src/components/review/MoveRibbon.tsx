@@ -53,7 +53,7 @@ export const MoveRibbon: FC<MoveRibbonProps> = ({
       >
         {moves.map((m) => {
           const isActive = currentPly === m.ply;
-          const meta = CLASSIFICATION_METAS[m.classification];
+          const meta = CLASSIFICATION_METAS[m.classification] ?? CLASSIFICATION_METAS.good;
           const isWhite = m.playedBy === 'white';
 
           return (

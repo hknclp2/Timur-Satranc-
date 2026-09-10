@@ -5,8 +5,9 @@
  * (tsc → node; proje build'ine dahil olur).
  */
 
-import { selectNextPuzzle, type SelectablePuzzle } from '../puzzleSelector';
+import { puzzleDifficultyOf, puzzleIdOf, selectNextPuzzle, type SelectablePuzzle } from '../puzzleSelector';
 import { updateStreak, xpForStreak } from '../streak';
+import { sanitizeLearnProgress } from '../learnContent';
 
 export interface TestSummary {
   passed: number;
@@ -93,6 +94,55 @@ export function runLearnTests(): TestSummary {
   const beforeSolved = JSON.stringify(solvedIds);
   selectNextPuzzle(solvedIds, pool, 2);
   ok(JSON.stringify(pool) === beforePool && JSON.stringify(solvedIds) === beforeSolved, 'L22: saf fonksiyon (mutate yok)');
+
+  // ─── selector: kimlik + zorluk yardımcıları (edge) ───
+  ok(puzzleIdOf({ title: 'T', desc: 'x', id: '' }) === 'T', 'L23: boş id → title fallback');
+  ok(puzzleIdOf({ title: 'T', desc: 'x', id: 'k1' }) === 'k1', 'L24: dolu id korunur');
+  ok(puzzleDifficultyOf({ title: 'T', desc: 'x', difficulty: 99 }, 0, 6) === 3, 'L25: difficulty 99 → 3 cap');
+  ok(puzzleDifficultyOf({ title: 'T', desc: 'x', difficulty: -2 }, 0, 6) === 1, 'L26: difficulty -2 → 1 taban');
+  ok(puzzleDifficultyOf({ title: 'T', desc: 'x', difficulty: NaN }, 0, 6) === 1, 'L27: NaN difficulty → konumsal');
+  ok(puzzleDifficultyOf({ title: 'T', desc: 'x' }, 0, 0) === 1, 'L28: total 0 → 1 (bölme yok)');
+  const nanPick = selectNextPuzzle([], pool, NaN);
+  ok(nanPick !== null && nanPick.title === 'P1', 'L29: NaN streak → en kolay (fail dalı)');
+  const nonArrayPick = selectNextPuzzle('P1' as unknown as string[], pool, 0);
+  ok(nonArrayPick !== null && nonArrayPick.title === 'P1', 'L30: dizi-olmayan solvedIds → boş sayılır');
+
+  // ─── progress: sanitizeLearnProgress (bozuk veri toleransı) ───
+  ok(
+    JSON.stringify(sanitizeLearnProgress(null)) ===
+      JSON.stringify({ completedLessons: [], lastLessonIdxByLevel: {} }),
+    'L31: null → boş durum',
+  );
+  ok(
+    JSON.stringify(sanitizeLearnProgress({ completedLessons: 'x' })) ===
+      JSON.stringify({ completedLessons: [], lastLessonIdxByLevel: {} }),
+    'L32: dizi-olmayan completedLessons → boş',
+  );
+  const san = sanitizeLearnProgress({
+    completedLessons: ['1.1', '1.1', 42, '9.9', null],
+    lastLessonIdxByLevel: { 1: 99, 2: -3, 3: 1.9, 99: 0, __proto__: 0, x: 'a' },
+  });
+  ok(
+    JSON.stringify(san.completedLessons) === JSON.stringify(['1.1']),
+    'L33: bilinmeyen/tekrar/hatalı id filtrelenir, yinelenen teklenir',
+  );
+  ok(
+    san.lastLessonIdxByLevel[1] === 3 &&
+      san.lastLessonIdxByLevel[2] === 0 &&
+      san.lastLessonIdxByLevel[3] === 1 &&
+      !(99 in san.lastLessonIdxByLevel),
+    'L34: imleç kelepçelenir (taşma/negatif/kesir), bilinmeyen seviye atılır',
+  );
+  ok(
+    JSON.stringify(sanitizeLearnProgress({ completedLessons: [], lastLessonIdxByLevel: 'x' })) ===
+      JSON.stringify({ completedLessons: [], lastLessonIdxByLevel: {} }),
+    'L35: dizi-olmayan lastLessonIdxByLevel → {}',
+  );
+
+  // NOT: completeLesson singleton testleri bilerek yok — learnProgress.ts `react`
+  // import eder, node test harness'ında (temp outDir) require('react') çözülemez.
+  // Store korumaları (bilinmeyen id yoksayma, çapraz-seviye imleç dokunmama)
+  // yukarıdaki saf sanitize + aşağıdaki seçici testleriyle dolaylı güvence altındadır.
 
   console.log(`learn: ${passed} passed, ${failed} failed`);
   return { passed, failed };

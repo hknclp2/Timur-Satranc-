@@ -1,4 +1,4 @@
-import React, { FC, useState, useMemo, useEffect } from 'react';
+import React, { FC, useState, useMemo, useEffect, useRef } from 'react';
 import { useGame } from '../hooks/useGame';
 import { Header } from '../components/game/Header';
 import { PlayerCard } from '../components/game/PlayerCard';
@@ -66,6 +66,10 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
   const [subView, setSubView] = useState<'game' | 'review' | 'analysis'>('game');
   /** Game-over modalı X ile kapatılabilir (tahtayı incelemek için). */
   const [showGameOver, setShowGameOver] = useState(true);
+
+  // İnceleme/analiz subView'ları hook'u unmount etmez (early return hook'tan
+  // sonra gelir); saat işlemesin diye kimin beklettiğini izleyen bayrak.
+  const pausedBySubView = useRef(false);
 
   // Timur Chess Gameplay Engine Hook
   const {
@@ -142,7 +146,22 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
     }
   }, [gameState.isGameOver, gameOverMode, botProfileId, botSide, gameState.winner]);
 
+  // İnceleme/analiz subView'ları hook'u unmount etmez (early return hook'tan
+  // sonra gelir); dış maçın saati işlemesin diye oyunu beklet, dönüşte
+  // yalnızca bizim beklettiğimizi çöz (resetGame zaten unpause eder).
+  useEffect(() => {
+    if (subView !== 'game' && !isPaused) {
+      pausedBySubView.current = true;
+      togglePause();
+    } else if (subView === 'game' && pausedBySubView.current) {
+      pausedBySubView.current = false;
+      togglePause();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subView]);
+
   const onResetClick = () => {
+    pausedBySubView.current = false;
     resetGame();
     setIsOptionsOpen(false);
     setShowGameOver(true);
@@ -205,8 +224,8 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
       <SelfAnalysisView
         whiteName={whiteName}
         blackName={blackName}
-        initialBoard={displayedBoard}
-        initialCitadels={displayedCitadels}
+        initialBoard={gameState.board}
+        initialCitadels={gameState.citadels}
         initialTurn={gameState.currentTurn}
         initialTimeSeconds={0}
         onExit={() => setSubView('game')}

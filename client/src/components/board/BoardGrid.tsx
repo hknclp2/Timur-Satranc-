@@ -280,6 +280,15 @@ export const BoardGrid: FC<BoardGridProps> = ({
                           setDraggingFromKey(posKey);
                           onPieceDragStart?.({ x, y });
                           try {
+                            // İçteki PieceView handler'ı çalışmazsa (iç içe draggable'da
+                            // tarayıcı dış öğeyi kaynak seçebilir) drop sessizce düşerdi.
+                            // Kaynağı kapanış (closure) koordinatından yaz: piece.position
+                            // bayatlığına da dayanıklıdır.
+                            e.dataTransfer.setData(
+                              'application/json',
+                              JSON.stringify({ type: 'piece', from: { x, y } })
+                            );
+                            e.dataTransfer.effectAllowed = 'move';
                             const img = (e.currentTarget as HTMLDivElement).querySelector('img');
                             if (img) {
                               e.dataTransfer.setDragImage(img, img.clientWidth / 2, img.clientHeight / 2);

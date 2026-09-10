@@ -34,6 +34,7 @@ const slides = [
 ];
 
 export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification, slideIdx, setSlideIdx }) => {
+  const safeSlideIdx = Math.max(0, Math.min(slideIdx, slides.length - 1));
   return (
     <div className="mobile-screen flex flex-col bg-[#122b1e] relative overflow-hidden select-none">
       {/* Başlık */}
@@ -47,7 +48,7 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
           <div className="text-[#00d4c4] text-xs font-bold uppercase tracking-widest">Bölüm 1</div>
           <h1 className="font-batangas text-lg font-bold text-white leading-tight">Timur Satrancı Hakkında</h1>
         </div>
-        <div className="text-white/30 text-xs font-semibold">{slideIdx + 1}/{slides.length}</div>
+        <div className="text-white/30 text-xs font-semibold">{safeSlideIdx + 1}/{slides.length}</div>
       </div>
 
       {/* İlerleme noktaları */}
@@ -58,8 +59,8 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
             onClick={() => setSlideIdx(i)}
             className="h-1.5 rounded-full transition-all duration-300"
             style={{
-              width: i === slideIdx ? '24px' : '6px',
-              background: i === slideIdx ? '#00d4c4' : 'rgba(255,255,255,0.15)',
+              width: i === safeSlideIdx ? '24px' : '6px',
+              background: i === safeSlideIdx ? '#00d4c4' : 'rgba(255,255,255,0.15)',
             }}
           />
         ))}
@@ -68,14 +69,14 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
       {/* Slayt içeriği */}
       <div className="flex-1 px-5 relative z-10 flex flex-col">
         <div
-          key={slideIdx}
+          key={safeSlideIdx}
           className="flex-1 rounded-3xl p-6 flex flex-col border border-[#e5dcce] bg-[#f5eedc] shadow-xl animate-zoom-in"
         >
-          <div className="text-5xl mb-4 text-center">{slides[slideIdx].emoji}</div>
+          <div className="text-5xl mb-4 text-center">{slides[safeSlideIdx].emoji}</div>
           <h2 className="font-batangas text-2xl font-bold text-[#141f1b] text-center mb-4 leading-tight">
-            {slides[slideIdx].title}
+            {slides[safeSlideIdx].title}
           </h2>
-          <p className="text-[#3a4a44] text-sm leading-relaxed text-center flex-1">{slides[slideIdx].body}</p>
+          <p className="text-[#3a4a44] text-sm leading-relaxed text-center flex-1">{slides[safeSlideIdx].body}</p>
           <div className="flex justify-center mt-6 opacity-20">
             <img src={logoImg} alt="" className="w-16 h-16 object-contain" />
           </div>
@@ -86,12 +87,12 @@ export const Lesson1Page: FC<Lesson1PageProps> = ({ onNavigate, showNotification
       <div className="px-5 pt-4 pb-8 flex gap-3 relative z-10 flex-shrink-0">
         <button
           onClick={() => setSlideIdx((s) => Math.max(0, s - 1))}
-          disabled={slideIdx === 0}
+          disabled={safeSlideIdx === 0}
           className="flex-1 py-4 rounded-2xl border border-[#cfc4ad] bg-[#e8deca] text-[#141f1b] font-bold text-sm disabled:opacity-40 transition-all active:scale-95"
         >
           ← Önceki
         </button>
-        {slideIdx < slides.length - 1 ? (
+        {safeSlideIdx < slides.length - 1 ? (
           <button
             onClick={() => setSlideIdx((s) => s + 1)}
             className="flex-1 py-4 rounded-2xl bg-[#00d4c4] hover:bg-[#00c4b4] active:scale-[0.98] text-[#0d2818] font-bold text-sm shadow-lg transition-all cursor-pointer"

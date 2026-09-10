@@ -556,3 +556,39 @@ export const TOTAL_PUZZLES = LEARN_LEVELS.reduce(
   0,
 ); // 70
 export const TOTAL_XP = LEARN_LEVELS.reduce((n, l) => n + l.xp, 0); // 4650
+
+// ─── Bozuk localStorage verisi toleransı (saf; react importu YOK — node test harness uyumlu) ──
+/**
+ * Bozuk/elle düzenlenmiş ilerleme verisini güvenli duruma indirger:
+ * bilinmeyen ders id'lerini atar, yinelenenleri tekler, "devam et" imleçlerini
+ * sayı + seviye aralığına kelepçeler. learnProgress.loadInitial burayı kullanır.
+ */
+export function sanitizeLearnProgress(raw: unknown): {
+  completedLessons: string[];
+  lastLessonIdxByLevel: Record<number, number>;
+} {
+  const empty = { completedLessons: [] as string[], lastLessonIdxByLevel: {} as Record<number, number> };
+  if (typeof raw !== 'object' || raw === null) return empty;
+  const rec = raw as Record<string, unknown>;
+  const knownIds = new Set<string>(LEARN_LEVELS.flatMap((l) => l.lessons.map((d) => d.id)));
+  const completed = Array.isArray(rec.completedLessons)
+    ? Array.from(
+        new Set(
+          rec.completedLessons.filter(
+            (id): id is string => typeof id === 'string' && knownIds.has(id),
+          ),
+        ),
+      )
+    : [];
+  const last: Record<number, number> = {};
+  if (typeof rec.lastLessonIdxByLevel === 'object' && rec.lastLessonIdxByLevel !== null) {
+    for (const [k, v] of Object.entries(rec.lastLessonIdxByLevel)) {
+      const levelId = Number(k);
+      if (!Number.isInteger(levelId)) continue;
+      const level = LEARN_LEVELS.find((l) => l.id === levelId);
+      if (!level || typeof v !== 'number' || !Number.isFinite(v)) continue;
+      last[levelId] = Math.min(Math.max(0, Math.floor(v)), Math.max(0, level.lessons.length - 1));
+    }
+  }
+  return { completedLessons: completed, lastLessonIdxByLevel: last };
+}

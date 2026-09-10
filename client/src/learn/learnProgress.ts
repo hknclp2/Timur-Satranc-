@@ -5,7 +5,7 @@
  * yarın backend adapter takılır; ekran kodu değişmez.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { LEARN_LEVELS, TOTAL_LESSONS, TOTAL_XP } from './learnContent';
+import { LEARN_LEVELS, TOTAL_LESSONS, TOTAL_XP, sanitizeLearnProgress } from './learnContent';
 
 export interface LearnProgressState {
   /** "1.1" gibi tamamlanmış ders id'leri */
@@ -28,12 +28,7 @@ function loadInitial(): LearnProgressState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { completedLessons: [], lastLessonIdxByLevel: {} };
-    const parsed = JSON.parse(raw) as LearnProgressState;
-    if (!Array.isArray(parsed.completedLessons)) return { completedLessons: [], lastLessonIdxByLevel: {} };
-    return {
-      completedLessons: parsed.completedLessons,
-      lastLessonIdxByLevel: parsed.lastLessonIdxByLevel ?? {},
-    };
+    return sanitizeLearnProgress(JSON.parse(raw) as unknown);
   } catch {
     return { completedLessons: [], lastLessonIdxByLevel: {} };
   }
@@ -62,14 +57,22 @@ class LocalLearnProgressStore implements LearnProgressStore {
 
   completeLesson(levelId: number, lessonId: string): void {
     if (this.state.completedLessons.includes(lessonId)) return;
+    // Bilinmeyen ders id'si kaydetme (yüzde/XP hesabını %100 üstüne taşıtır).
+    const known = LEARN_LEVELS.some((l) => l.lessons.some((d) => d.id === lessonId));
+    if (!known) return;
     const level = LEARN_LEVELS.find((l) => l.id === levelId);
     const lessonIdx = level ? level.lessons.findIndex((d) => d.id === lessonId) : -1;
+    // Ders başka seviyeye aitse tamamlanana ekle ama bu seviyenin "devam et" imlecine dokunma.
+    const lastLessonIdxByLevel =
+      lessonIdx >= 0 && level
+        ? {
+            ...this.state.lastLessonIdxByLevel,
+            [levelId]: Math.min(lessonIdx + 1, level.lessons.length - 1),
+          }
+        : this.state.lastLessonIdxByLevel;
     this.state = {
       completedLessons: [...this.state.completedLessons, lessonId],
-      lastLessonIdxByLevel: {
-        ...this.state.lastLessonIdxByLevel,
-        [levelId]: lessonIdx >= 0 ? Math.min(lessonIdx + 1, (level?.lessons.length ?? 1) - 1) : 0,
-      },
+      lastLessonIdxByLevel,
     };
     persist(this.state);
     this.listeners.forEach((fn) => fn());

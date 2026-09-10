@@ -76,13 +76,13 @@ npm install -g supabase
 supabase login
 cd Client
 supabase link --project-ref <proje-ref>
-supabase db push   # Client/supabase/migrations içindeki tüm şemaları basar
+supabase db push   # supabase/migrations içindeki tüm şemaları basar
 ```
 
 **Seçenek B — SQL Editor (manuel):**
 
 1. [supabase.com](https://supabase.com) adresinde proje oluşturun (region: Frankfurt önerilir).
-2. Önce [`Client/supabase/schema.sql`](Client/supabase/schema.sql), ardından [`Client/supabase/migrations`](Client/supabase/migrations) içindeki `01_*.sql` → `05_*.sql` dosyalarını sırayla çalıştırın (tablolar + Realtime yayını + RLS politikaları).
+2. Önce [`supabase/schema.sql`](supabase/schema.sql), ardından [`supabase/migrations`](supabase/migrations) içindeki `01_*.sql` → `05_*.sql` dosyalarını sırayla çalıştırın (tablolar + Realtime yayını + RLS politikaları).
 3. **Settings → API** kısmından `Project URL` ve `anon/public key` değerlerini alıp `Client/.env` dosyası oluşturun:
 
 ```env
@@ -126,12 +126,12 @@ Timur-Satranc-/
 │   │   ├── types/                # Paylaşılan TypeScript tipleri
 │   │   └── views/                # ScreenPlayView, BotPlayView, OnlinePlayView,
 │   │                             # GameReviewView, SelfAnalysisView, SetupEditorView
-│   ├── supabase/
-│   │   ├── schema.sql            # Ana şema (tablolar + Realtime + RLS)
-│   │   └── migrations/           # 01_baseline → 05_rls_hardening (CLI ile basılır)
 │   ├── .env.example              # Supabase ortam değişkeni şablonu (.env commit edilmez)
 │   ├── index.html
 │   └── package.json
+├── supabase/
+│   ├── schema.sql            # Ana şema (tablolar + Realtime + RLS)
+│   └── migrations/           # 01_baseline → 05_rls_hardening (CLI ile basılır)
 ├── Assets/                       # Paylaşılan oyun asset'leri
 ├── Unıty Engine/                 # Unity prototipi (ayrı proje, web istemcisinden bağımsız)
 ├── docs/
@@ -149,7 +149,7 @@ Timur-Satranc-/
 | Motor | El yapımı negamax + alpha-beta + iterative deepening + transposition table (Zobrist), Web Worker |
 | Çevrim içi | Supabase (Postgres + Realtime `postgres_changes`) |
 | Durum | React hooks + localStorage (öğrenme ilerlemesi, anonim oyuncu kimliği) |
-| Test | `tsc` + node tabanlı birim testleri (~287 test: kurallar, motor, bot, analiz, ELO, turnuva) |
+| Test | `tsc` + node tabanlı birim testleri (~397 test: kurallar, motor, bot, analiz, ELO, turnuva) |
 | Büyük asset'ler | Git LFS (`*.png`, `*.jpg`, Unity dosyaları) |
 
 ## 🧭 Mimari İlkeler (özet)

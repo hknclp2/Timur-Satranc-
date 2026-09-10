@@ -1,4 +1,4 @@
-import React, { FC, useState, useMemo, useEffect, useCallback } from 'react';
+import React, { FC, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../hooks/useGame';
 import { BoardGrid } from '../components/board/BoardGrid';
 import { GameOverModal } from '../components/game/GameOverModal';
@@ -78,6 +78,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
     whiteTime,
     blackTime,
     botThinking,
+    isPaused,
     statusText,
     selectedPos,
     validMoves,
@@ -98,6 +99,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
     goToNextMove,
     goToLive,
     undoMove,
+    togglePause,
     resetGame,
     resignGame,
   } = useGame({
@@ -112,6 +114,21 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
 
   const humanSide: PlayerColor = botSide === 'white' ? 'black' : 'white';
   const isHumanTurn = gameState.currentTurn === humanSide && !gameState.isGameOver;
+
+  // İnceleme/analiz subView'ları hook'u unmount etmez (early return hook'tan
+  // sonra gelir); dış maçın saati işlemesin ve bot hamle yapmasın diye
+  // oyunu beklet, dönüşte yalnızca bizim beklettiğimizi çöz.
+  const pausedBySubView = useRef(false);
+  useEffect(() => {
+    if (subView !== 'game' && !isPaused) {
+      pausedBySubView.current = true;
+      togglePause();
+    } else if (subView === 'game' && pausedBySubView.current) {
+      pausedBySubView.current = false;
+      togglePause();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subView]);
 
   // Format time (MM:SS)
   const formatTime = (seconds: number) => {
@@ -287,9 +304,11 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
         onOpenSelfAnalysis={() => setSubView('analysis')}
         perspective={humanSide}
         onRematch={() => {
+          pausedBySubView.current = false;
           resetGame();
           setMatchCrowns(3);
           setHintMove(null);
+          setShowGameOver(true);
           setSubView('game');
         }}
       />
@@ -301,8 +320,8 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
       <SelfAnalysisView
         whiteName={whiteName}
         blackName={blackName}
-        initialBoard={displayedBoard}
-        initialCitadels={displayedCitadels}
+        initialBoard={gameState.board}
+        initialCitadels={gameState.citadels}
         initialTurn={gameState.currentTurn}
         initialTimeSeconds={0}
         onExit={() => setSubView('game')}

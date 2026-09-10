@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "tsc --skipLibCheck --target es2020 --module commonjs --moduleResolution node --outDir build/test-tmp src/core/__tests__/runTests.ts && echo {\"type\":\"commonjs\"} > build/test-tmp/package.json && node build/test-tmp/core/__tests__/runTests.js"
   },

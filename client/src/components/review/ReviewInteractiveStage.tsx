@@ -155,6 +155,7 @@ export const ReviewInteractiveStage: FC<ReviewInteractiveStageProps> = ({
 
   // Coach comment in interactive stage
   const currentCoachComment = useMemo(() => {
+    if (!activeMove) return '';
     if (isRetryMode) {
       if (retryStatus === 'success') {
         return `Harika buldun! 🎉 En iyi hamle tam olarak ${activeMove.bestMoveNotation} idi.`;
@@ -169,6 +170,14 @@ export const ReviewInteractiveStage: FC<ReviewInteractiveStageProps> = ({
     }
     return activeMove.coachComment;
   }, [isRetryMode, retryStatus, showBestBoard, activeMove]);
+
+  if (!activeMove) {
+    return (
+      <div className="w-full max-w-lg mx-auto flex flex-col items-center justify-center gap-2 py-10 text-center select-none">
+        <p className="text-sm font-bold text-white/70">İncelenecek hamle bulunamadı.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-lg mx-auto flex flex-col justify-between h-full gap-2 animate-fade-in select-none">

@@ -821,14 +821,13 @@ export function useGame({
     setStatusText(`Hamle ileri alındı (${turnName} sırası)`);
   }, [redoStack, gameState, historyEntries, whiteTime, blackTime, whiteName, blackName]);
 
-  // Pause / Resume
+  // Pause / Resume (updater saf tutulur: yan etki dışarıda — StrictMode güvenliği)
   const togglePause = useCallback(() => {
-    setIsPaused((p) => {
-      const next = !p;
-      setStatusText(next ? 'Oyun duraklatıldı.' : `${gameState.currentTurn === 'white' ? whiteName : blackName} sırası`);
-      return next;
-    });
-  }, [gameState.currentTurn, whiteName, blackName]);
+    const next = !stateRef.current.isPaused;
+    const turn = stateRef.current.gameState.currentTurn;
+    setIsPaused(next);
+    setStatusText(next ? 'Oyun duraklatıldı.' : `${turn === 'white' ? whiteName : blackName} sırası`);
+  }, [whiteName, blackName]);
 
   // Reset Game — her zaman GERÇEK oyun başlangıcına döner (özel dizilim korunur)
   const resetGame = useCallback(() => {
@@ -862,9 +861,10 @@ export function useGame({
     setRedoStack([]);
   }, [startSnapshot, initialTimeSeconds, whiteName, blackName]);
 
-  // Resign Game
+  // Resign Game (bitmiş oyunda tekrar ateşlenmez: çift onGameOver önlenir)
   const resignGame = useCallback(
     (player: PlayerColor) => {
+      if (stateRef.current.gameState.isGameOver) return;
       const winner: PlayerColor = player === 'white' ? 'black' : 'white';
       const winnerName = winner === 'white' ? whiteName : blackName;
       const loserName = player === 'white' ? whiteName : blackName;
@@ -879,8 +879,9 @@ export function useGame({
     [whiteName, blackName, onGameOver]
   );
 
-  // Agree Draw
+  // Agree Draw (bitmiş oyunda tekrar ateşlenmez)
   const agreeDraw = useCallback(() => {
+    if (stateRef.current.gameState.isGameOver) return;
     setGameState((prev) => ({
       ...prev,
       isGameOver: true,
