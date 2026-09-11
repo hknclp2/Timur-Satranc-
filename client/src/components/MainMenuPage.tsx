@@ -3,7 +3,7 @@ import { ShoppingCart, User, Gear } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../types';
 import logoImg from '../assets/logo.png';
 import okulLogo from '../assets/okulLogo.png';
-import chessboardImg from '../assets/Board.png';
+import chessboardImg from '../assets/board.png';
 import timurArkaImg from '../assets/timur-arka.png';
 
 interface MainMenuPageProps {

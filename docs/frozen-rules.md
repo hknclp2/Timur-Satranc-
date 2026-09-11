@@ -162,7 +162,7 @@ Hisar-içi taş çıkışı: 110'daki taş → `(0,7),(0,8),(0,9)`; 111'deki ta�
 ## 8. Test Komutları
 
 ```bash
-# Client/ dizininden — tüm süitler (derle + çalıştır):
+# client/ dizininden — tüm süitler (derle + çalıştır):
 npm run test
 # Proje geneli tip kontrolü:
 npx tsc --noEmit

@@ -1,6 +1,6 @@
 /**
  * Faz 1+2 (+4/5/6/8) test entry'si: Game Core + Engine + Eval + Bot + Worker + Analyzer.
- * Çalıştırma (Client/ dizininden):
+ * Çalıştırma (client/ dizininden):
  *   npx tsc --skipLibCheck --target es2020 --module commonjs --moduleResolution node \
  *     --outDir "<TEMP>/timur-tests" "src/core/__tests__/runTests.ts"
  *   node "<TEMP>/timur-tests/core/__tests__/runTests.js"

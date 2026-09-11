@@ -13,7 +13,7 @@
  *  - R7 make/undo simetrisi (quiet/terfi/takas/hisar) + perft bütünlüğü.
  *  - R8 setupValidator hisar-renk sayımı.
  *
- * Çalıştırma (Client/ dizininden):
+ * Çalıştırma (client/ dizininden):
  *   npx tsc --skipLibCheck --target es2020 --module commonjs --moduleResolution node \
  *     --outDir "<TEMP>/timur-a1" "src/core/rules/__tests__/agent1.regression.test.ts"
  *   node "<TEMP>/timur-a1/core/rules/__tests__/agent1.regression.test.js"

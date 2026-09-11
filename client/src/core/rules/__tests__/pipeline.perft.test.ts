@@ -13,7 +13,7 @@
  * Karşılaştırma terazisi: terfi satırına değen piyon YOK (legacy relocation
  * hattı taşımaz; bu pozisyonlar terfi-dışı seçildi — kural değişikliği yok).
  *
- * Çalıştırma (Client/ dizininden; jest/vitest yok — repo geleneği düz runner):
+ * Çalıştırma (client/ dizininden; jest/vitest yok — repo geleneği düz runner):
  *   npx tsc --skipLibCheck --target es2020 --module commonjs --moduleResolution node \
  *     --outDir "<TEMP>/timur-pipeline" "src/core/rules/__tests__/pipeline.perft.test.ts"
  *   node "<TEMP>/timur-pipeline/core/rules/__tests__/pipeline.perft.test.js"

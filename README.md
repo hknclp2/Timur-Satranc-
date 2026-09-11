@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Client/src/assets/logo.png" alt="Timur Satrancı logosu" width="120" />
+  <img src="client/src/assets/logo.png" alt="Timur Satrancı logosu" width="120" />
   <h1>Timur Satrancı</h1>
   <p><strong>112 karelik kadim strateji oyununun modern web uygulaması</strong></p>
   <p>
@@ -60,7 +60,7 @@ Seviyelendirme rehberine sadık, ilerleme takibi yapan interaktif eğitim:
 Gereksinim: **Node.js 18+**
 
 ```bash
-cd Client
+cd client
 npm install
 npm run dev      # geliştirme sunucusu (http://localhost:3000)
 ```
@@ -74,7 +74,7 @@ Oda kodlu online maç Supabase (Postgres + Realtime) kullanır. Bu adım atlanı
 ```bash
 npm install -g supabase
 supabase login
-cd Client
+cd client
 supabase link --project-ref <proje-ref>
 supabase db push   # supabase/migrations içindeki tüm şemaları basar
 ```
@@ -83,7 +83,7 @@ supabase db push   # supabase/migrations içindeki tüm şemaları basar
 
 1. [supabase.com](https://supabase.com) adresinde proje oluşturun (region: Frankfurt önerilir).
 2. Önce [`supabase/schema.sql`](supabase/schema.sql), ardından [`supabase/migrations`](supabase/migrations) içindeki `01_*.sql` → `05_*.sql` dosyalarını sırayla çalıştırın (tablolar + Realtime yayını + RLS politikaları).
-3. **Settings → API** kısmından `Project URL` ve `anon/public key` değerlerini alıp `Client/.env` dosyası oluşturun:
+3. **Settings → API** kısmından `Project URL` ve `anon/public key` değerlerini alıp `client/.env` dosyası oluşturun:
 
 ```env
 VITE_SUPABASE_URL=https://xxxx.supabase.co
@@ -104,7 +104,7 @@ npm run test     # birim testleri (tsc ile derlenip node'da koşar)
 
 ```
 Timur-Satranc-/
-├── Client/                       # Web istemcisi (asıl ürün)
+├── client/                       # Web istemcisi (asıl ürün)
 │   ├── src/
 │   │   ├── assets/               # Logo, taş görselleri, tahta dokuları (tüm görseller burada)
 │   │   ├── components/           # Ekranlar (MainMenu, PlayMenu, BotSelect, Learn…)
@@ -154,7 +154,7 @@ Timur-Satranc-/
 
 ## 🧭 Mimari İlkeler (özet)
 
-- **Tek doğruluk kaynağı:** tüm hamle mantığı `core/rules` içindedir; UI, motor ve analiz aynı çekirdeği kullanır. Taş dizimi ve kurallar dondurulmuştur (bkz. `Client/docs/frozen-rules.md`).
+- **Tek doğruluk kaynağı:** tüm hamle mantığı `core/rules` içindedir; UI, motor ve analiz aynı çekirdeği kullanır. Taş dizimi ve kurallar dondurulmuştur (bkz. `client/docs/frozen-rules.md`).
 - **Tek motor, çok profil:** bot ve analizör aynı engine'i kullanır; zorluk profille, derinlik ihtiyaca göre ayarlanır.
 - **Ana thread bloklanmaz:** ağır hesap (bot + oyun incelemesi) Web Worker'da koşar, iptal edilebilir.
 - **ELO yalnızca online'dadır;** bot zorluğunu kullanıcı seçer.

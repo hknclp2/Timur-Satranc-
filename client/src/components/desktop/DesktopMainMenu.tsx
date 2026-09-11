@@ -14,7 +14,7 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../../types';
-import chessboardImg from '../../assets/Board.png';
+import chessboardImg from '../../assets/board.png';
 import timurArkaImg from '../../assets/timur-arka.png';
 import okulLogo from '../../assets/okulLogo.png';
 import lagariImg from '../../assets/lagari.png';

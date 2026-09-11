@@ -57,7 +57,7 @@ Asset/Unity Layer
 ### 2.2 Klasör Yapısı (mevcut, bilinen kısım)
 
 ```
-Client/src/
+client/src/
 ├── App.tsx
 ├── components/
 │   ├── MainMenuPage.tsx
@@ -532,7 +532,7 @@ Game finished → "Analyze" tıklanır → Worker → WASM Engine
 ## 5. Hedef Klasör Yapısı (Öneri)
 
 ```
-Client/src/
+client/src/
 ├── core/                     // Game Core — UI'dan bağımsız
 │   ├── position/
 │   │   └── Position.ts

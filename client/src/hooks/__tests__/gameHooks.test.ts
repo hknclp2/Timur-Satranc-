@@ -28,7 +28,7 @@ export interface TestSummary {
 function hooksDir(): string {
   // Bağımsız derlemede (__tests__ -> .. = hooks/) kaynaklar yanındadır;
   // runTests paketinde ise derlenmiş çıktı build/test-tmp altındadır —
-  // o durumda Client/src/hooks'a düş (npm test Client dizininden koşar).
+  // o durumda client/src/hooks'a düş (npm test client dizininden koşar).
   const compiled = path.resolve(__dirname, '..');
   try {
     if (fs.existsSync(path.join(compiled, 'useGameState.ts'))) return compiled;
