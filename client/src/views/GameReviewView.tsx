@@ -266,7 +266,7 @@ export const GameReviewView: FC<GameReviewViewProps> = ({
       </div>
 
       {/* ── Main Body ── */}
-      <div className={`flex-1 w-full mx-auto px-3 py-2 flex flex-col overflow-y-auto custom-scrollbar ${report ? 'max-w-lg' : 'max-w-xl'}`}>
+      <div className={`flex-1 w-full mx-auto px-3 py-2 flex flex-col overflow-y-auto custom-scrollbar ${report ? 'max-w-lg lg:max-w-5xl' : 'max-w-xl lg:max-w-5xl'}`}>
         {/* Loading Progress State — büyük canlı tahta + kademeli hamleler */}
         {!report && (
           <ReviewLoadingStage

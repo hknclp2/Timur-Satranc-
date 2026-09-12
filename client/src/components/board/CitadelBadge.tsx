@@ -75,8 +75,8 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
       }}
       className={`absolute z-20 flex items-center justify-center cursor-pointer box-border transition-all duration-200 ${
         isLeft
-          ? 'left-[-18px] sm:left-[calc(-100%/11)] w-[22px] sm:w-[calc(100%/11)] border-t border-b border-l border-r-0 border-[#2b180d] rounded-l-md'
-          : 'right-[-18px] sm:right-[calc(-100%/11)] w-[22px] sm:w-[calc(100%/11)] border-t border-b border-r border-l-0 border-[#2b180d] rounded-r-md'
+          ? 'left-[calc(-100%/11)] w-[calc(100%/11)] border-t border-b border-l border-r-0 border-[#2b180d] rounded-l-md'
+          : 'right-[calc(-100%/11)] w-[calc(100%/11)] border-t border-b border-r border-l-0 border-[#2b180d] rounded-r-md'
       } ${
         isValidMoveTarget
           ? 'bg-amber-400/90 border-amber-400 shadow-md ring-2 ring-amber-400 z-30'
@@ -116,8 +116,8 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center text-[#d9b382] pointer-events-none select-none">
-          <CastleTurret size={14} weight="bold" className={isValidMoveTarget ? 'text-amber-950 animate-bounce' : 'opacity-70'} />
-          <span className={`hidden sm:inline text-[7px] font-extrabold uppercase tracking-tight leading-none mt-0.5 ${
+          <CastleTurret weight="bold" className={`w-[min(58%,20px)] h-auto ${isValidMoveTarget ? 'text-amber-950 animate-bounce' : 'opacity-70'}`} />
+          <span className={`hidden min-[420px]:inline text-[max(6px,1.6cqw)] font-extrabold uppercase tracking-tight leading-none mt-0.5 ${
             isValidMoveTarget ? 'text-amber-950 opacity-100' : 'opacity-60'
           }`}>
             {isLeft ? 'Hisar' : 'Hisar'}
@@ -126,7 +126,7 @@ export const CitadelBadge: FC<CitadelBadgeProps> = ({
       )}
 
       {isValidMoveTarget && !piece && (
-        <span className="absolute w-2.5 h-2.5 bg-[#00d4c4] rounded-full animate-pulse pointer-events-none" />
+        <span className="absolute w-[min(38%,14px)] aspect-square bg-[#00d4c4] rounded-full animate-pulse pointer-events-none" />
       )}
     </div>
   );

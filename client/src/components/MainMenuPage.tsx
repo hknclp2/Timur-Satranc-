@@ -4,7 +4,6 @@ import { PageState, NotificationType } from '../types';
 import logoImg from '../assets/logo.png';
 import okulLogo from '../assets/okulLogo.png';
 import chessboardImg from '../assets/board.png';
-import timurArkaImg from '../assets/timur-arka.png';
 
 interface MainMenuPageProps {
   onNavigate: (page: PageState) => void;
@@ -40,14 +39,14 @@ export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, onOpenCredits,
         <button
           type="button"
           onClick={onOpenCredits}
-          className="w-[60px] h-[60px] rounded-full overflow-hidden border-2 border-white/20 bg-black/20 flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer"
+          className="w-[clamp(48px,15.4vw,60px)] h-[clamp(48px,15.4vw,60px)] rounded-full overflow-hidden border-2 border-white/20 bg-black/20 flex items-center justify-center shadow-md active:scale-95 transition-transform cursor-pointer"
           title="Hakkında & Künye Bilgileri"
           aria-label="Hakkında"
         >
           <img src={okulLogo} alt="Logo" className="w-[52px] h-[52px] object-contain" />
         </button>
 
-        <h1 className="font-batangas text-4xl font-extrabold text-white text-center leading-none drop-shadow-md tracking-wide">
+        <h1 className="font-batangas text-fluid-h1 font-extrabold text-white text-center leading-none drop-shadow-md tracking-wide">
           Timur
           <br />
           Satrancı
@@ -65,15 +64,8 @@ export const MainMenuPage: FC<MainMenuPageProps> = ({ onNavigate, onOpenCredits,
 
       {/* Satranç tahtası görseli */}
       <div className="flex-1 flex items-center justify-center px-6 py-2 relative z-10 overflow-x-clip">
-        <div className="relative w-full max-w-[330px]">
+        <div className="relative w-full max-w-[min(330px,84vw)] translate-y-[clamp(30px,14.1vw,60px)]">
           <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(0,212,196,0.12)_0%,_transparent_70%)] blur-2xl pointer-events-none" />
-          {/* Arka plan görseli — tahtanın arkasında, çap ekrana sığar */}
-          <img
-            src={timurArkaImg}
-            alt=""
-            aria-hidden
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(125%,52vh)] max-w-none aspect-square object-contain pointer-events-none z-0 select-none"
-          />
           <img
             src={chessboardImg}
             alt="3D Timur Satranç Tahtası"

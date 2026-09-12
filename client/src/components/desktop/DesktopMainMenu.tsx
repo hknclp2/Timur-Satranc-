@@ -75,16 +75,16 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
   ];
 
   return (
-    <div className="flex-1 ml-[110px] px-8 lg:px-12 py-6 flex flex-col min-h-screen justify-between relative z-10 select-none bg-gradient-to-b from-[#0c2417] to-[#081810] text-white">
+    <div className="flex-1 ml-[var(--sbw)] min-w-0 py-6 flex flex-col min-h-screen justify-between relative z-10 select-none bg-gradient-to-b from-[#0c2417] to-[#081810] text-white overflow-x-clip">
 
       {/* Arka Plan Vurgu Işıkları */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-[radial-gradient(circle,_rgba(0,212,196,0.06)_0%,_transparent_70%)] blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-[400px] h-[400px] bg-[radial-gradient(circle,_rgba(16,185,129,0.05)_0%,_transparent_70%)] blur-2xl" />
+        <div className="absolute top-1/4 left-1/3 w-[clamp(280px,35vw,500px)] h-[clamp(280px,35vw,500px)] bg-[radial-gradient(circle,_rgba(0,212,196,0.06)_0%,_transparent_70%)] blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-[clamp(220px,28vw,400px)] h-[clamp(220px,28vw,400px)] bg-[radial-gradient(circle,_rgba(16,185,129,0.05)_0%,_transparent_70%)] blur-2xl" />
       </div>
 
-      {/* ── 1. ÜST BAŞLIK & KULLANICI BARI (kaydırmada üstte kalır) ── */}
-      <header className="flex justify-between items-center w-full mb-6 relative z-30 sticky top-0 bg-[#0c2417]/90 backdrop-blur-md rounded-2xl px-3 py-2">
+      {/* ── 1. ÜST BAŞLIK & KULLANICI BARI (kaydırmada üstte kalır, kenarlara dayanır) ── */}
+      <header className="flex justify-between items-center w-full mb-6 relative z-50 sticky top-0 bg-[#0c2417]/90 backdrop-blur-md px-2 lg:px-3 py-2">
 
         {/* Sol: Okul Logosu & Künye Butonu */}
         <button
@@ -144,23 +144,23 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
         </div>
       </header>
 
-      {/* ── 2. ANA PANEL ── */}
-      <main className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto w-full relative z-20">
+      {/* ── 2. ANA PANEL (tarihçe+footer dahil: yan kolonlar tüm sayfa boyunca sticky kalır) ── */}
+      <main className="grid grid-cols-1 lg:grid-cols-12 gap-x-4 lg:gap-x-0 gap-y-8 lg:gap-y-0 items-center my-auto w-full min-w-0 relative z-20 px-4 lg:px-0">
 
         {/* KOLON 1 (kaydırmada ekranda kalır) */}
-        <section className="lg:col-span-4 flex flex-col gap-6 text-left lg:self-start lg:sticky lg:top-[110px]">          <div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-5xl xl:text-6xl font-black tracking-tight leading-[1.05] text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+        <section className="lg:col-span-4 min-w-0 z-0 flex flex-col gap-6 text-left lg:self-start lg:sticky lg:top-[clamp(90px,7.6vw,110px)] translate-y-[clamp(40px,5.2vw,75px)] lg:pl-[35px]">          <div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif" }} className="text-fluid-hero font-black tracking-tight leading-[1.05] text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
               Timur
               <br />
               <span className="text-[#00d4c4]">Satrancı</span>
             </h1>
           </div>
 
-          <p className="text-sm xl:text-base text-[#A7BDB1] leading-relaxed max-w-sm">
+          <p className="text-fluid-body text-[#A7BDB1] leading-relaxed max-w-sm">
             Stratejini kur, bilgelikle hamle yap. Geçmişi Keşfet, Geleceği Yönet!
           </p>
 
-          <div className="flex flex-col gap-3 max-w-[280px]">
+          <div className="flex flex-col gap-3 max-w-[clamp(220px,19.4vw,280px)]">
 
             <button
               onClick={() => onNavigate('PLAY_MENU')}
@@ -182,28 +182,29 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
         </section>
 
         {/* KOLON 2: SATRANÇ TAHTASI */}
-        <section className="lg:col-span-5 relative flex items-center justify-center w-full min-h-[320px] overflow-x-clip lg:-translate-x-[10%] lg:translate-y-[70px]">
+        <section className="lg:col-span-5 min-w-0 z-0 relative flex items-center justify-center w-full min-h-[clamp(220px,22vw,320px)] overflow-x-clip translate-y-[clamp(30px,13vw,60px)] lg:-translate-x-[10%] lg:translate-y-[clamp(70px,8.6vw,125px)]">
           <div className="relative w-full flex items-center justify-center">
-            <div className="absolute w-[280px] h-[280px] bg-[radial-gradient(circle,_rgba(0,212,196,0.12)_0%,_transparent_70%)] rounded-full blur-2xl pointer-events-none z-0 animate-pulse" />
+            <div className="absolute w-[clamp(200px,19.4vw,280px)] h-[clamp(200px,19.4vw,280px)] bg-[radial-gradient(circle,_rgba(0,212,196,0.12)_0%,_transparent_70%)] rounded-full blur-2xl pointer-events-none z-0 animate-pulse" />
 
             {/* Arka plan görseli — tahtanın arkasında, çap viewport'a sığar */}
             <img
               src={timurArkaImg}
               alt=""
               aria-hidden
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(125%,72vh)] max-w-none aspect-square object-contain pointer-events-none z-0 select-none"
+              className="absolute top-1/2 left-1/2 max-w-none aspect-square object-contain pointer-events-none z-0 select-none"
+              style={{ width: 'calc(min(110%, 64vh) * 1.1)', transform: 'translate(-50%, -47%)' }}
             />
 
             <img
               src={chessboardImg}
               alt="3D Timur Satranç Tahtası"
-              className="w-full max-w-[380px] object-contain relative z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-float"
+              className="w-full max-w-[clamp(260px,26vw,380px)] object-contain relative z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-float"
             />
           </div>
         </section>
 
         {/* KOLON 3: OYUN MODLARI (kaydırmada ekranda kalır) */}
-        <section className="lg:col-span-3 flex flex-col gap-4 lg:self-start lg:sticky lg:top-[110px]">
+        <section className="lg:col-span-3 min-w-0 z-0 flex flex-col gap-4 lg:self-start lg:sticky lg:top-[clamp(90px,7.6vw,110px)] translate-y-[clamp(40px,5.2vw,75px)] lg:pr-[25px] min-[2000px]:max-w-[420px] min-[2000px]:justify-self-end">
 
           {gameModeCards.map((card) => (
             <button
@@ -224,7 +225,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2">
 
-                    <span className="text-[#141f1b] font-batangas font-bold text-lg leading-tight">
+                    <span className="text-[#141f1b] font-batangas font-bold text-lg leading-tight truncate">
                       {card.title}
                     </span>
 
@@ -251,22 +252,21 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
           ))}
 
         </section>
-      </main>
 
       {/* ── 3. TARİHÇE: TİMUR SATRANCI NEDİR? (panelsiz) ── */}
-      <section className="mt-[180px] mb-4 relative z-20 w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-5 py-8 select-none">
+      <section className="lg:col-span-12 mt-[clamp(200px,61vw,300px)] lg:mt-[clamp(210px,18.75vw,320px)] mb-0 relative z-20 w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-5 py-8 select-none">
         <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#00d4c4]">
           14. Yüzyıldan Günümüze
         </span>
-        <h2 className="font-batangas text-4xl xl:text-5xl font-black text-white leading-tight">
+        <h2 className="font-batangas text-fluid-h1 font-black text-white leading-tight">
           Köklü Bir Miras
         </h2>
-        <p className="text-sm xl:text-base text-[#A7BDB1] leading-relaxed max-w-2xl">
+        <p className="text-fluid-body text-[#A7BDB1] leading-relaxed max-w-2xl">
           Timur Satrancı (Şatranj-ı Tîmûrî), 14. yüzyılda Büyük Timur'un sarayında
           doğmuş tarihin en zengin satranç varyasyonudur. Standart satrancın 8×8
-          tahtası yerine 10×11 büyüklüğünde, 110 karelik bir tahtada oynanır.
+          tahtası yerine 10×11 büyüklüğünde, ek olarak 2 adet hisar ile 112 karelik bir tahtada oynanır.
         </p>
-        <p className="text-sm xl:text-base text-[#A7BDB1] leading-relaxed max-w-2xl">
+        <p className="text-fluid-body text-[#A7BDB1] leading-relaxed max-w-2xl">
           Deve, Zürafa, Mancınık ve Fers gibi özel taşlarıyla stratejik derinliği
           katlanan oyun, İpek Yolu üzerinden tüm Orta Asya'ya yayılmıştır.
         </p>
@@ -274,13 +274,13 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
         {/* Veriler */}
         <div className="flex items-stretch justify-center gap-6 sm:gap-10 mt-2">
           {[
-            { value: '110', label: 'Kare' },
+            { value: '112', label: 'Kare' },
             { value: '28', label: 'Taş' },
             { value: '13', label: 'Figür' },
             { value: '2', label: 'Hisar' },
           ].map((stat) => (
             <div key={stat.label} className="flex flex-col items-center gap-1">
-              <span className="font-batangas text-3xl xl:text-4xl font-black text-[#00d4c4]">
+              <span className="font-batangas text-[clamp(1.5rem,0.95rem+1.44vw,2.25rem)] font-black text-[#00d4c4]">
                 {stat.value}
               </span>
               <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">
@@ -299,7 +299,7 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
       </section>
 
       {/* ── 4. ALT İSTATİSTİK BARI ── */}
-      <footer className="mt-[112px] relative z-20">
+      <footer className="lg:col-span-12 mt-[70px] lg:mx-[30px] relative z-20">
 
         <div className="bg-black/35 border border-white/10 rounded-2xl p-4 md:p-5 backdrop-blur-md shadow-xl">
 
@@ -380,16 +380,25 @@ export const DesktopMainMenu: FC<DesktopMainMenuProps> = ({
       </footer>
 
       {/* ── Lâgarî Studios imzası (kutudan bağımsız) ── */}
-      <div className="mt-6 w-full flex flex-col items-center justify-center gap-1 text-center relative z-20 select-none">
+      <div className="lg:col-span-12 mt-[-8px] lg:mt-6 w-full flex flex-col items-center justify-center gap-1 text-center relative z-20 select-none">
         <span className="text-[8px] font-semibold tracking-widest uppercase text-white/50">
           Made by
         </span>
-        <img
-          src={lagariImg}
-          alt="Lâgarî Studios"
-          className="h-12 w-auto object-contain"
-        />
+        <a
+          href="https://lagari.tr"
+          target="_blank"
+          rel="noreferrer"
+          title="Lâgarî Studios"
+          className="cursor-pointer transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-[1.02]"
+        >
+          <img
+            src={lagariImg}
+            alt="Lâgarî Studios"
+            className="h-12 w-auto object-contain"
+          />
+        </a>
       </div>
+      </main>
     </div>
   );
 };

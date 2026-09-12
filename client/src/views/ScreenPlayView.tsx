@@ -255,8 +255,9 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
         </div>
       )}
 
-      {/* 2. OYUN ALANI (Masaüstü Oyun Düzeni: Üst Oyuncu -> Board -> Alt Oyuncu) */}
-      <div className="flex-1 flex flex-col justify-between items-center px-10 py-1 relative z-10 w-full max-w-lg mx-auto overflow-visible">
+      {/* 2. OYUN ALANI (Mobil: dikey — Desktop: tahta + yan panel) */}
+      <div className="flex-1 flex flex-col justify-between items-center px-[var(--gutter)] py-1 relative z-10 w-full max-w-lg md:max-w-2xl mx-auto overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:max-w-6xl lg:items-start">
+        <div className="min-w-0 w-full flex flex-col justify-between items-center gap-2">
         {/* Üst Oyuncu (Siyah / misafir) */}
         <PlayerCard
           name={blackName}
@@ -291,20 +292,21 @@ export const ScreenPlayView: FC<ScreenPlayViewProps> = ({
           capturedPieces={displayedCapturedPieces.black}
           materialAdvantage={whiteAdvantage}
         />
-      </div>
+        </div>
 
-      {/* 3. EN ALT ARAÇ ÇUBUĞU (Seçenekler, Duraklat, Analiz, Geri, İleri) */}
-      <BottomToolbar
-        onOptions={() => setIsOptionsOpen(true)}
-        onTogglePause={togglePause}
-        isPaused={isPaused}
-        onSelfAnalysis={() => setSubView('analysis')}
-        analysisHidden={!gameState.isGameOver}
-        onPrevious={goToPreviousMove}
-        onNext={goToNextMove}
-        canPrevious={canGoPrevious}
-        canNext={canGoNext}
-      />
+        {/* 3. YAN PANEL ARAÇ ÇUBUĞU (Mobil: alt bar — Desktop: sağ panel) */}
+        <BottomToolbar
+          onOptions={() => setIsOptionsOpen(true)}
+          onTogglePause={togglePause}
+          isPaused={isPaused}
+          onSelfAnalysis={() => setSubView('analysis')}
+          analysisHidden={!gameState.isGameOver}
+          onPrevious={goToPreviousMove}
+          onNext={goToNextMove}
+          canPrevious={canGoPrevious}
+          canNext={canGoNext}
+        />
+      </div>
 
       {/* ─── PİYON TERFİ MODALI ────────────────────────────────────── */}
       {pendingPromotion && (

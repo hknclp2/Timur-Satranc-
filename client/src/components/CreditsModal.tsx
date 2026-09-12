@@ -1,7 +1,8 @@
 import React, { FC } from 'react';
-import { X, Heart } from '@phosphor-icons/react';
+import { X } from '@phosphor-icons/react';
 import okulLogo from '../assets/okulLogo.png';
 import logoImg from '../assets/logo.png';
+import lagariImg from '../assets/lagari.png';
 
 interface CreditsModalProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ export const CreditsModal: FC<CreditsModalProps> = ({ isOpen, onClose }) => {
               <span>Proje Hakkında</span>
             </div>
             <p className="text-xs md:text-sm leading-relaxed text-white/80">
-              Bu proje; Türk-İslam tarihinin kadim mirası olan 112 karelik Timur Satrancı'nı modern teknolojiyle buluşturmak, stratejik derinliğini yeni nesillere interaktif ve eğlenceli bir deneyimle aktarmak amacıyla geliştirilmiştir.
+              Bu proje; İslamî Türk tarihinin kadim mirası olan 112 karelik Timur Satrancı'nı modern teknolojiyle buluşturmak, stratejik derinliğini yeni nesillere interaktif ve eğlenceli bir deneyimle aktarmak amacıyla geliştirilmiştir.
             </p>
           </div>
 
@@ -85,11 +86,6 @@ export const CreditsModal: FC<CreditsModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Teşekkür & Telif */}
-          <div className="flex items-center justify-center gap-2 text-xs text-white/50 text-center pt-2">
-            <Heart size={14} weight="fill" className="text-rose-400" />
-            <span>Tüm katkı sağlayanlara teşekkür ederiz.</span>
-          </div>
         </div>
 
         {/* Kapat Butonu */}
@@ -99,6 +95,26 @@ export const CreditsModal: FC<CreditsModalProps> = ({ isOpen, onClose }) => {
         >
           Kapat
         </button>
+
+        {/* Lâgarî Studios imzası */}
+        <div className="mt-6 w-full flex flex-col items-center justify-center gap-1 text-center select-none">
+          <span className="text-[8px] font-semibold tracking-widest uppercase text-white/50">
+            Product of
+          </span>
+          <a
+            href="https://lagari.tr"
+            target="_blank"
+            rel="noreferrer"
+            title="Lâgarî Studios"
+            className="cursor-pointer transition-all duration-300 opacity-70 hover:opacity-100 hover:scale-[1.02]"
+          >
+            <img
+              src={lagariImg}
+              alt="Lâgarî Studios"
+              className="h-12 w-auto object-contain"
+            />
+          </a>
+        </div>
       </div>
     </div>
   );

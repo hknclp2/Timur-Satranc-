@@ -464,8 +464,9 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
         onSelectMove={goToMove}
       />
 
-      {/* Oyun alanı: rakip -> tahta -> ben */}
-      <div className="flex-1 flex flex-col justify-between items-center px-10 py-1 relative z-10 w-full max-w-lg mx-auto overflow-visible">
+      {/* Oyun alanı (Mobil: dikey — Desktop: tahta + yan panel) */}
+      <div className="flex-1 flex flex-col justify-between items-center px-[var(--gutter)] py-1 relative z-10 w-full max-w-lg md:max-w-2xl mx-auto overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6 lg:max-w-6xl lg:items-start">
+        <div className="min-w-0 w-full flex flex-col justify-between items-center gap-2">
         <PlayerCard
           name={opponentDisplayName}
           side={opponentColor}
@@ -498,25 +499,26 @@ export const OnlinePlayView: FC<OnlinePlayViewProps> = ({
           capturedPieces={displayedCapturedPieces[opponentColor]}
           materialAdvantage={myColor === 'white' ? whiteAdvantage : blackAdvantage}
         />
-      </div>
+        </div>
 
-      {/* Alt araç çubuğu */}
-      <BottomToolbar
-        onOptions={() => setIsOptionsOpen(true)}
-        onTogglePause={togglePause}
-        isPaused={isPaused}
-        onSelfAnalysis={() => {
-          if (gameState.isGameOver || onlineGameOver) {
-            setSubView('analysis');
-          } else {
-            showNotification?.('Önce maçı bitir', 'info');
-          }
-        }}
-        onPrevious={goToPreviousMove}
-        onNext={goToNextMove}
-        canPrevious={canGoPrevious}
-        canNext={canGoNext}
-      />
+        {/* Yan panel araç çubuğu (Mobil: alt bar — Desktop: sağ panel) */}
+        <BottomToolbar
+          onOptions={() => setIsOptionsOpen(true)}
+          onTogglePause={togglePause}
+          isPaused={isPaused}
+          onSelfAnalysis={() => {
+            if (gameState.isGameOver || onlineGameOver) {
+              setSubView('analysis');
+            } else {
+              showNotification?.('Önce maçı bitir', 'info');
+            }
+          }}
+          onPrevious={goToPreviousMove}
+          onNext={goToNextMove}
+          canPrevious={canGoPrevious}
+          canNext={canGoNext}
+        />
+      </div>
 
       {/* Piyon terfisi */}
       {pendingPromotion && (

@@ -5,7 +5,6 @@ import {
   Trophy,
   User,
   Gear,
-  Info,
   BookOpen,
 } from '@phosphor-icons/react';
 import { PageState, NotificationType } from '../../types';
@@ -67,17 +66,10 @@ export const DesktopSidebar: FC<DesktopSidebarProps> = ({
       isActive: false,
       onClick: () => showNotification('Ayarlar yakında açılıyor!', 'info'),
     },
-    {
-      id: 'credits',
-      label: 'Hakkında',
-      icon: <Info size={22} weight="duotone" />,
-      isActive: false,
-      onClick: onOpenCredits,
-    },
   ];
 
   return (
-    <aside className="w-[110px] fixed top-0 bottom-0 left-0 z-40 flex flex-col justify-between items-center py-6 border-r border-white/10 bg-[#0c2417]/90 backdrop-blur-xl select-none shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
+    <aside className="w-[var(--sbw)] fixed top-0 bottom-0 left-0 z-40 flex flex-col justify-between items-center py-6 border-r border-white/10 bg-[#0c2417]/90 backdrop-blur-xl select-none shadow-[4px_0_24px_rgba(0,0,0,0.4)]">
       {/* Üst Logo */}
       <button
         onClick={() => onNavigate('MAIN_MENU')}

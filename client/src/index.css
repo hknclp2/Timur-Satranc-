@@ -28,6 +28,11 @@
   --color-success: #22c55e;
   --font-primary: 'Outfit', sans-serif;
   --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* Akışkan kabuk ölçüsü: sidebar genişliği + karşılığı ml boşluğu tek kaynaktan.
+     1024px'te ~82px, 1440px'te ~110px (üst sınır), altında 76px taban. */
+  --sbw: clamp(76px, 8vw, 110px);
+  /* Akışkan yatay iç boşluk: 360px'te 16px → 1440px'te 40px */
+  --gutter: clamp(1rem, 1rem + 2.2vw, 2.5rem);
 }
 
 /* ─── Reset ────────────────────────────────────────────────────── */
@@ -51,8 +56,8 @@ html, body, #root {
 
 /* ─── İkon Butonları (küçük kare krem) ─────────────────────────── */
 .mobile-icon-btn {
-  width: 54px;
-  height: 54px;
+  width: clamp(44px, 11vw, 54px);
+  height: clamp(44px, 11vw, 54px);
   background: #f5eedc;
   border-radius: 16px;
   display: flex;
@@ -166,8 +171,8 @@ html, body, #root {
 
 /* ─── Geri Dön Butonu ──────────────────────────────────────────── */
 .mobile-back-btn {
-  width: 44px;
-  height: 44px;
+  width: clamp(38px, 10vw, 44px);
+  height: clamp(38px, 10vw, 44px);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -264,9 +269,26 @@ html, body, #root {
 
 /* ─── Glassmorphism kaldırıldı (Gridline düz tasarım) ─────────── */
 
+/* ─── Tahta çerçevesi: iç rozet/yazı birimleri tahtaya göre ölçeklenir ── */
+.board-frame {
+  container-type: inline-size;
+}
+
 /* ─── font-batangas fallback ───────────────────────────────────── */
 .font-batangas {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+/* ─── Akışkan yerleşim yardımcıları ─────────────────────────────
+   Çözünürlüğe göre ölçeklenen iç boşluk ve aralıklar. */
+@layer utilities {
+  .px-gutter {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+  .gap-fluid {
+    gap: clamp(1rem, 1rem + 2vw, 2rem);
+  }
 }

@@ -122,7 +122,7 @@ export const BoardGrid: FC<BoardGridProps> = ({
     <div className="w-full flex-1 flex items-center justify-center p-1 sm:p-2 select-none overflow-visible">
       {/* 11x10 Outer Board Frame */}
       <div
-        className="relative w-full max-w-[540px] aspect-[11/10] bg-[#3a200f] rounded-xl p-1 sm:p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[#7a4f2c]"
+        className="board-frame relative w-full max-w-[min(100%,clamp(300px,80vmin,760px))] aspect-[11/10] bg-[#3a200f] rounded-xl p-1 sm:p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.8)] border border-[#7a4f2c]"
         style={{
           transform: isRotated ? 'rotate(180deg)' : undefined,
         }}

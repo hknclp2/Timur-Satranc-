@@ -276,8 +276,9 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
         <div className="w-10" />
       </div>
 
-      {/* ─── BOARD ────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 items-center justify-center overflow-visible px-10 min-h-0">
+      {/* ─── BOARD + PALET (Mobil: dikey — Desktop: yan yana) ── */}
+      <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 lg:max-w-6xl lg:mx-auto lg:px-[var(--gutter)]">
+      <div className="flex flex-1 items-center justify-center overflow-visible px-[var(--gutter)] lg:px-0 min-h-0 min-w-0 w-full">
         <BoardGrid
           board={board}
           citadels={citadels}
@@ -295,9 +296,9 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
         />
       </div>
 
-      {/* ─── ALT PALET (örnek tasarımdaki gibi altta, 2 sıra) ────────── */}
-      <div className="px-2 pb-1 z-10">
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-2 flex gap-2">
+      {/* ─── ALT PALET (Mobil: altta 2 sıra — Desktop: sağ panel) ── */}
+      <div className="px-2 pb-1 z-10 lg:px-0 lg:pb-0 lg:sticky lg:top-20 lg:self-start min-w-0">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-2 flex gap-2 lg:flex-col">
           <div className="flex-1 flex flex-col gap-1 min-w-0">
             {/* Beyaz sırası */}
             <div className="flex items-center gap-1">
@@ -323,7 +324,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
             onDrop={handleTrashDrop}
             title="Taşı buraya sürükleyerek kaldır"
             className={`
-              w-14 flex-shrink-0 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1
+              w-14 lg:w-auto flex-shrink-0 rounded-xl border-2 border-dashed flex flex-col lg:flex-row items-center justify-center gap-1 lg:px-3 lg:py-2
               transition-all cursor-pointer
               ${trashHover
                 ? 'border-red-400 bg-red-500/20 scale-105'
@@ -340,6 +341,7 @@ export const SetupEditorView: FC<SetupEditorViewProps> = ({
           <span className="text-[#00d4c4] font-semibold">Çift tıkla / çöpe sürükle</span> kaldır ·{' '}
           <span className="text-[#00d4c4] font-semibold">Sürükle</span> taşı
         </div>
+      </div>
       </div>
 
       {/* ─── ALT AKSIYON BARI (Options · Flip · OK) ──────────────────── */}

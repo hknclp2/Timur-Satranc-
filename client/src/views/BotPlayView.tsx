@@ -387,7 +387,8 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-between max-w-xl mx-auto w-full px-2 sm:px-4 py-2 gap-2">
+      <div className="flex-1 flex flex-col items-center justify-between max-w-xl md:max-w-3xl mx-auto w-full px-2 sm:px-4 py-2 gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:max-w-6xl lg:items-start lg:px-6">
+        <div className="min-w-0 w-full flex flex-col items-center justify-between gap-2">
         {/* ─── 2. BOT KARAKTERİ & DİYALOG BALONU (Chess.com Style) ──────── */}
         <div className="w-full flex items-center gap-3 px-1 py-1 animate-fade-in">
           {/* Bot Avatar */}
@@ -431,7 +432,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
         </div>
 
         {/* ─── 4. OYUNCU SAATLERİ & SIRA BİLGİSİ ───────────────────────── */}
-        <div className="w-full grid grid-cols-2 gap-2 px-1 max-w-[540px]">
+        <div className="w-full grid grid-cols-2 gap-2 px-1 max-w-[540px] lg:max-w-none">
           {/* Beyaz Saat */}
           <div
             className={`flex items-center justify-between px-3 py-2 rounded-xl transition-all border ${
@@ -442,7 +443,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
           >
             <div className="flex items-center gap-1.5">
               <span className="w-3.5 h-3.5 rounded-full bg-white border border-gray-400 inline-block shadow-sm" />
-              <span className="text-xs font-bold truncate max-w-[80px]">
+              <span className="text-xs font-bold truncate max-w-[80px] lg:max-w-[140px]">
                 {whiteName}
               </span>
               {whiteAdvantage > 0 && (
@@ -466,7 +467,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
           >
             <div className="flex items-center gap-1.5">
               <span className="w-3.5 h-3.5 rounded-full bg-[#141f1b] border border-gray-600 inline-block shadow-sm" />
-              <span className="text-xs font-bold truncate max-w-[80px]">
+              <span className="text-xs font-bold truncate max-w-[80px] lg:max-w-[140px]">
                 {blackName}
               </span>
               {blackAdvantage > 0 && (
@@ -480,9 +481,12 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
             </span>
           </div>
         </div>
+        </div>
 
+        {/* ─── SAĞ PANEL: NOTASYON + KONTROLLER (Mobil: altta) ─── */}
+        <aside className="w-full min-w-0 flex flex-col gap-2 lg:sticky lg:top-20">
         {/* ─── 5. NOTASYON & GEÇMİŞ GEZİNME BARI ───────────────────────── */}
-        <div className="w-full max-w-[540px] bg-[#142b1f] border border-white/10 rounded-xl p-1.5 flex items-center justify-between gap-2 shadow-inner">
+        <div className="w-full max-w-[540px] lg:max-w-none bg-[#142b1f] border border-white/10 rounded-xl p-1.5 flex items-center justify-between gap-2 shadow-inner">
           {/* Hamle Geçmişi Yatay Liste */}
           <div className="flex-1 flex items-center gap-1 overflow-x-auto custom-scrollbar px-1 py-0.5 text-xs">
             {historyEntries.length === 0 ? (
@@ -554,7 +558,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
         </div>
 
         {/* ─── 6. ALT KONTROL ÇUBUĞU (4 Eylem Butonu — Resimdeki gibi) ─── */}
-        <div className="w-full max-w-[540px] bg-[#f5eedc] text-[#141f1b] rounded-2xl p-2 grid grid-cols-4 gap-2 shadow-2xl border border-[#e5dcce]">
+        <div className="w-full max-w-[540px] lg:max-w-none bg-[#f5eedc] text-[#141f1b] rounded-2xl p-2 grid grid-cols-4 lg:grid-cols-2 gap-2 shadow-2xl border border-[#e5dcce]">
           {/* 1. Seçenekler */}
           <button
             type="button"
@@ -602,6 +606,7 @@ export const BotPlayView: FC<BotPlayViewProps> = ({
             <span className="text-[11px] font-bold mt-1 text-[#141f1b]">Geri Al</span>
           </button>
         </div>
+        </aside>
       </div>
 
       {/* ─── PENDING PROMOTION MODAL ───────────────────────────────────── */}

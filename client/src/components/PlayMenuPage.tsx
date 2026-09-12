@@ -115,13 +115,13 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
         >
           <ArrowLeft size={28} weight="bold" />
         </button>
-        <h1 className="font-batangas text-[2.4rem] font-bold text-white tracking-wide leading-none">
+        <h1 className="font-batangas text-[clamp(2rem,1.4rem+3vw,2.4rem)] font-bold text-white tracking-wide leading-none">
           Oyna
         </h1>
       </div>
 
       {/* ─── MOD KARTLARI & HIZLI OYNA ─────────────────────────────── */}
-      <div className="flex flex-col gap-4 px-5 py-3 pb-12 relative z-10 max-w-lg mx-auto w-full">
+      <div className="flex flex-col gap-4 px-5 py-3 pb-12 relative z-10 max-w-lg md:max-w-2xl mx-auto w-full lg:max-w-4xl">
         {/* 1. ÜST KISIM DİREKT OYNAMA KISAYOLU (krem kutu) */}
         <div className="bg-[#f5eedc] rounded-2xl p-3.5 shadow-xl flex flex-col gap-2.5 border border-[#e5dcce]">
           {/* Zaman Seçici Butonu */}
@@ -159,7 +159,7 @@ export const PlayMenuPage: FC<PlayMenuPageProps> = ({
         </div>
 
         {/* 2. KREM RENK MENÜ KARTLARI LİSTESİ (Phosphor Icons - size={48}) */}
-        <div className="flex flex-col gap-3.5 mt-1">
+        <div className="flex flex-col gap-3.5 mt-1 md:grid md:grid-cols-2 md:gap-4">
           {/* Turnuvalar */}
           <CreamCard
             id="mobile-tournament-btn"

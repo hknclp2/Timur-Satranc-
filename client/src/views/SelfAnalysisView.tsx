@@ -154,7 +154,7 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
 
       {/* Canlı değerlendirme çubuğu */}
       {evalBarOn && (
-        <div className="w-full max-w-lg mx-auto px-3 pt-2">
+        <div className="w-full max-w-lg mx-auto px-3 pt-2 lg:max-w-6xl lg:px-[var(--gutter)]">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold text-white/60 w-10 text-right">{formatEval(liveEval)}</span>
             <div
@@ -181,7 +181,8 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
         </div>
       )}
 
-      <div className="flex-1 flex flex-col justify-between items-center px-10 py-1 relative z-10 w-full max-w-lg mx-auto overflow-visible">
+      <div className="flex-1 flex flex-col justify-between items-center px-[var(--gutter)] py-1 relative z-10 w-full max-w-lg md:max-w-2xl mx-auto overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 lg:max-w-6xl lg:items-start">
+        <div className="min-w-0 w-full flex flex-col items-center">
         <BoardContainer
           board={game.displayedBoard}
           citadels={game.displayedCitadels}
@@ -193,9 +194,10 @@ export const SelfAnalysisView: FC<SelfAnalysisViewProps> = ({
           onSquareClick={game.handleSelectSquare}
           onDropMove={game.handleDropMove}
         />
+        </div>
 
-        {/* Varyasyon ağacı editörü */}
-        <div className="w-full bg-[#1c3829] border border-white/10 rounded-2xl p-3 mt-1 max-h-44 overflow-y-auto custom-scrollbar">
+        {/* Varyasyon ağacı editörü (Mobil: altta — Desktop: sağ panel) */}
+        <div className="w-full bg-[#1c3829] border border-white/10 rounded-2xl p-3 mt-1 max-h-44 overflow-y-auto custom-scrollbar lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20 lg:max-h-[70vh] lg:mt-0">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold text-white/60 uppercase tracking-wider">
               Varyasyonlar ({variations.length})

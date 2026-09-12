@@ -25,7 +25,7 @@ export const PlayerCard: FC<PlayerCardProps> = ({
   materialAdvantage,
 }) => {
   return (
-    <div className="w-full max-w-[500px] px-3 py-1.5 flex items-center justify-between select-none bg-[#132b1d]/90 border-b border-white/10 border-t border-t-white/10">
+    <div className="w-full max-w-[500px] lg:max-w-none px-3 py-1.5 flex items-center justify-between select-none bg-[#132b1d]/90 border-b border-white/10 border-t border-t-white/10 lg:rounded-xl lg:border lg:border-white/10">
       {/* Sol: Krem Kare Avatar + İsim ve Kazanılan Taşlar / Puan */}
       <div className="flex items-center gap-3 min-w-0 flex-1 mr-2">
         {/* Krem Renkli Kare Avatar Kutusu */}

@@ -423,7 +423,7 @@ export const App: React.FC = () => {
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     showNotification={showNotification}
                   />
-                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                  <div className="flex-1 ml-[var(--sbw)] overflow-y-auto custom-scrollbar">
                     <BotSelectPage
                       onNavigate={setCurrentPage}
                       onStartGame={(mode, seconds, profileId, inc, side) =>
@@ -453,7 +453,7 @@ export const App: React.FC = () => {
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     showNotification={showNotification}
                   />
-                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                  <div className="flex-1 ml-[var(--sbw)] overflow-y-auto custom-scrollbar">
                     <LearnMenuPage
                       onNavigate={setCurrentPage}
                       showNotification={showNotification}
@@ -479,7 +479,7 @@ export const App: React.FC = () => {
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     showNotification={showNotification}
                   />
-                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                  <div className="flex-1 ml-[var(--sbw)] overflow-y-auto custom-scrollbar">
                     <RoadmapPage
                       onNavigate={setCurrentPage}
                       showNotification={showNotification}
@@ -526,7 +526,7 @@ export const App: React.FC = () => {
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     showNotification={showNotification}
                   />
-                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                  <div className="flex-1 ml-[var(--sbw)] overflow-y-auto custom-scrollbar">
                     <LessonDetailPage
                       levelId={selectedLevelId}
                       lessonIdx={selectedLessonIdx}
@@ -558,7 +558,7 @@ export const App: React.FC = () => {
                     onOpenCredits={() => setIsCreditsOpen(true)}
                     showNotification={showNotification}
                   />
-                  <div className="flex-1 ml-[110px] overflow-y-auto custom-scrollbar">
+                  <div className="flex-1 ml-[var(--sbw)] overflow-y-auto custom-scrollbar">
                     <RulesPage
                       onNavigate={setCurrentPage}
                       rulesTab={rulesTab}
