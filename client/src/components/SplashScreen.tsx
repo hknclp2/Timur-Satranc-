@@ -23,9 +23,6 @@ export const SplashScreen: FC<SplashScreenProps> = ({ onDone }) => {
           alt="Timur Satrancı Logo"
           className="w-52 h-52 object-contain drop-shadow-[0_12px_30px_rgba(0,0,0,0.6)] animate-float"
         />
-        <h1 className="font-batangas text-4xl font-bold text-white tracking-widest text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
-          Timur&nbsp; Satrancı
-        </h1>
       </div>
 
       {/* Yükleme noktaları */}
